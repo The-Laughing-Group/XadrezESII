@@ -1,4 +1,4 @@
-import Casa from "./casa"
+import Casa from "./Casa.tsx"
 
 const Tabuleiro = () => {
     const t = [
