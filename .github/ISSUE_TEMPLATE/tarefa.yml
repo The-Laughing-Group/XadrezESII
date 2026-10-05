@@ -6,7 +6,7 @@ body:
     id: modulo
     attributes:
       label: Módulo
-      options: [Regras, IA, Frontend, Infra]
+      options: [Regras, IA, Frontend, Infra, docs]
     validations:
       required: true
   - type: input
