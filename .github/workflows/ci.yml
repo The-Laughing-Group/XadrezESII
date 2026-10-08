@@ -5,24 +5,40 @@ on:
     branches: [main]
 
 jobs:
-  frontend:
-    name: Front React/TS
+  engine:
+    name: Motor C++
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - id: d
-        run: test -f frontend/package-lock.json && echo "ok=true" >> "$GITHUB_OUTPUT" || echo "Front ainda não existe, pulando"
-      - if: steps.d.outputs.ok == 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - if: steps.d.outputs.ok == 'true'
-        working-directory: frontend
+      - name: Configurar
+        run: cmake -S engine -B build -DCMAKE_BUILD_TYPE=Debug -DCOVERAGE=ON
+      - name: Compilar
+        run: cmake --build build -j
+      - name: Testes
+        run: ctest --test-dir build --output-on-failure
+      - name: Cobertura
         run: |
-          npm ci
-          npx tsc --noEmit
-          npm run lint --if-present
-          npm test --if-present -- --coverage
-          npm run build
+          pip install gcovr
+          gcovr -r engine --object-directory build --filter 'engine/src/' \
+            --print-summary --xml cobertura.xml
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cobertura-engine
+          path: cobertura.xml
+
+  frontend:
+    name: Front React/TS
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: interface-xadrez
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: interface-xadrez/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
