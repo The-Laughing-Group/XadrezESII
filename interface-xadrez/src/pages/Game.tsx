@@ -1,4 +1,4 @@
-import Tabuleiro from "../components/tabuleiro"
+import Tabuleiro from "../components/Tabuleiro"
 
 const Game = () => {
   return (
