@@ -111,8 +111,21 @@ bool fazer_lance(Tabuleiro& b, Lance m);
 // Só chamar após um fazer_lance que retornou true, com o mesmo lance.
 void desfazer_lance(Tabuleiro& b, Lance m);
 
+
+
+
+
+
+
+
+
+
+//Candidatos pra maquina de regras
+
+
+
 // A posição atual já apareceu antes na pilha de estados?
 bool repetida(const Tabuleiro& b);
 
 // contador_50 >= LIMITE_REGRA_50 (100 meios-lances)
-bool empate_50(const Tabuleiro& b);
+bool empate_50(const Tabuleiro& b); 

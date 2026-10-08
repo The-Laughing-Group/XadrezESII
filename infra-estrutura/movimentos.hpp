@@ -23,16 +23,16 @@ struct ListaLances {
 
 // Gera todos os lances PSEUDO-LEGAIS: podem deixar o próprio rei em xeque.
 // fazer_lance verifica isso e retorna false para lances ilegais.
-void gerar_lances(const Tabuleiro& b, ListaLances& lista);
+void gerar_lances(const Tabuleiro& b, ListaLances& lista); //PJ e LUCAS
 
 // Gera APENAS capturas e promoções (usada na quiescence search).
-void gerar_capturas(const Tabuleiro& b, ListaLances& lista);
+void gerar_capturas(const Tabuleiro& b, ListaLances& lista);  //PJ e LUCAS
 
 // A 'casa' está atacada por alguma peça de cor 'atacante'?
-bool casa_atacada(const Tabuleiro& b, Quadrado casa, Cor atacante);
+bool casa_atacada(const Tabuleiro& b, Quadrado casa, Cor atacante);  //PJ e LUCAS
 
 // O rei da 'cor' está em xeque?
-bool em_xeque(const Tabuleiro& b, Cor cor);
+bool em_xeque(const Tabuleiro& b, Cor cor);  //PJ e LUCAS
 
 // Ordenação de lances (move ordering). Quanto melhor a ordem, mais o alpha-beta corta.
 // Ordem usual:

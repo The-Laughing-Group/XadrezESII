@@ -99,7 +99,7 @@ struct Estado {
     int      contador_50   = 0;      // meios-lances sem captura nem lance de peão
                                      // (50 lances de cada lado = 100 meios-lances)
     uint8_t  direitos_roque = TODOS_ROQUES;
-    Quadrado en_passant     = quadrado_vazio; // casa "pulada" pelo peão. Se ele foi de e2 para e4,
+    Quadrado en_passant     = Quadrado::quadrado_vazio; // casa "pulada" pelo peão. Se ele foi de e2 para e4,
                                               // guardamos e3. Sempre preenchida após um avanço duplo,
                                               // mesmo sem peão inimigo ao lado (é o que a FEN faz).
     Cor      lado_a_jogar   = Cor::BRANCO;

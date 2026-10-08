@@ -1,6 +1,6 @@
 # Nome do projeto
 
-Engine de xadrez em C++ (bitboards + piece-list + mailbox). Uma frase sobre o objetivo.
+Engine de xadrez em C++ (bitboards + piece-list + mailbox). O uso dessas estruturas visa otimizar a busca.
 
 ## Requisitos
 - Compilador com suporte a **C++20** (g++ 10+ ou clang 11+)

@@ -57,4 +57,33 @@ void imprimir(const Tabuleiro& b);
 bool carregar_fen(Tabuleiro& b, const std::string& fen);
 
 // Gera a FEN da posição atual.
+/*
+P = Peão (Pawn)
+
+N = Cavalo (Knight)
+
+B = Bispo (Bishop)
+
+R = Torre (Rook)
+
+Q = Dama (Queen)
+
+K = Rei (King)
+*/
+
+// rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+
+/*
+rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR: As peças pretas na 8ª e 7ª fileiras, 4 fileiras vazias de 8 casas, e as peças brancas na 2ª e 1ª fileiras.
+
+w: As Brancas jogam primeiro.
+
+KQkq: Ambos os lados têm direito a ambos os roques.
+
+-: Nenhuma captura en passant disponível.
+
+0: 0 meias-jogadas sem captura ou avanço de peão.
+
+1: Lance número 1.
+*/
 std::string gerar_fen(const Tabuleiro& b);
