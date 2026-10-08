@@ -1,7 +1,7 @@
 #pragma once
 #include <cstddef>
-#include "constantes.hpp"
-#include "lances.hpp"
+#include "utils/constantes.hpp"
+#include "lances.hpp" //Pode estar desatualizado, procurar lances.hpp
 
 // Tipos de limite guardados na TT (resultado do alpha-beta).
 enum class TTFlag : uint8_t {

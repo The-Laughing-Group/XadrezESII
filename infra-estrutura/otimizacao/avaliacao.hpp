@@ -1,6 +1,6 @@
 #pragma once
-#include "tipos.hpp"   // Tabuleiro, idx(); traz também constantes.hpp (VALOR_PECA, SCORE_*)
-#include "constantes.hpp"
+#include "utils/tipos.hpp"   // Tabuleiro, idx(); traz também constantes.hpp (VALOR_PECA, SCORE_*)
+#include "utils/constantes.hpp"
 
 // Estrutura para avaliação em fases (tapered eval: meio-jogo vs final).
 // Ainda não é usada; remova ou complete quando decidir se vai usá-la.

@@ -1,5 +1,5 @@
 #pragma once
-#include "tipos.hpp"   // traz constantes.hpp (offsets ZOB_*)
+#include "utils/tipos.hpp"  // traz constantes.hpp (offsets ZOB_*)
 
 // Array único com todas as chaves aleatórias de 64 bits. Layout (offsets em constantes.hpp):
 //   ZOB_PECAS ...  768 chaves: peça (cor, tipo) em cada casa -> use zob_peca()

@@ -1,6 +1,6 @@
 #pragma once
 #include <bit>        
-#include "tipos.hpp"
+#include "utils/tipos.hpp"
 
 // Operações sobre bitboards. Em todas, 'casa' deve ser uma casa real (a1..h8).
 // Com quadrado_vazio (64) o deslocamento "1ULL << 64" é comportamento indefinido.

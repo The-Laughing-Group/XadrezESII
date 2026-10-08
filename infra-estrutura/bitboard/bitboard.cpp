@@ -1,5 +1,4 @@
 #include "bitboard.hpp"
-#include "tipos.hpp"
 #include <iostream>
 
 namespace BitboardUtils {

@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include "tipos.hpp"
+#include "utils/tipos.hpp"
 
 // ---------------------------------------------------------------------------
 // Preparação
