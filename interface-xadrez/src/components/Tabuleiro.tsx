@@ -4,6 +4,7 @@ import { useJogo } from '../hooks/useJogo'
 const Tabuleiro = () => {
 
     const jogo = useJogo()
+    if (!jogo) return <p>Carregando motor de regras...</p>
     //funcoes:
     // jogo?.carregarFen
     // ...
@@ -23,7 +24,8 @@ const Tabuleiro = () => {
         <>
             <div id="tabuleiro">
                 { t.map((linha, linhaIndex) => (
-                    linha.map((casa, colunaIndex) => (
+                    //linha.map((casa, colunaIndex)
+                    linha.map((_, colunaIndex) => (
                         <Casa key={`${linhaIndex}-${colunaIndex}`} row={linhaIndex} col={colunaIndex}/>
                     ))
                 )) }
