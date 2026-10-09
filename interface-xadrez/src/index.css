@@ -40,3 +40,53 @@ body {
 .casa-preta {
     background-color: #000000;
 }
+
+
+.peca {
+    font-size: 40px;
+    line-height: 1;
+    user-select: none;
+    pointer-events: none;   /* o clique vai para a casa, não para o símbolo */
+}
+ 
+/* contorno na cor oposta, para a peça aparecer tanto em casa branca quanto em preta */
+.peca-branca {
+    color: #ffffff;
+    text-shadow: 0 0 2px #000, 0 0 2px #000, 0 0 3px #000;
+}
+ 
+.peca-preta {
+    color: #000000;
+    text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff;
+}
+ 
+/* ---------- destaques dos lances ---------- */
+ 
+/* peça selecionada (o seletor duplo vence .casa-branca / .casa-preta) */
+.casa.casa-selecionada {
+    background-color: #f6c000;
+}
+ 
+/* destino numa casa vazia: bolinha verde no centro */
+.casa.casa-destino::after {
+    content: "";
+    position: absolute;
+    width: 30%;
+    height: 30%;
+    border-radius: 50%;
+    background-color: rgba(46, 160, 67, 0.9);
+    border: 2px solid #ffffff;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+ 
+/* destino com peça adversária (captura): anel vermelho em volta da casa */
+.casa.casa-captura::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 4px solid rgba(220, 38, 38, 0.9);
+    box-sizing: border-box;
+    pointer-events: none;
+}
+ 
