@@ -46,7 +46,6 @@ const Tabuleiro = () => {
 
             {tabuleiroInicial.map((linha, row) =>
                 linha.map((tipo, col) => (
-
                     <Casa
                         key={`${row}-${col}`}
                         row={row}
