@@ -19,7 +19,7 @@ body {
     width: calc(var(--casa-largura) * 8);
     height: calc(var(--casa-largura) * 4);
 
-     /* espaço para as peças do fundo */
+    /* espaço para as peças do fundo */
     margin-top: calc(var(--casa-largura) * 0.9);    
 }
 
@@ -50,6 +50,14 @@ body {
 
 .casa-preta  { 
     background-image: url("./assets/casas/casaPreta.png"); 
+}
+
+.casa-selecionada { 
+    background-image: url("./assets/casas/casaAmarelaOrigem.png"); 
+}
+
+.movimento-possivel  { 
+    background-image: url("./assets/casas/casaAmarelaDestino.png"); 
 }
 
 .peca {
