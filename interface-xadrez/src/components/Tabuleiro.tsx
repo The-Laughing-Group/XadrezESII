@@ -1,96 +1,63 @@
-import Casa from "./Casa"
-import { useJogo } from '../hooks/useJogo'
+import Casa from "./Casa";
+import type { Peca, TipoPeca } from "../interfaces/Peca";
+
+import p from "../assets/pecas/peaoPreto.png";
+import t from "../assets/pecas/torrePreta.png";
+import c from "../assets/pecas/cavaloPreto.png";
+import b from "../assets/pecas/bispoPreto.png";
+import q from "../assets/pecas/rainhaPreta.png";
+import k from "../assets/pecas/reiPreto.png";
+
+import P from "../assets/pecas/peaoBranco.png";
+import T from "../assets/pecas/torreBranca.png";
+import C from "../assets/pecas/cavaloBranco.png";
+import B from "../assets/pecas/bispoBranco.png";
+import Q from "../assets/pecas/rainhaBranca.png";
+import K from "../assets/pecas/reiBranco.png";
+
+
+const criarPeca = (tipo: TipoPeca): Peca => {
+
+    const imagens = {p, t, c, b, q, k, P, T, C, B, Q, K};
+
+    return {
+        tipo,
+        img: imagens[tipo]
+    };
+};
+
+
+const tabuleiroInicial: (TipoPeca | null)[][] = [
+    ["t", "c", "b", "q", "k", "b", "c", "t"],
+    ["p", "p", "p", "p", "p", "p", "p", "p"],
+    [null, null, null, null, null, null, null, null],
+    [null, null, null, null, null, null, null, null],
+    [null, null, null, null, null, null, null, null],
+    [null, null, null, null, null, null, null, null],
+    ["P", "P", "P", "P", "P", "P", "P", "P"],
+    ["T", "C", "B", "Q", "K", "B", "C", "T"]
+];
+
 
 const Tabuleiro = () => {
 
-    const jogo = useJogo()
-    if (!jogo) return <p>Carregando motor de regras...</p>
-    //funcoes:
-    // jogo?.carregarFen
-    // ...
-
-    const t = [
-        ["r", "n", "b", "q", "k", "b", "n", "r"],
-        ["p", "p", "p", "p", "p", "p", "p", "p"],
-        ["", "", "", "", "", "", "", ""],
-        ["", "", "", "", "", "", "", ""],
-        ["", "", "", "", "", "", "", ""],
-        ["", "", "", "", "", "", "", ""],
-        ["P", "P", "P", "P", "P", "P", "P", "P"],
-        ["R", "N", "B", "Q", "K", "B", "N", "R"]
-    ];
-
     return (
-        <>
-            <div id="tabuleiro">
-                { t.map((linha, linhaIndex) => (
-                    //linha.map((casa, colunaIndex)
-                    linha.map((_, colunaIndex) => (
-                        <Casa key={`${linhaIndex}-${colunaIndex}`} row={linhaIndex} col={colunaIndex}/>
-                    ))
-                )) }
-            </div>
-        </>
-    )
-}
-export default Tabuleiro
+        <div id="tabuleiro">
 
+            {tabuleiroInicial.map((linha, row) =>
+                linha.map((tipo, col) => (
+                    <Casa
+                        key={`${row}-${col}`}
+                        row={row}
+                        col={col}
+                        peca={tipo ? criarPeca(tipo) : null}
+                    />
 
+                ))
+            )}
 
+        </div>
+    );
+};
 
-// import { useState } from 'react'
-// import Casa from './Casa'
-// import { useJogo } from '../hooks/useJogo'
-
-// const COLUNAS = 'abcdefgh'
-
-// // linha 0 = 8ª fileira; coluna 0 = 'a'  ->  (6, 4) = "e2"
-// const nomeDaCasa = (linha: number, coluna: number) => `${COLUNAS[coluna]}${8 - linha}`
-
-// const Tabuleiro = () => {
-//     const jogo = useJogo()
-//     const [selecionada, setSelecionada] = useState<string | null>(null)
-//     const [destinos, setDestinos] = useState<string[]>([])
-
-//     if (!jogo) return <p>Carregando motor de regras...</p>
-
-//     const limparSelecao = () => {
-//         setSelecionada(null)
-//         setDestinos([])
-//     }
-
-//     const aoClicar = (casa: string) => {
-//         if (casa === selecionada) return limparSelecao()
-
-//         // O motor decide o que é possível: o front só mostra o que ele devolve.
-//         const lances = jogo.lancesDe(casa)               // ex.: ["e2e3", "e2e4"]
-//         if (lances.length === 0) return limparSelecao()  // vazia, peça do adversário ou sem lances
-
-//         setSelecionada(casa)
-//         // Pega só a casa de destino (caracteres 3 e 4 do lance). Promoção gera 4 lances
-//         // para o mesmo destino, então removemos os repetidos.
-//         setDestinos([...new Set(lances.map(lance => lance.slice(2, 4)))])
-//     }
-
-//     return (
-//         <div id="tabuleiro">
-//             {jogo.tabuleiro().flatMap((texto, linha) =>
-//                 Array.from(texto).map((peca, coluna) => {
-//                     const casa = nomeDaCasa(linha, coluna)
-//                     return (
-//                         <Casa
-//                             key={casa}
-//                             row={linha}
-//                             col={coluna}
-//                             peca={peca}
-//                             selecionada={casa === selecionada}
-//                             destino={destinos.includes(casa)}
-//                             aoClicar={() => aoClicar(casa)}
-//                         />
-//                     )
-//                 })
-//             )}
-//         </div>
-//     )
-// }
-// export default Tabuleiro
+export default Tabuleiro;
