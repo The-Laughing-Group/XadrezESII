@@ -1,0 +1,36 @@
+name: Bug
+description: Comportamento incorreto do jogo ou do código
+labels: ["tipo:bug"]
+body:
+  - type: dropdown
+    id: modulo
+    attributes:
+      label: Módulo
+      options: [Regras, IA, Frontend, Infra]
+    validations:
+      required: true
+  - type: input
+    id: req
+    attributes:
+      label: Requisito/Regra afetada
+      placeholder: "RN-006 (Roque)"
+  - type: textarea
+    id: repro
+    attributes:
+      label: Passos para reproduzir (inclua a FEN, se aplicável)
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Comportamento esperado vs. observado
+    validations:
+      required: true
+  - type: input
+    id: est
+    attributes:
+      label: Horas estimadas para correção
+  - type: input
+    id: real
+    attributes:
+      label: Horas realizadas (preencher ao fechar)

@@ -1,0 +1,33 @@
+Layout Lance: 16 bits (6|6|4)
+
+Promoção: o tipo da peça promovida vai dentro das flags.
+
+bits:  15 14 13 12 | 11 10 9 8 7 6 | 5 4 3 2 1 0
+        flags (4)  |   destino (6)  |  origem (6)
+
+E a tabela de flags (valor de 0 a 15):
+
+Valor	Binário	Significado
+0	0000	lance normal
+1	0001	avanço duplo de peão
+2	0010	roque do lado do rei
+3	0011	roque do lado da dama
+4	0100	captura
+5	0101	captura en passant
+8	1000	promoção a cavalo
+9	1001	promoção a bispo
+10	1010	promoção a torre
+11	1011	promoção a dama
+12 a 15	11xx	promoção com captura (cavalo, bispo, torre, dama)
+
+A ideia é que os bits têm significado:
+
+bit 3 (valor 8) ligado: é promoção
+bit 2 (valor 4) ligado: é captura
+2 bits baixos: em promoções, dizem qual peça (0 = cavalo, 1 = bispo, 2 = torre, 3 = dama)
+
+
+AVISOS: compilar por c++20 : -std=c++20
+
+Tabuleiro fica com ~48 KB. Avise a equipe para nunca passar por valor (sempre Tabuleiro& ou const Tabuleiro&), 
+senão cada cópia custa isso.

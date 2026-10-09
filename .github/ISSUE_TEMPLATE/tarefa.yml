@@ -1,0 +1,40 @@
+name: Tarefa / Requisito
+description: Trabalho alocado a um membro da equipe
+labels: ["tipo:tarefa"]
+body:
+  - type: dropdown
+    id: modulo
+    attributes:
+      label: Módulo
+      options: [Regras, IA, Frontend, Infra, docs]
+    validations:
+      required: true
+  - type: input
+    id: req
+    attributes:
+      label: Requisito(s) relacionados
+      placeholder: "RF-007, RN-004"
+    validations:
+      required: true
+  - type: textarea
+    id: desc
+    attributes:
+      label: Descrição
+    validations:
+      required: true
+  - type: textarea
+    id: aceite
+    attributes:
+      label: Critérios de aceitação
+      value: "- [ ] \n- [ ] "
+  - type: input
+    id: est
+    attributes:
+      label: Horas estimadas
+      placeholder: "4"
+    validations:
+      required: true
+  - type: input
+    id: real
+    attributes:
+      label: Horas realizadas (preencher ao fechar)

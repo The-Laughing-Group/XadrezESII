@@ -1,0 +1,15 @@
+"mod:ia":
+  - changed-files:
+      - any-glob-to-any-file: ['ia/**']
+"mod:regras":
+  - changed-files:
+      - any-glob-to-any-file: ['engine/**']
+"mod:frontend":
+  - changed-files:
+      - any-glob-to-any-file: ['interface-xadrez/**']
+"mod:infra":
+  - changed-files:
+      - any-glob-to-any-file: ['.github/**', 'scripts/**']
+"mod:docs":
+  - changed-files:
+      - any-glob-to-any-file: ['docs/**', '*.md']
