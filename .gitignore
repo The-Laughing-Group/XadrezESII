@@ -8,3 +8,5 @@ coverage/
 .vscode/
 .idea/
 .DS_Store
+infra-estrutura/testar.ps1
+infra-estrutura/teste.exe
