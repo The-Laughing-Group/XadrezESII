@@ -22,6 +22,7 @@ EMSCRIPTEN_BINDINGS(xadrez) {
         .function("carregarFen", &Jogo::carregarFen)
         .function("fen", &Jogo::fen)
         .function("vezDasBrancas", &Jogo::vezDasBrancas)
+        .function("tentarLance", &Jogo::tentarLance)
         .function("tabuleiro", optional_override([](const Jogo& j) {
             return paraArrayJs(j.tabuleiro());
         }))

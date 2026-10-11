@@ -78,3 +78,49 @@ body {
 .peca:hover {
     transform: translateX(-50%) translateY(-6%);
 }
+
+
+/* ---------- interação: seleção de peça e destaque dos lances ---------- */
+
+/* A casa (retângulo da imagem) não recebe clique: só o losango e a peça recebem.
+   Assim o clique nos cantos transparentes atravessa para a casa que está atrás. */
+.casa {
+    pointer-events: none;
+}
+
+/* losango clicável por cima da casa; o clip-path recorta o retângulo em losango 2:1 */
+.casa-area {
+    position: absolute;
+    inset: 0;
+    cursor: pointer;
+    pointer-events: auto;
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+.casa-selecionada .casa-area { background-color: rgba(246, 192, 0, 0.6); }    /* peça escolhida */
+.casa-destino .casa-area     { background-color: rgba(46, 160, 67, 0.55); }   /* pode ir para cá */
+.casa-captura .casa-area     { background-color: rgba(220, 38, 38, 0.55); }   /* pode capturar aqui */
+
+/* a peça selecionada "levanta" um pouco */
+.casa-selecionada .peca {
+    transform: translateX(-50%) translateY(-10%);
+}
+
+/* ---------- painel de vez e promoção ---------- */
+
+.painel-partida {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-family: system-ui, sans-serif;
+}
+
+.painel-partida button {
+    cursor: pointer;
+    padding: 4px 10px;
+}

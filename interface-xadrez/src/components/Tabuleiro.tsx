@@ -14,6 +14,7 @@ import C from "../assets/pecas/cavaloBranco.png";
 import B from "../assets/pecas/bispoBranco.png";
 import Q from "../assets/pecas/rainhaBranca.png";
 import K from "../assets/pecas/reiBranco.png";
+import type { Partida } from "../hooks/usePartida";
 
 
 const criarPeca = (tipo: TipoPeca): Peca => {
@@ -39,7 +40,9 @@ const tabuleiroInicial: (TipoPeca | null)[][] = [
 ];
 
 
-const Tabuleiro = () => {
+const Tabuleiro = ({ partida }: { partida: Partida }) => {
+
+    console.log(partida.fen)
 
     return (
         <div id="tabuleiro">
