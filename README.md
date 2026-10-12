@@ -8,3 +8,18 @@
 - [Análise de Riscos](https://docs.google.com/document/d/1Cp6d9goywOjF5f3_6RJU2Wfpv-qGOxragN6FXJpj5MQ/edit?usp=sharing)
 - [EAP e Cronograma de Gantt](https://miro.com/app/board/uXjVHvnTBlM=/?share_link_id=266751974007)
 - [Análise de Valor Agregado](https://docs.google.com/spreadsheets/d/1YgpwxNxlImJMcc6Xr1GFhVQhDr9ImlwEJ7RtAn7dvt0/edit?usp=sharing)
+
+
+## Comandos
+- Compilar backend com emscripten (funções do back devem ser compiladas para .wasm para serem usadas pelo front):
+  - Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+  - $env:EMSDK = "C:\emsdk"
+  - .\build-wasm.ps1 
+- Build com Cmake para testes:
+  - cmake -S engine -B engine/build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug
+  - cmake --build engine/build 
+  - ctest --test-dir engine/build --output-on-failure
+- Rodando a interface(frontend):
+  - cd interface-xadrez
+  - npm i
+  - npm run dev
