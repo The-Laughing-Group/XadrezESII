@@ -32,7 +32,7 @@ void gerar_capturas(const Tabuleiro& b, ListaLances& lista);  //PJ e LUCAS
 bool casa_atacada(const Tabuleiro& b, Quadrado casa, Cor atacante);  //PJ e LUCAS
 
 // O rei da 'cor' está em xeque?
-bool em_xeque(const Tabuleiro& b, Cor cor);  
+bool em_xeque(const Tabuleiro& b, Cor cor);  //PJ e LUCAS
 
 // Ordenação de lances (move ordering). Quanto melhor a ordem, mais o alpha-beta corta.
 // Ordem usual:
