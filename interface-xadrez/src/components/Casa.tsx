@@ -1,22 +1,28 @@
 import type { CSSProperties } from "react";
-import type { Peca } from "../interfaces/Peca";
+import type { CasaProps } from "../interfaces/CasaProps";
 
-interface CasaProps {
-    row: number;
-    col: number;
-    peca: Peca | null;
-}
+const Casa = ({ row, col, peca, selecionada, onSelecionar, movimentoPossivel }: CasaProps) => {
 
-const Casa = ({ row, col, peca }: CasaProps) => {
     // o TypeScript não conhece variáveis CSS, então precisa do cast
     const posicao = { "--col": col, "--lin": row } as CSSProperties;
 
+    const selecionarCasa = () => {
+        onSelecionar(row, col);
+    };
+
     return (
         <div
-            className={`casa ${(row + col) % 2 === 0 ? "casa-branca" : "casa-preta"}`}
+            className={
+                `casa
+                ${selecionada === true ? 'casa-selecionada' 
+                : movimentoPossivel === true? 'movimento-possivel' 
+                : (row + col) % 2 === 0 ? 'casa-branca' : 'casa-preta'}
+                `
+            }
             style={posicao}
             data-row={row}
             data-col={col}
+            onClick={selecionarCasa}
         >
             {peca && (
                 <img
