@@ -1,5 +1,6 @@
 :root {
     --casa-largura: min(11vw, 16vh, 100px); /* Largura de uma casa na tela (cresce com a janela, até 100px) */
+    --casa-altura: calc(var(--casa-largura) * 0.6);  /* altura do PNG / largura do PNG */
 }
 
 body {
@@ -29,8 +30,7 @@ body {
     /* +1px evita frestas */
     width: calc(var(--casa-largura) + 1px);
     
-    /* losango 2:1 */
-    height: calc(var(--casa-largura) / 2 + 1px);  
+    height: calc(var(--casa-altura) + 1px);  
 
     /* posição isométrica a partir de --col e --lin obtidas em Casa.tsx */
     left: calc((var(--col) - var(--lin) + 7) * var(--casa-largura) / 2);
@@ -65,7 +65,7 @@ body {
 
     position: absolute;
     left: 50%;
-    bottom: 40%;
+    bottom: 50%;
 
     height: calc(var(--casa-largura) * var(--altura-rel));
     width: auto;   /* mantém a proporção do desenho */
