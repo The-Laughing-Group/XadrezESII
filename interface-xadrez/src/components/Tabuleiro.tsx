@@ -181,8 +181,8 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
                             ))}
                             <button className="botao-pixel" onClick={limparSelecao}>Cancelar</button>
                         </>
-                    )}
-            
+                )}
+
                 <div id="tabuleiro">
                     {tabuleiro.flatMap((linha, row) =>
                         Array.from(linha).map((tipo, col) => {
