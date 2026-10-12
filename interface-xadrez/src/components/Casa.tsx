@@ -28,17 +28,19 @@ const Casa = ({ row,
             style={estilo}
             data-row={row}
             data-col={col}
-            onClick={selecionarCasa}
         >
-            {peca && (
+            <div className="casa-area" onClick={selecionarCasa} />
+            { peca && (
                 <img
                     src={peca.img}
                     className={`peca ${podeSelecionar ? "peca-selecionavel" : ""}`}
                     data-tipo={peca.tipo}
                     alt={peca.tipo}
                     draggable={false}
+                    onClick={selecionarCasa}
                 />
             )}
+            
         </div>
     );
 };
