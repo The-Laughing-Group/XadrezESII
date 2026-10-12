@@ -87,15 +87,15 @@ const Tabuleiro = ({ partida }: { partida: Partida }) => {
         return vezDasBrancas ? branca : !branca;
     }
 
-    const addMovimentoHistorico = (row: number, col: number, promocao = ""):void => {
+    const addMovimentoHistorico = (row: number, col: number, { promocao = "", captura = "" }):void => {
         const destino = posicaoToUci(row, col);
         if(!casaSelecionada) return;
         const peca = tabuleiro[casaSelecionada.row][casaSelecionada.col];
         if(peca.toUpperCase() === "p".toUpperCase()) {
-            historicoMovimentos.push(destino+promocao);
+            historicoMovimentos.push(`${captura ? captura + "x" : ""}` + destino + promocao);
         }
         else {
-            historicoMovimentos.push(peca.toUpperCase() + destino + promocao);
+            historicoMovimentos.push(peca.toUpperCase() + `${captura ? "x" : ""}` + destino + promocao);
         }
     };
 
@@ -107,11 +107,20 @@ const Tabuleiro = ({ partida }: { partida: Partida }) => {
 
     const escolherPromocao = (letra: string) => {
         if (!promocao) return;
+
+        const captura = tabuleiro[promocao.destino.row][promocao.destino.col] === "." ? "" : posicaoToUci(promocao.origem.row, promocao.origem.col).slice(0, 1);
+
         if(tentarLance(posicaoToUci(promocao.origem.row, 
                                  promocao.origem.col) + 
-                    posicaoToUci(promocao.destino.row, 
-                                 promocao.destino.col) + 
-                    letra)) addMovimentoHistorico(promocao.destino.row, promocao.destino.col, letra.toUpperCase());
+                       posicaoToUci(promocao.destino.row, 
+                                    promocao.destino.col) + 
+                       letra)) {
+            addMovimentoHistorico(promocao.destino.row, 
+                                 promocao.destino.col, 
+                                 { promocao: letra.toUpperCase(),
+                                   captura: captura
+                                  });
+        }
         limparSelecao();
     };
 
@@ -135,7 +144,11 @@ const Tabuleiro = ({ partida }: { partida: Partida }) => {
                 return;
             }
 
-            if(tentarLance(posicaoToUci(casaSelecionada.row, casaSelecionada.col) + posicaoToUci(row, col))) addMovimentoHistorico(row, col);
+            const captura = tabuleiro[row][col] === "." ? "" : uci.slice(0, 1);
+
+            if(tentarLance(posicaoToUci(casaSelecionada.row, casaSelecionada.col) + posicaoToUci(row, col))) {
+                addMovimentoHistorico(row, col, { captura: captura });
+            }
             limparSelecao();
             return;
         }
