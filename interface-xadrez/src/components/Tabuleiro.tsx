@@ -60,9 +60,7 @@ const OPCOES_DE_PROMOCAO = [
     ["n", "Cavalo"],
 ] as const;
 
-const historicoMovimentos: (string)[] = [];
-
-const Tabuleiro = ({ partida }: { partida: Partida }) => {
+const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, historicoMovimentos: (string)[] }) => {
 
     const {pronta, tabuleiro, vezDasBrancas, lancesDe, tentarLance } = partida;
 
@@ -172,17 +170,16 @@ const Tabuleiro = ({ partida }: { partida: Partida }) => {
 
     return (
         <>
-            <div className="">
-                <div>Vez das {vezDasBrancas ? "brancas" : "pretas"}</div>
+            <div>
                 { promocao && (
                         <>
                             <span>Promover para:</span>
                             {OPCOES_DE_PROMOCAO.map(([tipo, nome]) => (
-                                <button key={tipo} onClick={() => escolherPromocao(tipo)}>
+                                <button className="botao-pixel" key={tipo} onClick={() => escolherPromocao(tipo)}>
                                     {nome}
                                 </button>
                             ))}
-                            <button onClick={limparSelecao}>Cancelar</button>
+                            <button className="botao-pixel" onClick={limparSelecao}>Cancelar</button>
                         </>
                     )}
             
@@ -203,32 +200,6 @@ const Tabuleiro = ({ partida }: { partida: Partida }) => {
                             );
                         })
                     )}
-                </div>
-            </div>
-
-            <div id="historico-movimentos">
-                <div className="coluna-movimentos">
-                    <h3>Brancas</h3>
-
-                    {historicoMovimentos
-                        .filter((_, index) => index % 2 === 0)
-                        .map((movimento, index) => (
-                            <p key={index}>
-                                {index + 1}. {movimento}
-                            </p>
-                        ))}
-                </div>
-
-                <div className="coluna-movimentos">
-                    <h3>Pretas</h3>
-
-                    {historicoMovimentos
-                        .filter((_, index) => index % 2 !== 0)
-                        .map((movimento, index) => (
-                            <p key={index + 1}>
-                                {index + 1}. {movimento}
-                            </p>
-                        ))}
                 </div>
             </div>
         </>
