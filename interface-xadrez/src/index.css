@@ -9,16 +9,23 @@
 }
 
 body {
-    background-color: var(--claro);
     font-family: "Pixelify Sans", sans-serif;
     font-optical-sizing: auto;
     font-weight: 400;
     font-style: normal;
     color: var(--escuro);
+    margin: 0;
 }
 
 #game {
     padding: 20px;
+    background-image: url("./assets/fundos/bg4.gif");
+    background-position: center;        
+    background-size: cover;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    box-sizing: border-box;           
+    min-height: 100vh;
 }
 
 .painel {
@@ -70,16 +77,25 @@ body {
     display: flex;
     align-items: center;
     gap: 15px;
+    color: var(--creme);
 }
 
 .botao-pixel {
-    font: inherit;
     color: var(--escuro);
     background-color: var(--creme);
     border: 0;
-    padding: 6px 12px;
-    box-shadow: var(--moldura);
-    cursor: pointer;
+    box-shadow: var(--moldura); 
+    font-size: 25px;
+    padding: 0 8px;
+}
+
+.botao-pixel:hover {
+    transform: translateY(-6%);
+    cursor: pointer;  
+}
+
+.cancelar {
+    padding: 2px 8px;
 }
 
 #tabuleiro {
@@ -128,14 +144,20 @@ body {
 }
 
 .casa-selecionada {
-    background-image: url("./assets/casas/casaAmarelaOrigem.png");
+    background-image: url("./assets/casas/casaOrigem.png");
     cursor: pointer;
 }
 
-.movimento-possivel  { 
-    background-image: url("./assets/casas/casaAmarelaDestino.png");
+.movimento-possivel-branco  { 
+    background-image: url("./assets/casas/casaBrancaDestino.png");
     cursor: pointer;
 }
+
+.movimento-possivel-preto  { 
+    background-image: url("./assets/casas/casaPretaDestino.png");
+    cursor: pointer;
+}
+
 
 .peca {
     --altura-rel: 0.5;   /* altura da peça, em frações da largura da casa */
@@ -177,7 +199,7 @@ body {
     align-content: start;
 
     width: 28vw;
-    max-height: calc(92vh);
+    max-height: 92vh;
 
     overflow-y: auto;
     padding: 0 12px 12px;
@@ -202,7 +224,7 @@ body {
     padding-top: 8px;
     padding-bottom: 8px;
 
-    border-top: 12px solid var(--creme);
+    border-top: 12px solid transparent;
     border-bottom: 2px solid var(--escuro);
     background-clip: padding-box;
 

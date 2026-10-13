@@ -21,7 +21,8 @@ const Casa = ({ row,
             className={
                 `casa
                 ${selecionada === true ? 'casa-selecionada' 
-                : movimentoPossivel === true? 'movimento-possivel' 
+                : movimentoPossivel === true && (row + col) % 2 === 0? 'movimento-possivel-branco' 
+                : movimentoPossivel === true && (row + col) % 2 !== 0? 'movimento-possivel-preto' 
                 : (row + col) % 2 === 0 ? 'casa-branca' : 'casa-preta'}
                 `
             }

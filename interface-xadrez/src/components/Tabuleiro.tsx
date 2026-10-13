@@ -54,10 +54,10 @@ const FEN_PARA_TIPO: Record<string, TipoPeca> = {
 };
 
 const OPCOES_DE_PROMOCAO = [
-    ["q", "Dama"],
-    ["r", "Torre"],
-    ["b", "Bispo"],
-    ["n", "Cavalo"],
+    ["q", "♛"],
+    ["r", "♜"],
+    ["b", "♝"],
+    ["n", "♞"],
 ] as const;
 
 const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, historicoMovimentos: (string)[] }) => {
@@ -175,13 +175,12 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
                  <div className="promocao">
                     { promocao && (
                             <>
-                                <span>Promover para:</span>
                                 {OPCOES_DE_PROMOCAO.map(([tipo, nome]) => (
                                     <button className="botao-pixel" key={tipo} onClick={() => escolherPromocao(tipo)}>
                                         {nome}
                                     </button>
                                 ))}
-                                <button className="botao-pixel" onClick={limparSelecao}>Cancelar</button>
+                                <button className="botao-pixel cancelar" onClick={limparSelecao}>⨉</button>
                             </>
                     )}
                 </div>   
