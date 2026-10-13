@@ -8,9 +8,10 @@ const Game = () => {
     const [historicoMovimentos] = useState<(string)[]>([]);
     
     return (
-        <div className="game">
-            <Tabuleiro partida={partida} historicoMovimentos={historicoMovimentos} />
-            <div className={`indicador-vez ${partida.vezDasBrancas ? "indicador-vez-branca" : "indicador-vez-preta"}`}>Vez das {partida.vezDasBrancas ? "brancas" : "pretas"}</div>
+        <div id="game">
+            <div className="painel">
+                <Tabuleiro partida={partida} historicoMovimentos={historicoMovimentos} />
+            </div>
             <div id="historico-movimentos">
                 <div className="coluna-movimentos">
                     <h3>Rodadas</h3>

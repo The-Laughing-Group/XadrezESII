@@ -170,37 +170,39 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
 
     return (
         <>
-            <div>
-                { promocao && (
-                        <>
-                            <span>Promover para:</span>
-                            {OPCOES_DE_PROMOCAO.map(([tipo, nome]) => (
-                                <button className="botao-pixel" key={tipo} onClick={() => escolherPromocao(tipo)}>
-                                    {nome}
-                                </button>
-                            ))}
-                            <button className="botao-pixel" onClick={limparSelecao}>Cancelar</button>
-                        </>
-                )}
-
-                <div id="tabuleiro">
-                    {tabuleiro.flatMap((linha, row) =>
-                        Array.from(linha).map((tipo, col) => {
-                            return (
-                                <Casa
-                                    key={`${row}-${col}`}
-                                    row={row}
-                                    col={col}
-                                    peca={tipo === "." ? null : criarPeca(FEN_PARA_TIPO[tipo])}
-                                    selecionada={casaEstaSelecionada(row,col)}
-                                    onSelecionar={selecionarCasa}
-                                    movimentoPossivel={eMovimentoPossivel(row, col)}
-                                    podeSelecionar={podeSelecionar(row,col)}
-                                />
-                            );
-                        })
+            <div className="barra-superior">
+                <div className={`indicador-vez ${partida.vezDasBrancas ? "indicador-vez-branca" : "indicador-vez-preta"}`}>Vez das {partida.vezDasBrancas ? "brancas" : "pretas"}</div>
+                 <div className="promocao">
+                    { promocao && (
+                            <>
+                                <span>Promover para:</span>
+                                {OPCOES_DE_PROMOCAO.map(([tipo, nome]) => (
+                                    <button className="botao-pixel" key={tipo} onClick={() => escolherPromocao(tipo)}>
+                                        {nome}
+                                    </button>
+                                ))}
+                                <button className="botao-pixel" onClick={limparSelecao}>Cancelar</button>
+                            </>
                     )}
-                </div>
+                </div>   
+            </div>
+            <div id="tabuleiro">
+                {tabuleiro.flatMap((linha, row) =>
+                    Array.from(linha).map((tipo, col) => {
+                        return (
+                            <Casa
+                                key={`${row}-${col}`}
+                                row={row}
+                                col={col}
+                                peca={tipo === "." ? null : criarPeca(FEN_PARA_TIPO[tipo])}
+                                selecionada={casaEstaSelecionada(row,col)}
+                                onSelecionar={selecionarCasa}
+                                movimentoPossivel={eMovimentoPossivel(row, col)}
+                                podeSelecionar={podeSelecionar(row,col)}
+                            />
+                        );
+                    })
+                )}
             </div>
         </>
     );

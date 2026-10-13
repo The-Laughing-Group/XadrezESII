@@ -17,23 +17,78 @@ body {
     color: var(--escuro);
 }
 
-.game {
+#game {
+    padding: 20px;
+}
+
+.painel {
+    position: relative; 
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    flex-direction: row;
-    min-height: 100vh;
-    overflow: hidden;
-    gap: calc(var(--casa-largura) * 0.6);
+    justify-content: space-around;
+    height: 90vh;
+    width: 65vw;
+}
+
+.barra-superior {
+    display: flex;
+    justify-content: space-between;
+    width: 65vw;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.indicador-vez {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    font-size: 1.1rem;
+    background-color: var(--claro);
+    box-shadow: var(--moldura);
+}
+
+.indicador-vez-preta::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    background-color: var(--escuro);
+    box-shadow: 0 0 0 var(--pixel-ui) var(--escuro);
+}
+
+.indicador-vez-branca::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    background-color: var(--creme);
+    box-shadow: 0 0 0 var(--pixel-ui) var(--escuro);
+}
+
+.promocao {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.botao-pixel {
+    font: inherit;
+    color: var(--escuro);
+    background-color: var(--creme);
+    border: 0;
+    padding: 6px 12px;
+    box-shadow: var(--moldura);
+    cursor: pointer;
 }
 
 #tabuleiro {
+    justify-content: center;
     position: relative;
     width: calc(var(--casa-largura) * 8);
     height: calc(var(--casa-largura) * 4);
 
-    /* espaço para as peças do fundo */
-    margin-top: calc(var(--casa-largura) * 0.9);    
+    margin-top: 100px;
 }
 
 .casa {
@@ -110,38 +165,24 @@ body {
     cursor: pointer;
 }
 
-/* altura reservada: a promoção aparece sem empurrar o tabuleiro */
-.barra-superior {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-    min-height: 56px;
-}
-
-.botao-pixel {
-    font: inherit;
-    color: var(--escuro);
-    background-color: var(--creme);
-    border: 0;
-    padding: 6px 12px;
-    box-shadow: var(--moldura);
-    cursor: pointer;
-}
-
 #historico-movimentos {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 16px;
+    align-content: start;
 
-    width: 100%;
-    max-width: 400px;
-    max-height: 300px;
+    width: 28vw;
+    max-height: calc(92vh);
 
     overflow-y: auto;
-    padding: 12px;
+    padding: 0 12px 12px;
 
+    background-color: var(--creme);
     box-shadow: var(--moldura);
 }
 
@@ -153,9 +194,17 @@ body {
 }
 
 .coluna-movimentos h3 {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+
     margin: 0 0 12px;
+    padding-top: 8px;
     padding-bottom: 8px;
-    border-bottom: 2px solid #333333;
+
+    border-top: 12px solid var(--creme);
+    border-bottom: 2px solid var(--escuro);
+    background-clip: padding-box;
 
     font-size: 1.25rem;
     text-align: center;
@@ -183,38 +232,10 @@ body {
     font-weight: 300;
     margin: 0;
     padding: 6px 4px;
-    border-bottom: 1px solid var(--rosa);
     text-align: center;
     font-size: 13px;
 }
 
 .coluna-movimentos p:nth-of-type(odd) {
     background-color: rgba(51, 51, 51, 0.06);
-}
-
-.indicador-vez {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 6px 12px;
-    font-size: 1.1rem;
-    background-color: var(--claro);
-    box-shadow: var(--moldura);
-}
-
-
-.indicador-vez-preta::before {
-    content: "";
-    width: 14px;
-    height: 14px;
-    background-color: var(--escuro);
-    box-shadow: 0 0 0 var(--pixel-ui) var(--escuro);
-}
-
-.indicador-vez-branca::before {
-    content: "";
-    width: 14px;
-    height: 14px;
-    background-color: var(--creme);
-    box-shadow: 0 0 0 var(--pixel-ui) var(--escuro);
 }
