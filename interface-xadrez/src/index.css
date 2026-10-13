@@ -1,5 +1,5 @@
 :root {
-    --casa-largura: min(11vw, 16vh, 100px); /* Largura de uma casa na tela (cresce com a janela, até 100px) */
+    --casa-largura: min(7.5vw, 16vh, 100px);   
     --casa-altura: calc(var(--casa-largura) * 0.6);  /* altura do PNG / largura do PNG */
     --creme: #fffcf0;
     --claro: #FAF5F0;
@@ -9,7 +9,7 @@
 }
 
 body {
-    background-color: var(--creme);
+    background-color: var(--claro);
     font-family: "Pixelify Sans", sans-serif;
     font-optical-sizing: auto;
     font-weight: 400;
@@ -88,7 +88,7 @@ body {
     width: calc(var(--casa-largura) * 8);
     height: calc(var(--casa-largura) * 4);
 
-    margin-top: 100px;
+    margin-top: calc(var(--casa-largura) * 0.9);   
 }
 
 .casa {
@@ -182,7 +182,7 @@ body {
     overflow-y: auto;
     padding: 0 12px 12px;
 
-    background-color: var(--creme);
+    background-color: var(--claro);
     box-shadow: var(--moldura);
 }
 
@@ -206,7 +206,8 @@ body {
     border-bottom: 2px solid var(--escuro);
     background-clip: padding-box;
 
-    font-size: 1.25rem;
+    font-size: clamp(0.65rem, 1.5vw, 1.25rem);   
+    letter-spacing: 0.04em; 
     text-align: center;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -233,9 +234,44 @@ body {
     margin: 0;
     padding: 6px 4px;
     text-align: center;
-    font-size: 13px;
+    font-size: clamp(9px, 1.1vw, 13px);
 }
 
 .coluna-movimentos p:nth-of-type(odd) {
     background-color: rgba(51, 51, 51, 0.06);
+}
+
+@media (max-width: 900px) {
+    :root {
+        --casa-largura: min(10.5vw, 16vh, 100px);   /* sem histórico ao lado, o tabuleiro pode ocupar mais */
+    }
+
+    .painel {
+        width: 100%;
+        height: auto;
+        padding-top: 60px;           /* espaço para a barra superior, que é absoluta */
+        justify-content: flex-start;
+    }
+
+    .barra-superior {
+        width: 100%;
+        flex-wrap: wrap;             /* os botões de promoção quebram de linha */
+        gap: 8px;
+    }
+
+    .promocao {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    #historico-movimentos {
+        position: static;            /* sai do canto da tela e passa a ficar embaixo do tabuleiro */
+        width: auto;
+        max-height: 40vh;
+        margin-top: 24px;
+    }
+
+    .coluna-movimentos h3 {
+        font-size: clamp(0.7rem, 3.6vw, 1.1rem);
+    }
 }
