@@ -14,6 +14,7 @@ import C from "../assets/pecas/cavaloBranco.png";
 import B from "../assets/pecas/bispoBranco.png";
 import Q from "../assets/pecas/rainhaBranca.png";
 import K from "../assets/pecas/reiBranco.png";
+import type { Partida } from "../hooks/usePartida";
 
 import { useState } from "react";
 import { useJogo } from "../hooks/useJogo";
@@ -44,7 +45,9 @@ const tabuleiroInicial: (TipoPeca | null)[][] = [
     ["T", "C", "B", "Q", "K", "B", "C", "T"]
 ];
 
-const Tabuleiro = () => {
+const Tabuleiro = ({ partida }: { partida: Partida }) => {
+
+    console.log(partida.fen)
 
     const [tabuleiro, setTabuleiro] = useState<(TipoPeca | null)[][]>(
         () => tabuleiroInicial.map((linha) => [...linha])
