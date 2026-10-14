@@ -79,6 +79,25 @@ using Bitboard = uint64_t;
 constexpr Bitboard get_mascara_coluna(Coluna c) { return MASCARA_COLUNAS[c]; }
 constexpr Bitboard get_mascara_linha(Linha l)   { return MASCARA_LINHAS[l]; }
 
+// Máscara de diagonais / antidiagonais (as tabelas ficam em constantes.hpp).
+// ---------- Funções Auxiliares de Mapeamento ----------
+// Retorna o índice da diagonal (0 a 14) contendo a casa sq (0 a 63)
+constexpr int diagonal_index(int sq) {
+    int rank = sq / 8;
+    int file = sq % 8;
+    return (rank - file) + 7;
+}
+// Retorna o índice da antidiagonal (0 a 14) contendo a casa sq (0 a 63)
+constexpr int antidiagonal_index(int sq) {
+    int rank = sq / 8;
+    int file = sq % 8;
+    return (rank + file);
+}
+
+// Máscara direta contendo a diagonal e antidiagonal de uma determinada casa
+constexpr uint64_t mascara_diagonal_casa(int sq) { return DIAGONAIS[diagonal_index(sq)]; }
+constexpr uint64_t mascara_antidiagonal_casa(int sq) { return ANTIDIAGONAIS[antidiagonal_index(sq)]; }
+
 // ---------------------------------------------------------------------------
 // Estado da partida
 // ---------------------------------------------------------------------------
