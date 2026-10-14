@@ -83,3 +83,72 @@ TEST(Jogo, FenInvalidoDevolveFalseEMantemAPosicao) {
     EXPECT_FALSE(j.carregarFen("8/8/8/8/8/8/8/8 w - - 0 1"));   // sem reis
     EXPECT_EQ(j.fen(), FEN_INICIAL);
 }
+
+// ---------- tentarLance ----------
+
+TEST(Jogo, TentarLanceValidoAtualizaAPosicao) {
+    Jogo j;
+    EXPECT_TRUE(j.tentarLance("e2e4"));
+    EXPECT_EQ(j.fen(), "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
+    EXPECT_FALSE(j.vezDasBrancas());
+    EXPECT_EQ(j.tabuleiro()[4], "....P...");
+    EXPECT_EQ(j.tabuleiro()[6], "PPPP.PPP");
+}
+
+TEST(Jogo, TentarLanceInvalidoNaoMudaNada) {
+    Jogo j;
+    EXPECT_FALSE(j.tentarLance("e2e5"));   // peão não anda 3 casas
+    EXPECT_FALSE(j.tentarLance("e2d3"));   // diagonal sem captura
+    EXPECT_FALSE(j.tentarLance("a1a3"));   // torre bloqueada pelo próprio peão
+    EXPECT_EQ(j.fen(), FEN_INICIAL);
+}
+
+TEST(Jogo, TentarLanceDeCasaVaziaOuDePecaDoAdversario) {
+    Jogo j;
+    EXPECT_FALSE(j.tentarLance("e4e5"));   // casa vazia
+    EXPECT_FALSE(j.tentarLance("e7e5"));   // peça preta na vez das brancas
+    EXPECT_EQ(j.fen(), FEN_INICIAL);
+}
+
+TEST(Jogo, TentarLanceComTextoMalFormado) {
+    Jogo j;
+    EXPECT_FALSE(j.tentarLance(""));
+    EXPECT_FALSE(j.tentarLance("e2"));
+    EXPECT_FALSE(j.tentarLance("e2e4e4"));
+    EXPECT_FALSE(j.tentarLance("z9z9"));
+    EXPECT_EQ(j.fen(), FEN_INICIAL);
+}
+
+TEST(Jogo, SequenciaDeLancesAlternaAVez) {
+    Jogo j;
+    EXPECT_TRUE(j.tentarLance("e2e4"));
+    EXPECT_TRUE(j.tentarLance("e7e5"));
+    EXPECT_TRUE(j.tentarLance("g1f3"));
+    EXPECT_TRUE(j.tentarLance("b8c6"));
+    EXPECT_EQ(j.fen(), "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3");
+    EXPECT_FALSE(j.tentarLance("b8c6"));   // as pretas não jogam duas vezes seguidas
+}
+
+TEST(Jogo, LancesMudamDepoisDeJogar) {
+    Jogo j;
+    ASSERT_TRUE(j.tentarLance("e2e4"));
+    EXPECT_TRUE(j.lancesDe("e2").empty());          // a casa ficou vazia
+    EXPECT_TRUE(j.lancesDe("e4").empty());          // peça das brancas, mas a vez é das pretas
+    EXPECT_EQ(j.lancesDe("e7").size(), 2u);         // agora as pretas podem mover
+}
+
+TEST(Jogo, PromocaoExigeAPecaEscolhida) {
+    Jogo j;
+    ASSERT_TRUE(j.carregarFen("k7/4P3/8/8/8/8/8/4K3 w - - 0 1"));
+    EXPECT_FALSE(j.tentarLance("e7e8"));            // falta dizer em que peça promove
+    EXPECT_FALSE(j.tentarLance("e7e8k"));           // peão não vira rei
+    EXPECT_TRUE(j.tentarLance("e7e8Q"));            // maiúscula também é aceita
+    EXPECT_EQ(j.fen(), "k3Q3/8/8/8/8/8/8/4K3 b - - 0 1");
+}
+
+TEST(Jogo, EnPassantPeloJogo) {
+    Jogo j;
+    ASSERT_TRUE(j.carregarFen("4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1"));
+    EXPECT_TRUE(j.tentarLance("e5d6"));
+    EXPECT_EQ(j.fen(), "4k3/8/3P4/8/8/8/8/4K3 b - - 0 1");
+}
