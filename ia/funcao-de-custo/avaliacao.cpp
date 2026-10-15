@@ -1,6 +1,6 @@
-#include "tipos.hpp"
+#include "avaliacao.hpp"
 
-int avaliar(Tabuleiro& tab){
+int avaliar(const Tabuleiro& tab){
   int score = 0;
 
   score += avaliar_material(tab);

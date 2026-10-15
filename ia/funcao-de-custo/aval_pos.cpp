@@ -1,6 +1,4 @@
-#include <bit>
-#include "tipos.hpp"
-#include "piece_square_tables.hpp"
+#include "aval_pos.hpp"
 
 int avaliar_posicao_pecas(const Tabuleiro& tab){
   int score = 0;
@@ -20,7 +18,7 @@ int avaliar_tabela(Bitboard bitboard,  const TabelaPecas& tabela, Cor cor){
     // e me devolve a 'posição' que esse bit está localizado no bitboard
     int casa = std::countr_zero(bitboard);
     //inverte a casa para os peões pretos, a tabela é espelhada para essas peças 
-    int indice = Cor::BRANCO ? casa : (casa ^ 56);
+    int indice = cor == Cor::BRANCO ? casa : (casa ^ 56);
     score += tabela[indice];
     //operação desliga o bit menos significativo
     bitboard &= bitboard - 1;
