@@ -26,11 +26,14 @@ public:
     // Devolve lista vazia se a casa for inválida, estiver vazia ou tiver peça de quem não joga.
     //
     // ATENÇÃO: por enquanto são lances pseudo-legais (não descarta lance que deixa o rei em xeque).
-    // Quando o filtro de legalidade existir, só esta função muda; o frontend continua igual.
+    // Quando o filtro de legalidade existir, só esta função e tentarLance mudam por dentro;
+    // o frontend continua igual.
     std::vector<std::string> lancesDe(const std::string& casa) const;
 
-    // Próxima etapa (depende de aplicarLance e do filtro de legalidade):
-    // bool tentarLance(const std::string& uci);
+    // Tenta executar o lance (UCI: "e2e4", "e7e8q"). O lance só vale se estiver entre
+    // os devolvidos por lancesDe(origem). Se valer, atualiza a posição (troca a vez,
+    // remove peça capturada, promove, etc.) e devolve true. Senão, não muda nada e devolve false.
+    bool tentarLance(const std::string& uci);
 
 private:
     Posicao pos_;

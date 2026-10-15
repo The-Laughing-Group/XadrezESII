@@ -14,6 +14,7 @@
 constexpr int NUM_CASAS   = 64;
 constexpr int NUM_COLUNAS = 8;
 constexpr int NUM_LINHAS  = 8;
+constexpr int NUM_DIAGONAIS = 15;
 
 // ---------- Dimensões das estruturas ----------
 constexpr int NUM_CORES         = 2;
@@ -84,6 +85,47 @@ inline constexpr uint64_t MASCARA_LINHAS[NUM_LINHAS] = {
     0x0000FF0000000000ULL, // Linha 6
     0x00FF000000000000ULL, // Linha 7
     0xFF00000000000000ULL  // Linha 8
+};
+
+// ---------- Máscaras de diagonais (bitboards de 64 bits) ----------
+// Tabela com todas as 15 diagonais paralelas a a1-h8
+// O índice vai de 0 (a8: 1 casa) até 14 (h1: 1 casa), sendo o índice 7 a diagonal principal (a1-h8)
+inline constexpr uint64_t DIAGONAIS[NUM_DIAGONAIS] = {
+    0x0100000000000000ULL, // Diag 0  (a8)
+    0x0201000000000000ULL, // Diag 1  (a7-b8)
+    0x0402010000000000ULL, // Diag 2  (a6-c8)
+    0x0804020100000000ULL, // Diag 3  (a5-d8)
+    0x1008040201000000ULL, // Diag 4  (a4-e8)
+    0x2010080402010000ULL, // Diag 5  (a3-f8)
+    0x4020100804020100ULL, // Diag 6  (a2-g8)
+    0x8040201008040201ULL, // Diag 7  (a1-h8 - Principal)
+    0x0080402010080402ULL, // Diag 8  (b1-h7)
+    0x0000804020100804ULL, // Diag 9  (c1-h6)
+    0x0000008040201008ULL, // Diag 10 (d1-h5)
+    0x0000000080402010ULL, // Diag 11 (e1-h4)
+    0x0000000000804020ULL, // Diag 12 (f1-h3)
+    0x0000000000008040ULL, // Diag 13 (g1-h2)
+    0x0000000000000080ULL  // Diag 14 (h1)
+};
+
+// Tabela com todas as 15 antidiagonais paralelas a h1-a8
+// O índice vai de 0 (a1: 1 casa) até 14 (h8: 1 casa), sendo o índice 7 a antidiagonal principal (h1-a8)
+inline constexpr uint64_t ANTIDIAGONAIS[NUM_DIAGONAIS] = {
+    0x0000000000000001ULL, // Antidiag 0  (a1)
+    0x0000000000000102ULL, // Antidiag 1  (a2-b1)
+    0x0000000000010204ULL, // Antidiag 2  (a3-c1)
+    0x0000000001020408ULL, // Antidiag 3  (a4-d1)
+    0x0000000102040810ULL, // Antidiag 4  (a5-e1)
+    0x0000010204081020ULL, // Antidiag 5  (a6-f1)
+    0x0001020408102040ULL, // Antidiag 6  (a7-g1)
+    0x0102040810204080ULL, // Antidiag 7  (h1-a8 - Principal)
+    0x0204081020408000ULL, // Antidiag 8  (b8-h2)
+    0x0408102040800000ULL, // Antidiag 9  (c8-h3)
+    0x0810204080000000ULL, // Antidiag 10 (d8-h4)
+    0x1020408000000000ULL, // Antidiag 11 (e8-h5)
+    0x2040800000000000ULL, // Antidiag 12 (f8-h6)
+    0x4080000000000000ULL, // Antidiag 13 (g8-h7)
+    0x8000000000000000ULL  // Antidiag 14 (h8)
 };
 
 // ---------- Layout do array de chaves Zobrist (ver zobrist.hpp) ----------

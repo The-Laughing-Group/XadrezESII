@@ -21,6 +21,11 @@ struct ListaLances {
     }
 };
 
+void init_raios();
+
+Bitboard movimentos_cruz(const Bitboard& ocupacao, Quadrado origem);
+Bitboard movimentos_x(const Bitboard& ocupacao, Quadrado origem);
+
 // Gera todos os lances PSEUDO-LEGAIS: podem deixar o próprio rei em xeque.
 // fazer_lance verifica isso e retorna false para lances ilegais.
 void gerar_lances(const Tabuleiro& b, ListaLances& lista); //PJ e LUCAS
