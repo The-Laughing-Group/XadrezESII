@@ -95,8 +95,8 @@ constexpr int antidiagonal_index(int sq) {
 }
 
 // Máscara direta contendo a diagonal e antidiagonal de uma determinada casa
-constexpr uint64_t mascara_diagonal_casa(int sq) { return DIAGONAIS[diagonal_index(sq)]; }
-constexpr uint64_t mascara_antidiagonal_casa(int sq) { return ANTIDIAGONAIS[antidiagonal_index(sq)]; }
+constexpr uint64_t get_mascara_diagonal_casa(int sq) { return DIAGONAIS[diagonal_index(sq)]; }
+constexpr uint64_t get_mascara_antidiagonal_casa(int sq) { return ANTIDIAGONAIS[antidiagonal_index(sq)]; }
 
 // ---------------------------------------------------------------------------
 // Estado da partida
