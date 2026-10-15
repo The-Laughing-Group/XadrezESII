@@ -23,8 +23,11 @@ struct ListaLances {
 
 void init_raios();
 
-Bitboard movimentos_cruz(const Bitboard& ocupacao, Quadrado origem);
-Bitboard movimentos_x(const Bitboard& ocupacao, Quadrado origem);
+static inline Bitboard ataque_positivo(const Bitboard raio[], Bitboard ocupacao, Quadrado sq);
+static inline Bitboard ataque_negativo(const Bitboard raio[], Bitboard ocupacao, Quadrado sq);
+Bitboard ataques_torre(Quadrado sq, Bitboard ocupacao);
+Bitboard ataques_bispo(Quadrado sq, Bitboard ocupacao);
+Bitboard ataques_dama(Quadrado sq, Bitboard ocupacao);
 
 // Gera todos os lances PSEUDO-LEGAIS: podem deixar o próprio rei em xeque.
 // fazer_lance verifica isso e retorna false para lances ilegais.
