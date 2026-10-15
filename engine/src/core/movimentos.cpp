@@ -1,188 +1,217 @@
-#include "xadrez/movimentos.hpp"
+#include "../../infra-estrutura/movimentos.hpp"
+#include "../../infra-estrutura/bitboard/bitboard.hpp"
+#include "../../infra-estrutura/tabuleiro/tabuleiro.hpp"
+#
 
-namespace xadrez{
+// Funções implementadas pelo Henrique 
+extern Bitboard ataques_torre(Quadrado sq, Bitboard ocupacao);
+extern Bitboard ataques_bispo(Quadrado sq, Bitboard ocupacao);
+extern Bitboard ataques_dama(Quadrado sq, Bitboard ocupacao);
 
-static void adicionar(std::vector<Movimento>& v, int deL, int deC, int paraL, int paraC, char promocao = 0) {
-    Movimento m;
-    m.deLinha = deL;
-    m.deColuna = deC;
-    m.paraLinha = paraL;
-    m.paraColuna = paraC;
-    m.promocao = promocao;
-    v.push_back(m);
-}
+// ============================================================================
+// Pré-cálculos Estáticos (Gerados na Compilação) para Peças de Pulo
+// ============================================================================
+struct PrecalcAtaques {
+    Bitboard cavalo[NUM_CASAS];
+    Bitboard rei[NUM_CASAS];
 
-static bool podePousar(const Posicao& pos, int linha, int coluna, bool brancas) {
-    char casa_destino = pos.tabuleiro[linha][coluna];
-    return ehVazia(casa_destino) || !pertenceAo(casa_destino, brancas);
-}
+    constexpr PrecalcAtaques() : cavalo{}, rei{} {
+        for (int sq = 0; sq < NUM_CASAS; ++sq) {
+            Bitboard bb = 1ULL << sq;
+            
+            // Ataques do Cavalo
+            Bitboard c = 0;
+            c |= (bb << 17) & ~MASCARA_COLUNAS[COLUNA_A]; 
+            c |= (bb << 15) & ~MASCARA_COLUNAS[COLUNA_H];
+            c |= (bb << 10) & ~(MASCARA_COLUNAS[COLUNA_A] | MASCARA_COLUNAS[COLUNA_B]);
+            c |= (bb << 6)  & ~(MASCARA_COLUNAS[COLUNA_G] | MASCARA_COLUNAS[COLUNA_H]);
+            c |= (bb >> 17) & ~MASCARA_COLUNAS[COLUNA_H];
+            c |= (bb >> 15) & ~MASCARA_COLUNAS[COLUNA_A];
+            c |= (bb >> 10) & ~(MASCARA_COLUNAS[COLUNA_G] | MASCARA_COLUNAS[COLUNA_H]);
+            c |= (bb >> 6)  & ~(MASCARA_COLUNAS[COLUNA_A] | MASCARA_COLUNAS[COLUNA_B]);
+            cavalo[sq] = c;
+            
+            // Ataques do Rei
+            Bitboard r = 0;
+            Bitboard direita = (bb << 1) & ~MASCARA_COLUNAS[COLUNA_A];
+            Bitboard esquerda = (bb >> 1) & ~MASCARA_COLUNAS[COLUNA_H];
+            r |= direita | esquerda;
+            r |= (bb << 8) | (direita << 8) | (esquerda << 8);
+            r |= (bb >> 8) | (direita >> 8) | (esquerda >> 8);
+            rei[sq] = r;
+        }
+    }
+};
 
+constexpr PrecalcAtaques ATAQUES = PrecalcAtaques();
 
-//movimento de peças: cavalo e rei
-template <std::size_t N>
-static void movimentosDePulo(
-        const Posicao& pos, int linha, int coluna, const int (&passos)[N][2],
-        std::vector<Movimento>& v
-    ){
-    for (const auto& passo : passos) {
-        int lin = linha + passo[0];
-        int col = coluna + passo[1];
-        if (dentroDoTabuleiro(lin, col) && podePousar(pos, lin, col, ehBranca(pos.tabuleiro[linha][coluna])))
-            adicionar(v, linha, coluna, lin, col);
+// ============================================================================
+// Helpers para popular a ListaLances da Equipe
+// ============================================================================
+
+static void extrair_movimentos(ListaLances& lista, Quadrado origem, Bitboard destinos, Bitboard inimigas) {
+    while (destinos) {
+        Quadrado dest = BitboardUtils::remover_lsb(destinos);
+        TipoLance flag = (BitboardUtils::mascara_casa(dest) & inimigas) ? LANCE_CAPTURA : LANCE_NORMAL;
+        lista.adicionar(criar_lance(origem, dest, flag));
     }
 }
 
-//movimento de peças:
-// - Retas - rainha e torre
-// - Diagonais - rainha e bispo
-//
-//anda na direção até encontrar uma peça ou a borda
-template <std::size_t N>
-static void movimentosContinuos(
-        const Posicao& pos, int linha, int coluna, const int (&direcoes)[N][2],
-        std::vector<Movimento>& v
-    ){
-    for (const auto& dir : direcoes) {
-        int lin = linha + dir[0];
-        int col = coluna + dir[1];
-        while (dentroDoTabuleiro(lin, col)) {
-            char casa_destino = pos.tabuleiro[lin][col];
-            if (ehVazia(casa_destino)) {
-                adicionar(v, linha, coluna, lin, col);
+static void extrair_movimentos_peao(ListaLances& lista, Quadrado origem, Bitboard destinos, Bitboard mascara_promocao, Bitboard inimigas, Quadrado en_passant_sq) {
+    while (destinos) {
+        Quadrado dest = BitboardUtils::remover_lsb(destinos);
+        bool captura = (BitboardUtils::mascara_casa(dest) & inimigas) != 0;
+        bool ep = (dest == en_passant_sq && en_passant_sq != quadrado_vazio);
+
+        if ((BitboardUtils::mascara_casa(dest) & mascara_promocao) != 0) {
+            // Promoção
+            if (captura) {
+                lista.adicionar(criar_lance(origem, dest, LANCE_CAPTURA_PROMO_DAMA));
+                lista.adicionar(criar_lance(origem, dest, LANCE_CAPTURA_PROMO_TORRE));
+                lista.adicionar(criar_lance(origem, dest, LANCE_CAPTURA_PROMO_BISPO));
+                lista.adicionar(criar_lance(origem, dest, LANCE_CAPTURA_PROMO_CAVALO));
             } else {
-                if (!pertenceAo(casa_destino, ehBranca(pos.tabuleiro[linha][coluna]))) //peça na casa_destino é de cor diferente da que estou movendo agora?
-                    adicionar(v, linha, coluna, lin, col);   // peça inimiga - come e para
-                break;                                   // sua peça - para
+                lista.adicionar(criar_lance(origem, dest, LANCE_PROMO_DAMA));
+                lista.adicionar(criar_lance(origem, dest, LANCE_PROMO_TORRE));
+                lista.adicionar(criar_lance(origem, dest, LANCE_PROMO_BISPO));
+                lista.adicionar(criar_lance(origem, dest, LANCE_PROMO_CAVALO));
             }
-            lin += dir[0];
-            col += dir[1];
+        } else {
+            // Normal ou Captura comum
+            TipoLance flag = LANCE_NORMAL;
+            if (ep) flag = LANCE_EN_PASSANT;
+            else if (captura) flag = LANCE_CAPTURA;
+            
+            lista.adicionar(criar_lance(origem, dest, flag));
         }
     }
 }
 
+// ============================================================================
+// Função Principal Exportada
+// ============================================================================
+// No escopo global, o compilador reconhece o Tabuleiro e a ListaLances
+void gerar_lances(const Tabuleiro& b, ListaLances& lista) {
+    Cor cor = b.estado.lado_a_jogar;
+    bool branca = (cor == Cor::BRANCO);
+    Bitboard amigaveis = b.ocupacoes[idx(cor)];
+    Bitboard inimigas = b.ocupacoes[idx(oposta(cor))];
+    Bitboard ocupacoes_totais = b.ocupacoes_totais;
 
-// Se o peão chega na última fileira, o lance se desdobra em quatro (uma por peça de promoção).
-static void adicionarMovPeao(
-        std::vector<Movimento>& v, int deL, int deC,
-        int paraL, int paraC, int linhaFinal
-    ){
-    if (paraL == linhaFinal) {
-        for (char prom : {'q','r','b','n'})
-            adicionar(v, deL, deC, paraL, paraC, prom);
-    } else {
-        adicionar(v, deL, deC, paraL, paraC); //prom default é '0'
-    }
-}
- 
-static void movimentosDePeao(const Posicao& pos, int linha, int coluna, std::vector<Movimento>& v) {
-    char peca = pos.tabuleiro[linha][coluna];
-    bool branca = ehBranca(peca);
-    int direcao = branca? -1 : 1;
-    int linhaFinal = branca? 0 : 7;
-    int linhaInicial = branca? 6: 1;
+    Bitboard peças_ativas = amigaveis;
+    while (peças_ativas) {
+        Quadrado sq = BitboardUtils::remover_lsb(peças_ativas);
+        Peca p = peca_em(b, sq);
 
-    int frente = linha + direcao;
-    if (dentroDoTabuleiro(frente, coluna) && ehVazia(pos.tabuleiro[frente][coluna])) {
-        adicionarMovPeao(v, linha, coluna, frente, coluna, linhaFinal);
+        switch (p.tpeca) {
+            case TipoPeca::PEAO: {
+                Bitboard bb = BitboardUtils::mascara_casa(sq);
+                Bitboard destinos_avanco = 0;
+                Bitboard destinos_captura = 0;
+                Bitboard prom_rank = branca ? MASCARA_LINHAS[LINHA_8] : MASCARA_LINHAS[LINHA_1];
 
-        int duasFrente = linha + 2 * direcao;
-        if (linha == linhaInicial && ehVazia(pos.tabuleiro[duasFrente][coluna])) //nem a primeira nem a segunda casa a frente está preenchida
-            adicionar(v, linha, coluna, duasFrente, coluna);
-    }
- 
-    // Capturas nas duas diagonais
-    for (int diag_c : {-1, 1}) {
-        int col = coluna + diag_c;
-        if (!dentroDoTabuleiro(frente, col)) continue;
- 
-        char casa_destino = pos.tabuleiro[frente][col];
-        if (!ehVazia(casa_destino)) {
-            if (!pertenceAo(casa_destino, branca))
-                adicionarMovPeao(v, linha, coluna, frente, col, linhaFinal);
-        } else if (pos.vezDasBrancas == branca &&
-                   pos.passantLinha == frente && pos.passantColuna == col) { //en passant
-            adicionar(v, linha, coluna, frente, col);
+                if (branca) {
+                    Bitboard frente = (bb << 8) & ~ocupacoes_totais;
+                    destinos_avanco |= frente;
+                    if (frente && (bb & MASCARA_LINHAS[LINHA_2])) {
+                        Bitboard avanço_duplo = (frente << 8) & ~ocupacoes_totais;
+                        if (avanço_duplo) {
+                            lista.adicionar(criar_lance(sq, BitboardUtils::indice_lsb(avanço_duplo), LANCE_AVANCO_DUPLO));
+                        }
+                    }
+                    destinos_captura |= (((bb << 7) & ~MASCARA_COLUNAS[COLUNA_H]) | ((bb << 9) & ~MASCARA_COLUNAS[COLUNA_A])) & inimigas;
+                    if (b.estado.en_passant != quadrado_vazio) {
+                        destinos_captura |= (((bb << 7) & ~MASCARA_COLUNAS[COLUNA_H]) | ((bb << 9) & ~MASCARA_COLUNAS[COLUNA_A])) & BitboardUtils::mascara_casa(b.estado.en_passant);
+                    }
+                } else {
+                    Bitboard frente = (bb >> 8) & ~ocupacoes_totais;
+                    destinos_avanco |= frente;
+                    if (frente && (bb & MASCARA_LINHAS[LINHA_7])) {
+                        Bitboard avanço_duplo = (frente >> 8) & ~ocupacoes_totais;
+                        if (avanço_duplo) {
+                            lista.adicionar(criar_lance(sq, BitboardUtils::indice_lsb(avanço_duplo), LANCE_AVANCO_DUPLO));
+                        }
+                    }
+                    destinos_captura |= (((bb >> 9) & ~MASCARA_COLUNAS[COLUNA_H]) | ((bb >> 7) & ~MASCARA_COLUNAS[COLUNA_A])) & inimigas;
+                    if (b.estado.en_passant != quadrado_vazio) {
+                        destinos_captura |= (((bb >> 9) & ~MASCARA_COLUNAS[COLUNA_H]) | ((bb >> 7) & ~MASCARA_COLUNAS[COLUNA_A])) & BitboardUtils::mascara_casa(b.estado.en_passant);
+                    }
+                }
+                extrair_movimentos_peao(lista, sq, destinos_avanco | destinos_captura, prom_rank, inimigas, b.estado.en_passant);
+                break;
+            }
+
+            case TipoPeca::CAVALO: {
+                extrair_movimentos(lista, sq, ATAQUES.cavalo[sq] & ~amigaveis, inimigas);
+                break;
+            }
+
+            case TipoPeca::REI: {
+                extrair_movimentos(lista, sq, ATAQUES.rei[sq] & ~amigaveis, inimigas);
+                
+                Cor cor_atacante = oposta(cor);
+
+                // Tratamento de Roque
+                if (branca && sq == Quadrado::e1) {
+                    // Roque Menor (Lado do Rei)
+                    if ((b.estado.direitos_roque & ROQUE_BRANCO_REI) &&
+                        !BitboardUtils::testar_bit(ocupacoes_totais, Quadrado::f1) && 
+                        !BitboardUtils::testar_bit(ocupacoes_totais, Quadrado::g1) &&
+                        !casa_atacada(b, Quadrado::e1, cor_atacante) &&
+                        !casa_atacada(b, Quadrado::f1, cor_atacante) &&
+                        !casa_atacada(b, Quadrado::g1, cor_atacante)) {
+                        lista.adicionar(criar_lance(sq, Quadrado::g1, LANCE_ROQUE_REI));
+                    }
+                    // Roque Maior (Lado da Dama)
+                    if ((b.estado.direitos_roque & ROQUE_BRANCO_DAMA) &&
+                        !BitboardUtils::testar_bit(ocupacoes_totais, Quadrado::d1) && 
+                        !BitboardUtils::testar_bit(ocupacoes_totais, Quadrado::c1) &&
+                        !BitboardUtils::testar_bit(ocupacoes_totais, Quadrado::b1) &&
+                        !casa_atacada(b, Quadrado::e1, cor_atacante) &&
+                        !casa_atacada(b, Quadrado::d1, cor_atacante) &&
+                        !casa_atacada(b, Quadrado::c1, cor_atacante)) {
+                        lista.adicionar(criar_lance(sq, Quadrado::c1, LANCE_ROQUE_DAMA));
+                    }
+                } else if (!branca && sq == Quadrado::e8) {
+                    // Roque Menor (Lado do Rei)
+                    if ((b.estado.direitos_roque & ROQUE_PRETO_REI) &&
+                        !BitboardUtils::testar_bit(ocupacoes_totais, Quadrado::f8) && 
+                        !BitboardUtils::testar_bit(ocupacoes_totais, Quadrado::g8) &&
+                        !casa_atacada(b, Quadrado::e8, cor_atacante) &&
+                        !casa_atacada(b, Quadrado::f8, cor_atacante) &&
+                        !casa_atacada(b, Quadrado::g8, cor_atacante)) {
+                        lista.adicionar(criar_lance(sq, Quadrado::g8, LANCE_ROQUE_REI));
+                    }
+                    // Roque Maior (Lado da Dama)
+                    if ((b.estado.direitos_roque & ROQUE_PRETO_DAMA) &&
+                        !BitboardUtils::testar_bit(ocupacoes_totais, Quadrado::d8) && 
+                        !BitboardUtils::testar_bit(ocupacoes_totais, Quadrado::c8) &&
+                        !BitboardUtils::testar_bit(ocupacoes_totais, Quadrado::b8) &&
+                        !casa_atacada(b, Quadrado::e8, cor_atacante) &&
+                        !casa_atacada(b, Quadrado::d8, cor_atacante) &&
+                        !casa_atacada(b, Quadrado::c8, cor_atacante)) {
+                        lista.adicionar(criar_lance(sq, Quadrado::c8, LANCE_ROQUE_DAMA));
+                    }
+                }
+                break;
+            }
+
+            case TipoPeca::BISPO: {
+                extrair_movimentos(lista, sq, ataques_bispo(sq, ocupacoes_totais) & ~amigaveis, inimigas);
+                break;
+            }
+
+            case TipoPeca::TORRE: {
+                extrair_movimentos(lista, sq, ataques_torre(sq, ocupacoes_totais) & ~amigaveis, inimigas);
+                break;
+            }
+
+            case TipoPeca::DAMA: {
+                extrair_movimentos(lista, sq, ataques_dama(sq, ocupacoes_totais) & ~amigaveis, inimigas);
+                break;
+            }
+            
+            default: break;
         }
     }
-}
-
-static void movimentosDeRei(const Posicao& pos, int linha, int coluna, std::vector<Movimento>& v){
-    
-    //Movimentos básicos da peça
-    static const int rei_passos[8][2] = {{1,0},{1,1},{0,1},{0,-1},{-1,-1},{-1,0},{-1,1},{1,-1}};
-    movimentosDePulo(pos, linha, coluna, rei_passos, v);
-
-    //Roca:
-
-    bool branca = ehBranca(pos.tabuleiro[linha][coluna]);
-
-    int linhaInicial = branca ? 7 : 0;
-    if (linha != linhaInicial || coluna != 4) return;   //rei precisa estar na casa inicial
-
-    bool rocaDama = branca ? pos.rocaBrancasDama : pos.rocaPretasDama;
-    bool rocaRei = branca ? pos.rocaBrancasRei : pos.rocaPretasRei;
-    char torre = branca ? 'R' : 'r';
-
-    //Verifica se o caminho entre rei e torreRei e torreDama está livre para uma torre
-    bool livreRei = pos.tabuleiro[linha][7] == torre && ehVazia(pos.tabuleiro[linha][5])
-                    && ehVazia(pos.tabuleiro[linha][6]);
-    bool livreDama = pos.tabuleiro[linha][0] == torre && ehVazia(pos.tabuleiro[linha][1])
-                    && ehVazia(pos.tabuleiro[linha][2]) && ehVazia(pos.tabuleiro[linha][3]);
-
-    //Adiciona o movimento de roca
-    if(rocaRei && livreRei) adicionar(v, linha, coluna, linha, 6);
-    if(rocaDama && livreDama) adicionar(v, linha, coluna, linha, 2);
-
-    //proximo passo: funcao estaAtacada(): o rei não pode estar em xeque, nem passar por casa atacada, nem terminar em uma
-}
-
-
-
-std::vector<Movimento> movimentos(const Posicao& pos, int linha, int coluna){
-    std::vector<Movimento> v;
-    //Movimento mov;
-
-    if(!dentroDoTabuleiro(linha,coluna)) return v;
-    char peca = pos.tabuleiro[linha][coluna];
-    // int direcao = ehBranca(peca)? -1 : 1;
-
-    if(ehVazia(peca)) return v;
-
-    //vars usadas em verificacoes de cada peça
-    static const int cav_passos[8][2] = {{2,1},{2,-1},{1,2},{1,-2},{-2,1},{-2,-1},{-1,2},{-1,-2}};
-    //static const int rei_passos[8][2] = {{1,0},{1,1},{0,1},{0,-1},{-1,-1},{-1,0},{-1,1},{1,-1}};
-    
-    //int p_desloc_lin; int p_desloc_col;
-
-    static const int diagonal_dir[4][2] = {{1,1},{1,-1},{-1,1},{-1,-1}};
-    static const int retas_dir[4][2] = {{1,0},{0,1},{-1,0},{0,-1}}; //vertical e horizontal
-
-    
-    switch(minuscula(peca)){
-        case 'p': //peao
-            movimentosDePeao(pos, linha, coluna, v);
-            break;
-        case 'n': //cavalo
-            movimentosDePulo(pos, linha, coluna, cav_passos, v);
-            break;
-        case 'k': //rei
-            movimentosDeRei(pos, linha, coluna, v);
-            break;
-        case 'q': //rainha
-            movimentosContinuos(pos, linha, coluna, retas_dir, v);
-            movimentosContinuos(pos, linha, coluna, diagonal_dir, v);
-            break;
-        case 'r': //torre
-            movimentosContinuos(pos, linha, coluna, retas_dir, v);
-            break;
-        case 'b': //bispo
-            movimentosContinuos(pos, linha, coluna, diagonal_dir, v);
-            break;
-        default:
-            break;
-    }
-
-    return v;
-}
-
 }
