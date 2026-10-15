@@ -127,11 +127,12 @@ struct Tabuleiro {
     Bitboard ocupacoes[NUM_CORES] = {};
     Bitboard ocupacoes_totais = 0ULL;
 
+    //Desisti da piece-list
     // Piece-list: casas de cada peça por (cor, tipo). Só os primeiros
     // quantidade[cor][tipo] elementos são válidos.
     // MAX_PECAS_TIPO = 10: 8 peões, ou 2 + 8 promoções.
-    Quadrado lista[NUM_CORES][NUM_TIPOS][MAX_PECAS_TIPO] = {};
-    int      quantidade[NUM_CORES][NUM_TIPOS] = {};
+    //Quadrado lista[NUM_CORES][NUM_TIPOS][MAX_PECAS_TIPO] = {};
+    //int      quantidade[NUM_CORES][NUM_TIPOS] = {};
 
     // Mailbox: o que há em cada casa (para peca_em ser instantâneo)
     Peca casas[NUM_CASAS] = {};

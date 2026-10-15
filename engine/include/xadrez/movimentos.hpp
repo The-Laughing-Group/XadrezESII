@@ -12,17 +12,17 @@ struct Movimento {
     char promocao = 0;   // 'q', 'r', 'b' ou 'n' se o peão promove; o número 0 nos demais lances
 };
 
-// Lances básicos da peça em (linha, coluna).
+// Lances da peça em (linha, coluna).
 //
 // Regras que NÃO são consideradas:
-//  - rei em xeque
-//  - roque
+//  - rei em xeque 
 //
 // Regras extras consideradas:
 //  - en passant
+//  - roque
 //
 // Devolve lista vazia se não há peça em (linha, coluna) ou se a casa for fora do tabuleiro.
-std::vector<Movimento> movBasicos(const Posicao& pos, int linha, int coluna);
+std::vector<Movimento> movimentos(const Posicao& pos, int linha, int coluna);
 
 // Devolve a posição que resulta de executar o lance `m` em `pos` (a posição original não muda).
 // Assume que o lance é válido: quem chama é responsável por conferir.

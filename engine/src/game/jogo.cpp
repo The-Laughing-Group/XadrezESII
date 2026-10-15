@@ -46,7 +46,7 @@ std::vector<std::string> Jogo::lancesDe(const std::string& casa) const {
     // Só a peça de quem tem a vez pode se mover (casa vazia também cai aqui)
     if (!pertenceAo(pos_.tabuleiro[linha][coluna], pos_.vezDasBrancas)) return lances;
 
-    for (const Movimento& m : movBasicos(pos_, linha, coluna))
+    for (const Movimento& m : movimentos(pos_, linha, coluna))
         lances.push_back(movimentoParaUci(m));
     return lances;
 }
@@ -69,7 +69,7 @@ bool Jogo::tentarLance(const std::string& uci) {
     if (!pertenceAo(pos_.tabuleiro[deLinha][deColuna], pos_.vezDasBrancas)) return false;
 
     // Validar = o lance precisa estar na lista de lances daquela peça
-    for (const Movimento& m : movBasicos(pos_, deLinha, deColuna)) {
+    for (const Movimento& m : movimentos(pos_, deLinha, deColuna)) {
         if (m.paraLinha == paraLinha && m.paraColuna == paraColuna && m.promocao == promocao) {
             pos_ = aplicarLance(pos_, m);
             return true;
