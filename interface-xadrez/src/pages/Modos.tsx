@@ -1,8 +1,10 @@
+import { Link } from 'react-router-dom';
+
 const Modos = () => {
     return (
-        <>
-            <div>Modos</div>
-        </>
-    )
+    <div>
+        <Link to="/game">Game</Link>
+    </div>
+  );
 }
 export default Modos

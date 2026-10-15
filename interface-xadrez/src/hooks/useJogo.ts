@@ -4,7 +4,7 @@ import type { JogoWasm, ModuloXadrez } from '../wasm/chess_engine.js'
 
 // O módulo WebAssembly é baixado e inicializado uma única vez para a aplicação inteira.
 let carregamento: Promise<ModuloXadrez> | null = null
-function carregarModulo(): Promise<ModuloXadrez> {
+export function carregarModulo(): Promise<ModuloXadrez> {
     carregamento ??= criarModulo()
     return carregamento
 }

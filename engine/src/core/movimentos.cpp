@@ -106,8 +106,39 @@ static void movimentosDePeao(const Posicao& pos, int linha, int coluna, std::vec
     }
 }
 
+static void movimentosDeRei(const Posicao& pos, int linha, int coluna, std::vector<Movimento>& v){
+    
+    //Movimentos básicos da peça
+    static const int rei_passos[8][2] = {{1,0},{1,1},{0,1},{0,-1},{-1,-1},{-1,0},{-1,1},{1,-1}};
+    movimentosDePulo(pos, linha, coluna, rei_passos, v);
 
-std::vector<Movimento> movBasicos(const Posicao& pos, int linha, int coluna){
+    //Roca:
+
+    bool branca = ehBranca(pos.tabuleiro[linha][coluna]);
+
+    int linhaInicial = branca ? 7 : 0;
+    if (linha != linhaInicial || coluna != 4) return;   //rei precisa estar na casa inicial
+
+    bool rocaDama = branca ? pos.rocaBrancasDama : pos.rocaPretasDama;
+    bool rocaRei = branca ? pos.rocaBrancasRei : pos.rocaPretasRei;
+    char torre = branca ? 'R' : 'r';
+
+    //Verifica se o caminho entre rei e torreRei e torreDama está livre para uma torre
+    bool livreRei = pos.tabuleiro[linha][7] == torre && ehVazia(pos.tabuleiro[linha][5])
+                    && ehVazia(pos.tabuleiro[linha][6]);
+    bool livreDama = pos.tabuleiro[linha][0] == torre && ehVazia(pos.tabuleiro[linha][1])
+                    && ehVazia(pos.tabuleiro[linha][2]) && ehVazia(pos.tabuleiro[linha][3]);
+
+    //Adiciona o movimento de roca
+    if(rocaRei && livreRei) adicionar(v, linha, coluna, linha, 6);
+    if(rocaDama && livreDama) adicionar(v, linha, coluna, linha, 2);
+
+    //proximo passo: funcao estaAtacada(): o rei não pode estar em xeque, nem passar por casa atacada, nem terminar em uma
+}
+
+
+
+std::vector<Movimento> movimentos(const Posicao& pos, int linha, int coluna){
     std::vector<Movimento> v;
     //Movimento mov;
 
@@ -119,7 +150,7 @@ std::vector<Movimento> movBasicos(const Posicao& pos, int linha, int coluna){
 
     //vars usadas em verificacoes de cada peça
     static const int cav_passos[8][2] = {{2,1},{2,-1},{1,2},{1,-2},{-2,1},{-2,-1},{-1,2},{-1,-2}};
-    static const int rei_passos[8][2] = {{1,0},{1,1},{0,1},{0,-1},{-1,-1},{-1,0},{-1,1},{1,-1}};
+    //static const int rei_passos[8][2] = {{1,0},{1,1},{0,1},{0,-1},{-1,-1},{-1,0},{-1,1},{1,-1}};
     
     //int p_desloc_lin; int p_desloc_col;
 
@@ -135,7 +166,7 @@ std::vector<Movimento> movBasicos(const Posicao& pos, int linha, int coluna){
             movimentosDePulo(pos, linha, coluna, cav_passos, v);
             break;
         case 'k': //rei
-            movimentosDePulo(pos, linha, coluna, rei_passos, v);
+            movimentosDeRei(pos, linha, coluna, v);
             break;
         case 'q': //rainha
             movimentosContinuos(pos, linha, coluna, retas_dir, v);
