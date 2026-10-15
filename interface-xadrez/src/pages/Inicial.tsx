@@ -1,7 +1,9 @@
+import { Link } from "react-router-dom"
+
 const Inicial = () => {
     return (
         <>
-            <div>Inicial</div>
+            <Link to="/modos">Modos</Link>
         </>
     )
 }

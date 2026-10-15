@@ -1,27 +1,110 @@
 :root {
-    --casa-largura: min(11vw, 16vh, 100px); /* Largura de uma casa na tela (cresce com a janela, até 100px) */
+    --casa-largura: min(7.5vw, 16vh, 100px);   
     --casa-altura: calc(var(--casa-largura) * 0.6);  /* altura do PNG / largura do PNG */
+    --creme: #fffcf0;
+    --claro: #FAF5F0;
+    --escuro: #333333;
+    --pixel-ui: 3px;  
+    --moldura: 0 calc(-1 * var(--pixel-ui)) 0 0 var(--escuro), 0 var(--pixel-ui) 0 0 var(--escuro), calc(-1 * var(--pixel-ui)) 0 0 0 var(--escuro), var(--pixel-ui) 0 0 0 var(--escuro);
 }
 
 body {
-    background-color: #fffcf0;
+    font-family: "Pixelify Sans", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    color: var(--escuro);
+    margin: 0;
 }
 
-.game {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+#game {
+    padding: 20px;
+    background-image: url("./assets/fundos/bg4.gif");
+    background-position: center;        
+    background-size: cover;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    box-sizing: border-box;           
     min-height: 100vh;
-    overflow: hidden;
+}
+
+.painel {
+    position: relative; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    height: 90vh;
+    width: 65vw;
+}
+
+.barra-superior {
+    display: flex;
+    justify-content: space-between;
+    width: 65vw;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.indicador-vez {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    font-size: 1.1rem;
+    background-color: var(--claro);
+    box-shadow: var(--moldura);
+}
+
+.indicador-vez-preta::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    background-color: var(--escuro);
+    box-shadow: 0 0 0 var(--pixel-ui) var(--escuro);
+}
+
+.indicador-vez-branca::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    background-color: var(--creme);
+    box-shadow: 0 0 0 var(--pixel-ui) var(--escuro);
+}
+
+.promocao {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: var(--creme);
+}
+
+.botao-pixel {
+    color: var(--escuro);
+    background-color: var(--creme);
+    border: 0;
+    box-shadow: var(--moldura); 
+    font-size: 25px;
+    padding: 0 8px;
+}
+
+.botao-pixel:hover {
+    transform: translateY(-6%);
+    cursor: pointer;  
+}
+
+.cancelar {
+    padding: 2px 8px;
 }
 
 #tabuleiro {
+    justify-content: center;
     position: relative;
     width: calc(var(--casa-largura) * 8);
     height: calc(var(--casa-largura) * 4);
 
-    /* espaço para as peças do fundo */
-    margin-top: calc(var(--casa-largura) * 0.9);    
+    margin-top: calc(var(--casa-largura) * 0.9);   
 }
 
 .casa {
@@ -42,23 +125,39 @@ body {
     background-size: 100% 100%;
     background-repeat: no-repeat;
     image-rendering: pixelated;
+    pointer-events: none;
 }
 
-.casa-branca { 
+.casa-area {
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    pointer-events: auto;
+}
+
+.casa-branca {
     background-image: url("./assets/casas/casaBranca.png"); 
 }
 
-.casa-preta  { 
+.casa-preta  {
     background-image: url("./assets/casas/casaPreta.png"); 
 }
 
-.casa-selecionada { 
-    background-image: url("./assets/casas/casaAmarelaOrigem.png"); 
+.casa-selecionada {
+    background-image: url("./assets/casas/casaOrigem.png");
+    cursor: pointer;
 }
 
-.movimento-possivel  { 
-    background-image: url("./assets/casas/casaAmarelaDestino.png"); 
+.movimento-possivel-branco  { 
+    background-image: url("./assets/casas/casaBrancaDestino.png");
+    cursor: pointer;
 }
+
+.movimento-possivel-preto  { 
+    background-image: url("./assets/casas/casaPretaDestino.png");
+    cursor: pointer;
+}
+
 
 .peca {
     --altura-rel: 0.5;   /* altura da peça, em frações da largura da casa */
@@ -77,58 +176,124 @@ body {
     pointer-events: auto;
 }
 
-.peca[data-tipo="k" i]    { --altura-rel: 0.77; }
-.peca[data-tipo="q" i]   { --altura-rel: 0.77; }
-.peca[data-tipo="b" i]  { --altura-rel: 0.63; }
+.peca[data-tipo="k" i] { --altura-rel: 0.77; }
+.peca[data-tipo="q" i] { --altura-rel: 0.77; }
+.peca[data-tipo="b" i] { --altura-rel: 0.63; }
 .peca[data-tipo="c" i] { --altura-rel: 0.55; }
-.peca[data-tipo="t" i]  { --altura-rel: 0.57; }
+.peca[data-tipo="t" i] { --altura-rel: 0.57; }
 
-.peca:hover {
+.peca-selecionavel:hover {
     transform: translateX(-50%) translateY(-6%);
-}
-
-
-/* ---------- interação: seleção de peça e destaque dos lances ---------- */
-
-/* A casa (retângulo da imagem) não recebe clique: só o losango e a peça recebem.
-   Assim o clique nos cantos transparentes atravessa para a casa que está atrás. */
-.casa {
-    pointer-events: none;
-}
-
-/* losango clicável por cima da casa; o clip-path recorta o retângulo em losango 2:1 */
-.casa-area {
-    position: absolute;
-    inset: 0;
     cursor: pointer;
-    pointer-events: auto;
-    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
 }
 
-.casa-selecionada .casa-area { background-color: rgba(246, 192, 0, 0.6); }    /* peça escolhida */
-.casa-destino .casa-area     { background-color: rgba(46, 160, 67, 0.55); }   /* pode ir para cá */
-.casa-captura .casa-area     { background-color: rgba(220, 38, 38, 0.55); }   /* pode capturar aqui */
-
-/* a peça selecionada "levanta" um pouco */
-.casa-selecionada .peca {
-    transform: translateX(-50%) translateY(-10%);
-}
-
-/* ---------- painel de vez e promoção ---------- */
-
-.painel-partida {
+#historico-movimentos {
     position: fixed;
-    top: 12px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 20px;
+    right: 20px;
     z-index: 1000;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    font-family: system-ui, sans-serif;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    align-content: start;
+
+    width: 28vw;
+    max-height: 92vh;
+
+    overflow-y: auto;
+    padding: 0 12px 12px;
+
+    background-color: var(--claro);
+    box-shadow: var(--moldura);
 }
 
-.painel-partida button {
-    cursor: pointer;
-    padding: 4px 10px;
+#historico-movimentos::-webkit-scrollbar { width: 5px; }
+#historico-movimentos::-webkit-scrollbar-thumb { background: rgba(51, 51, 51, 0.06); }
+
+.coluna-movimentos {
+    min-width: 0;
+}
+
+.coluna-movimentos h3 {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+
+    margin: 0 0 12px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+
+    border-top: 12px solid transparent;
+    border-bottom: 2px solid var(--escuro);
+    background-clip: padding-box;
+
+    font-size: clamp(0.65rem, 1.5vw, 1.25rem);   
+    letter-spacing: 0.04em; 
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+
+    background-color: var(--creme);
+    color: var(--escuro);
+}
+
+.coluna-movimentos:first-child h3 {
+    border-bottom: 2px solid var(--creme);
+    background-color: var(--escuro);
+    color: var(--creme);
+}
+
+.coluna-movimentos:last-child h3 {
+    border-bottom: 2px solid var(--creme);
+    background-color: var(--escuro);
+    color: var(--creme);
+}
+
+.coluna-movimentos p {
+    font-family: "Press Start 2P", system-ui;
+    font-weight: 300;
+    margin: 0;
+    padding: 6px 4px;
+    text-align: center;
+    font-size: clamp(9px, 1.1vw, 13px);
+}
+
+.coluna-movimentos p:nth-of-type(odd) {
+    background-color: rgba(51, 51, 51, 0.06);
+}
+
+@media (max-width: 900px) {
+    :root {
+        --casa-largura: min(10.5vw, 16vh, 100px);   /* sem histórico ao lado, o tabuleiro pode ocupar mais */
+    }
+
+    .painel {
+        width: 100%;
+        height: auto;
+        padding-top: 60px;           /* espaço para a barra superior, que é absoluta */
+        justify-content: flex-start;
+    }
+
+    .barra-superior {
+        width: 100%;
+        flex-wrap: wrap;             /* os botões de promoção quebram de linha */
+        gap: 8px;
+    }
+
+    .promocao {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    #historico-movimentos {
+        position: static;            /* sai do canto da tela e passa a ficar embaixo do tabuleiro */
+        width: auto;
+        max-height: 40vh;
+        margin-top: 24px;
+    }
+
+    .coluna-movimentos h3 {
+        font-size: clamp(0.7rem, 3.6vw, 1.1rem);
+    }
 }
