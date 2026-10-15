@@ -1,23 +1,14 @@
-#include "tipos.hpp"
-#include "constantes.hpp"
+#include "aval_mat.hpp"
 
 int avaliar_material(const Tabuleiro& tab) {
-  constexpr int VALORES[] = {
-      100,  // Peão
-      320,  // Cavalo
-      330,  // Bispo
-      500,  // Torre
-      900,  // Dama
-      20000     // Rei
-  };
-
   int score = 0;
   for (int tipo = 0; tipo < NUM_TIPOS; ++tipo) {
-    score += VALORES[tipo] *
-    tab.quantidade[idx(Cor::BRANCO)][tipo];
+    TipoPeca tpeca = static_cast<TipoPeca>(tipo);
+    score += VALOR_PECA[tipo] *
+    quantidade_de(tab, Cor::BRANCO, tpeca);
 
-    score -= VALORES[tipo] *
-    tab.quantidade[idx(Cor::PRETO)][tipo];
+    score -= VALOR_PECA[tipo] *
+    quantidade_de(tab, Cor::PRETO, tpeca);
   }
-  return score
+  return score;
 }
