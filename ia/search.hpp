@@ -1,1 +1,0 @@
-int minimax_alfa_beta(Tabuleiro *tabuleiro, int profundidade, int alfa, int beta, bool eh_maximizador);

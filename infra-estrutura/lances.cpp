@@ -139,7 +139,7 @@ void desfazer_lance(Tabuleiro& b, Lance m) {
     //Lado a jogar foi atualizado, desatualize ele (troque de cor)
 
     Quadrado origem = origem_do_lance(m), destino = destino_do_lance(m);
-    Cor cor_atual = oposta(b.estado.lado_a_jogar), cor_oponente = cor_atual;
+    Cor cor_atual = oposta(b.estado.lado_a_jogar), cor_oponente = b.estao.lado_a_jogar;
     TipoPeca tpeca = peca_em(b, destino).tpeca;
 
     if (eh_promocao(m)) {
