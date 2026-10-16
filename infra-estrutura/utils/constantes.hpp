@@ -1,0 +1,232 @@
+#pragma once
+#include <cstdint>
+#include <array>
+// ============================================================================
+// constantes.hpp - todas as constantes numéricas do motor.
+//
+// Regra: este arquivo NÃO depende de nenhum outro arquivo do projeto (só de
+// <cstdint>). Assim qualquer header pode incluí-lo sem criar dependência circular.
+// Constantes que dependem de tipos do projeto (ex.: SEM_LANCE, que é um Lance)
+// ficam junto do tipo, no respectivo header.
+// ============================================================================
+
+// ---------- Dimensões do tabuleiro ----------
+constexpr int NUM_CASAS   = 64;
+constexpr int NUM_COLUNAS = 8;
+constexpr int NUM_LINHAS  = 8;
+constexpr int NUM_DIAGONAIS = 15;
+
+// ---------- Dimensões das estruturas ----------
+constexpr int NUM_CORES         = 2;
+constexpr int NUM_TIPOS         = 6;     // peão, cavalo, bispo, torre, dama, rei
+constexpr int MAX_PECAS_TIPO    = 10;    // 8 peões, ou 2 + 8 promoções
+constexpr int TAMANHO_HISTORICO = 2048;  // máximo de meios-lances empilhados (partida + busca)
+constexpr int MAX_LANCES        = 256;   // lances por posição (o máximo real conhecido é 218)
+
+// ---------- Regras ----------
+constexpr int LIMITE_REGRA_50 = 100;     // 50 lances de cada lado = 100 meios-lances
+
+// ---------- Busca e pontuações ----------
+constexpr int MAX_PLY        = 128;      // distância máxima da raiz (inclui quiescence)
+constexpr int SCORE_INFINITO = 30000;    // maior que qualquer pontuação real; nunca vai para a TT
+constexpr int SCORE_MATE     = 29000;    // mate em 1. Mates mais longos valem SCORE_MATE - ply
+constexpr int SCORE_MATE_MIN = SCORE_MATE - MAX_PLY;  // acima disso (ou abaixo do negativo) é mate
+
+static_assert(SCORE_MATE < SCORE_INFINITO, "SCORE_INFINITO deve superar SCORE_MATE");
+static_assert(SCORE_INFINITO <= INT16_MAX, "a pontuação da TT é int16_t");
+
+// ---------- Valores das peças (em centipeões) ----------
+// Indexar com idx(TipoPeca): PEAO, CAVALO, BISPO, TORRE, DAMA, REI, PECA_VAZIA
+// uso: VALOR_PECA[idx(tpeca)]
+inline constexpr int VALOR_PECA[NUM_TIPOS + 1] = {100, 320, 330, 500, 900, 20000, 0};
+
+// ---------- Máscaras de colunas e linhas (Bitboards de 64 bits) ----------
+// Indexadas de 0 a 7: coluna A..H e linha 1..8 (mapeamento LERF: a1 = bit 0).
+// Cada dígito hexadecimal representa 4 bits.
+inline constexpr uint64_t MASCARA_COLUNAS[NUM_COLUNAS] = {
+    0x0101010101010101ULL, // Coluna A
+    // Ex.: o bit 0 de cada byte, ou seja, cada linha do tabuleiro vale 0000|0001:
+    /*
+    0000|0001
+    0000|0001
+    0000|0001
+    0000|0001
+    0000|0001
+    0000|0001
+    0000|0001
+    0000|0001
+    */
+    0x0202020202020202ULL, // Coluna B
+    0x0404040404040404ULL, // Coluna C
+    0x0808080808080808ULL, // Coluna D
+    0x1010101010101010ULL, // Coluna E
+    0x2020202020202020ULL, // Coluna F
+    0x4040404040404040ULL, // Coluna G
+    0x8080808080808080ULL  // Coluna H
+};
+
+inline constexpr uint64_t MASCARA_LINHAS[NUM_LINHAS] = {
+    0x00000000000000FFULL, // Linha 1
+    // Ex.: só o byte da linha 1 fica ligado:
+    /*
+    0000|0000
+    0000|0000
+    0000|0000
+    0000|0000
+    0000|0000
+    0000|0000
+    0000|0000
+    1111|1111
+    */
+    0x000000000000FF00ULL, // Linha 2
+    0x0000000000FF0000ULL, // Linha 3
+    0x00000000FF000000ULL, // Linha 4
+    0x000000FF00000000ULL, // Linha 5
+    0x0000FF0000000000ULL, // Linha 6
+    0x00FF000000000000ULL, // Linha 7
+    0xFF00000000000000ULL  // Linha 8
+};
+
+// ---------- Máscaras de diagonais (bitboards de 64 bits) ----------
+// Tabela com todas as 15 diagonais paralelas a a1-h8
+// O índice vai de 0 (a8: 1 casa) até 14 (h1: 1 casa), sendo o índice 7 a diagonal principal (a1-h8)
+inline constexpr uint64_t DIAGONAIS[NUM_DIAGONAIS] = {
+    0x0100000000000000ULL, // Diag 0  (a8)
+    0x0201000000000000ULL, // Diag 1  (a7-b8)
+    0x0402010000000000ULL, // Diag 2  (a6-c8)
+    0x0804020100000000ULL, // Diag 3  (a5-d8)
+    0x1008040201000000ULL, // Diag 4  (a4-e8)
+    0x2010080402010000ULL, // Diag 5  (a3-f8)
+    0x4020100804020100ULL, // Diag 6  (a2-g8)
+    0x8040201008040201ULL, // Diag 7  (a1-h8 - Principal)
+    0x0080402010080402ULL, // Diag 8  (b1-h7)
+    0x0000804020100804ULL, // Diag 9  (c1-h6)
+    0x0000008040201008ULL, // Diag 10 (d1-h5)
+    0x0000000080402010ULL, // Diag 11 (e1-h4)
+    0x0000000000804020ULL, // Diag 12 (f1-h3)
+    0x0000000000008040ULL, // Diag 13 (g1-h2)
+    0x0000000000000080ULL  // Diag 14 (h1)
+};
+
+// Tabela com todas as 15 antidiagonais paralelas a h1-a8
+// O índice vai de 0 (a1: 1 casa) até 14 (h8: 1 casa), sendo o índice 7 a antidiagonal principal (h1-a8)
+inline constexpr uint64_t ANTIDIAGONAIS[NUM_DIAGONAIS] = {
+    0x0000000000000001ULL, // Antidiag 0  (a1)
+    0x0000000000000102ULL, // Antidiag 1  (a2-b1)
+    0x0000000000010204ULL, // Antidiag 2  (a3-c1)
+    0x0000000001020408ULL, // Antidiag 3  (a4-d1)
+    0x0000000102040810ULL, // Antidiag 4  (a5-e1)
+    0x0000010204081020ULL, // Antidiag 5  (a6-f1)
+    0x0001020408102040ULL, // Antidiag 6  (a7-g1)
+    0x0102040810204080ULL, // Antidiag 7  (h1-a8 - Principal)
+    0x0204081020408000ULL, // Antidiag 8  (b8-h2)
+    0x0408102040800000ULL, // Antidiag 9  (c8-h3)
+    0x0810204080000000ULL, // Antidiag 10 (d8-h4)
+    0x1020408000000000ULL, // Antidiag 11 (e8-h5)
+    0x2040800000000000ULL, // Antidiag 12 (f8-h6)
+    0x4080000000000000ULL, // Antidiag 13 (g8-h7)
+    0x8000000000000000ULL  // Antidiag 14 (h8)
+};
+
+// ---------- Layout do array de chaves Zobrist (ver zobrist.hpp) ----------
+constexpr int ZOB_N_PECAS = NUM_CORES * NUM_TIPOS * NUM_CASAS;  // 768: cada (cor, tipo) em cada casa
+constexpr int ZOB_N_ROQUE = 16;                                 // uma por combinação dos 4 direitos
+constexpr int ZOB_N_EP    = NUM_COLUNAS;                        // uma por coluna de en passant
+
+constexpr int ZOB_PECAS = 0;
+constexpr int ZOB_ROQUE = ZOB_PECAS + ZOB_N_PECAS;
+constexpr int ZOB_EP    = ZOB_ROQUE + ZOB_N_ROQUE;
+constexpr int ZOB_LADO  = ZOB_EP + ZOB_N_EP;                    // 1 chave: vez das pretas
+constexpr int ZOB_TOTAL = ZOB_LADO + 1;                         // 793
+
+static_assert(ZOB_TOTAL == 793, "layout das chaves Zobrist mudou");
+
+using TabelaPecas = std::array<int, 64>;
+
+constexpr std::array<int, 64> TABELA_PEAO = {
+  0,  0,  0,  0,  0,  0,  0,  0,
+  50, 50, 50, 50, 50, 50, 50, 50,
+  10, 10, 20, 30, 30, 20, 10, 10,
+  5,  5, 10, 25, 25, 10,  5,  5,
+  0,  0,  0, 20, 20,  0,  0,  0,
+  5, -5,-10,  0,  0,-10, -5,  5,
+  5, 10, 10,-20,-20, 10, 10,  5,
+  0,  0,  0,  0,  0,  0,  0,  0
+};
+
+constexpr std::array<int, 64> TABELA_CAVALO = {
+  -50,-40,-30,-30,-30,-30,-40,-50,
+  -40,-20,  0,  0,  0,  0,-20,-40,
+  -30,  0, 10, 15, 15, 10,  0,-30,
+  -30,  5, 15, 20, 20, 15,  5,-30,
+  -30,  0, 15, 20, 20, 15,  0,-30,
+  -30,  5, 10, 15, 15, 10,  5,-30,
+  -40,-20,  0,  5,  5,  0,-20,-40,
+  -50,-40,-30,-30,-30,-30,-40,-50,
+};
+
+constexpr std::array<int, 64> TABELA_BISPO = {
+  -20,-10,-10,-10,-10,-10,-10,-20,
+  -10,  0,  0,  0,  0,  0,  0,-10,
+  -10,  0,  5, 10, 10,  5,  0,-10,
+  -10,  5,  5, 10, 10,  5,  5,-10,
+  -10,  0, 10, 10, 10, 10,  0,-10,
+  -10, 10, 10, 10, 10, 10, 10,-10,
+  -10,  5,  0,  0,  0,  0,  5,-10,
+  -20,-10,-10,-10,-10,-10,-10,-20,
+};
+
+constexpr std::array<int, 64> TABELA_TORRE = {
+   0,  0,  0,  0,  0,  0,  0,  0,
+   5, 10, 10, 10, 10, 10, 10,  5,
+  -5,  0,  0,  0,  0,  0,  0, -5,
+  -5,  0,  0,  0,  0,  0,  0, -5,
+  -5,  0,  0,  0,  0,  0,  0, -5,
+  -5,  0,  0,  0,  0,  0,  0, -5,
+  -5,  0,  0,  0,  0,  0,  0, -5,
+    0,  0,  0,  5,  5,  0,  0,  0
+};
+
+constexpr std::array<int, 64> TABELA_DAMA = {
+  -20,-10,-10, -5, -5,-10,-10,-20,
+  -10,  0,  0,  0,  0,  0,  0,-10,
+  -10,  0,  5,  5,  5,  5,  0,-10,
+  -5,  0,  5,  5,  5,  5,  0, -5,
+   0,  0,  5,  5,  5,  5,  0, -5,
+  -10,  5,  5,  5,  5,  5,  0,-10,
+  -10,  0,  5,  0,  0,  0,  0,-10,
+  -20,-10,-10, -5, -5,-10,-10,-20
+};
+
+// valores para o rei durante o inicio/meio do jogo
+constexpr std::array<int, 64> TABELA_REI_MEIO_JOGO = {
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -30,-40,-40,-50,-50,-40,-40,-30,
+  -20,-30,-30,-40,-40,-30,-30,-20,
+  -10,-20,-20,-20,-20,-20,-20,-10,
+   20, 20,  0,  0,  0,  0, 20, 20,
+   20, 30, 10,  0,  0, 10, 30, 20
+};
+
+// king end game
+constexpr std::array<int, 64> TABELA_REI_FINAL{
+  -50,-40,-30,-20,-20,-30,-40,-50,
+  -30,-20,-10,  0,  0,-10,-20,-30,
+  -30,-10, 20, 30, 30, 20,-10,-30,
+  -30,-10, 30, 40, 40, 30,-10,-30,
+  -30,-10, 30, 40, 40, 30,-10,-30,
+  -30,-10, 20, 30, 30, 20,-10,-30,
+  -30,-30,  0,  0,  0,  0,-30,-30,
+  -50,-30,-30,-30,-30,-30,-30,-50
+};
+
+constexpr std::array<TabelaPecas, NUM_TIPOS> TABELAS = {
+    TABELA_PEAO, 
+    TABELA_CAVALO, 
+    TABELA_BISPO, 
+    TABELA_TORRE, 
+    TABELA_DAMA, 
+    TABELA_REI_MEIO_JOGO
+};
