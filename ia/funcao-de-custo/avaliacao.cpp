@@ -1,5 +1,7 @@
 #include "avaliacao.hpp"
 
+
+// Função que avalia o score daquela jogada
 int avaliar(const Tabuleiro& tab){
   int score = 0;
 
