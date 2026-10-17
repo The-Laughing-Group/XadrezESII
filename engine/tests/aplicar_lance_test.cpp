@@ -1,22 +1,52 @@
 #include <gtest/gtest.h>
 #include <string>
+#include "xadrez/posicao.hpp"
 #include "xadrez/movimentos.hpp"
+#include "tabuleiro/tabuleiro.hpp"
+#include "lances.hpp"
+#include "../../infra-estrutura/movimentos.hpp"   // ListaLances e gerar_lances
 
 using namespace xadrez;
 
-// Monta um Movimento a partir de texto UCI ("e2e4", "e7e8q"), SEM validar se o lance é legal.
-static Movimento lance(const char* uci) {
+static TipoPeca tipoDaLetra(char c) {
+    switch (c) {
+        case 'q': return TipoPeca::DAMA;
+        case 'r': return TipoPeca::TORRE;
+        case 'b': return TipoPeca::BISPO;
+        default:  return TipoPeca::CAVALO;
+    }
+}
+
+// Procura entre os lances pseudo-legais da posição o que corresponde ao texto UCI
+// ("e2e4", "e7e8q"), SEM validar se deixa o rei em xeque. Assim os testes recebem
+// um Lance com as flags certas (captura, en passant, roque, promoção).
+static Lance lance(const Posicao& pos, const char* uci) {
     std::string s = uci;
-    Movimento m;
-    textoParaCasa(s.substr(0, 2), m.deLinha, m.deColuna);
-    textoParaCasa(s.substr(2, 2), m.paraLinha, m.paraColuna);
-    if (s.size() == 5) m.promocao = s[4];
-    return m;
+    int dl = 0, dc = 0, pl = 0, pc = 0;
+    textoParaCasa(s.substr(0, 2), dl, dc);
+    textoParaCasa(s.substr(2, 2), pl, pc);
+    Quadrado de   = criar_quadrado(static_cast<Coluna>(dc), static_cast<Linha>(dl));
+    Quadrado para = criar_quadrado(static_cast<Coluna>(pc), static_cast<Linha>(pl));
+
+    ListaLances lista;
+    gerar_lances(pos.b, lista);
+    for (int i = 0; i < lista.quantidade; ++i) {
+        Lance m = lista.lances[i];
+        if (origem_do_lance(m) != de || destino_do_lance(m) != para) continue;
+        if (s.size() == 5) {
+            if (eh_promocao(m) && tipo_da_promocao(m) == tipoDaLetra(s[4])) return m;
+        } else if (!eh_promocao(m)) {
+            return m;
+        }
+    }
+    ADD_FAILURE() << "lance nao gerado: " << uci;
+    return SEM_LANCE;
 }
 
 // Aplica o lance na posição do FEN e devolve o FEN resultante.
 static std::string depois(const char* fen, const char* uci) {
-    return aplicarLance(Posicao::deFen(fen), lance(uci)).paraFen();
+    Posicao p = Posicao::deFen(fen);
+    return aplicarLance(p, lance(p, uci)).paraFen();
 }
 
 // ---------- lances comuns ----------
@@ -45,10 +75,11 @@ TEST(AplicarLance, CapturaZeraMeioLances) {
 
 TEST(AplicarLance, PosicaoOriginalNaoMuda) {
     Posicao antes = Posicao::inicial();
-    Posicao nova = aplicarLance(antes, lance("e2e4"));
+    Posicao nova = aplicarLance(antes, lance(antes, "e2e4"));
     EXPECT_EQ(antes.paraFen(), FEN_INICIAL);
-    EXPECT_EQ(nova.tabuleiro[4][4], 'P');
-    EXPECT_EQ(antes.tabuleiro[4][4], VAZIA);
+    EXPECT_EQ(peca_em(nova.b, Quadrado::e4).tpeca, TipoPeca::PEAO);
+    EXPECT_EQ(peca_em(nova.b, Quadrado::e4).cor, Cor::BRANCO);
+    EXPECT_TRUE(casa_vazia(antes.b, Quadrado::e4));
 }
 
 // ---------- en passant ----------

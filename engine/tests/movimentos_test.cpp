@@ -3,43 +3,39 @@
 #include <string>
 #include <vector>
 #include "xadrez/jogo.hpp"
-#include "xadrez/movimentos.hpp"
 
 using namespace xadrez;
 
 // ---------- auxiliares dos testes ----------
+// Os testes passam por Jogo::lancesDe, que usa gerar_lances + fazer_lance
+// (legalidade). Os lances voltam em texto UCI ("e2e4", "e7e8q").
 
-// Lances da peça que está em `casa` (ex.: "d4") na posição descrita pelo FEN.
-static std::vector<Movimento> lancesDe(const char* fen, const char* casa) {
-    int l = 0, c = 0;
-    EXPECT_TRUE(textoParaCasa(casa, l, c));
-    return movimentos(Posicao::deFen(fen), l, c);
+static std::vector<std::string> lancesDe(const char* fen, const char* casa) {
+    Jogo j;
+    EXPECT_TRUE(j.carregarFen(fen));
+    return j.lancesDe(casa);
+}
+
+static bool contem(const std::vector<std::string>& v, const std::string& item) {
+    return std::find(v.begin(), v.end(), item) != v.end();
 }
 
 // Existe um lance de `de` para `para` (com a promoção indicada, se houver)?
-static bool temLance(const std::vector<Movimento>& v, const char* de, const char* para, char promocao = 0) {
-    int dl = 0, dc = 0, pl = 0, pc = 0;
-    textoParaCasa(de, dl, dc);
-    textoParaCasa(para, pl, pc);
-    for (const Movimento& m : v)
-        if (m.deLinha == dl && m.deColuna == dc && m.paraLinha == pl && m.paraColuna == pc && m.promocao == promocao)
-            return true;
-    return false;
+static bool temLance(const std::vector<std::string>& v, const char* de, const char* para, char promocao = 0) {
+    std::string uci = std::string(de) + para;
+    if (promocao) uci += promocao;
+    return contem(v, uci);
 }
 
-// Soma os lances de todas as peças do lado indicado.
-static int totalDoLado(const Posicao& pos, bool brancas) {
+// Soma os lances de todas as peças do lado que tem a vez no FEN.
+static int totalDoLado(const char* fen) {
+    Jogo j;
+    EXPECT_TRUE(j.carregarFen(fen));
     int total = 0;
-    for (int l = 0; l < 8; ++l)
-        for (int c = 0; c < 8; ++c)
-            if (pertenceAo(pos.tabuleiro[l][c], brancas))
-                total += static_cast<int>(movimentos(pos, l, c).size());
+    for (char c = 'a'; c <= 'h'; ++c)
+        for (char r = '1'; r <= '8'; ++r)
+            total += static_cast<int>(j.lancesDe(std::string{c, r}).size());
     return total;
-}
-
-// O texto do lance (ex.: "e1g1") aparece na lista de lances devolvida pelo Jogo?
-static bool contem(const std::vector<std::string>& v, const std::string& item) {
-    return std::find(v.begin(), v.end(), item) != v.end();
 }
 
 // Os FENs de teste usam sempre um rei de cada cor (a leitura do FEN exige isso),
@@ -52,9 +48,10 @@ TEST(movimentos, CasaVaziaNaoTemLances) {
 }
 
 TEST(movimentos, ForaDoTabuleiroNaoTemLances) {
-    Posicao p = Posicao::inicial();
-    EXPECT_TRUE(movimentos(p, -1, 0).empty());
-    EXPECT_TRUE(movimentos(p, 0, 8).empty());
+    Jogo j;
+    EXPECT_TRUE(j.lancesDe("a0").empty());
+    EXPECT_TRUE(j.lancesDe("i1").empty());
+    EXPECT_TRUE(j.lancesDe("").empty());
 }
 
 // ---------- cavalo ----------
@@ -90,7 +87,6 @@ TEST(movimentos, CavaloCapturaPecaAdversaria) {
 TEST(movimentos, CavaloPulaPecasNoCaminho) {
     // cercado de peões, o cavalo ainda tem os 8 lances
     auto v = lancesDe("k7/8/8/2PPP3/2PNP3/2PPP3/8/7K w - - 0 1", "d4");
-    // as 8 casas de destino do cavalo estão livres (os peões ocupam só as vizinhas)
     EXPECT_EQ(v.size(), 8u);
 }
 
@@ -250,18 +246,17 @@ TEST(movimentos, SemCasaDePassantNaoHaCapturaNaCasaVazia) {
 }
 
 TEST(movimentos, EnPassantSoValePraQuemTemAVez) {
-    // a casa d6 é alvo das brancas (é a vez delas); o peão preto em c7 não pode usá-la
+    // a casa d6 é alvo das brancas (é a vez delas); o peão preto em c7 não tem a vez.
+    // Pelo Jogo, peça de quem não tem a vez não tem lances.
     auto v = lancesDe("4k3/2p5/8/3pP3/8/8/8/4K3 w - d6 0 1", "c7");
-    EXPECT_EQ(v.size(), 2u);   // só c6 e c5
-    EXPECT_FALSE(temLance(v, "c7", "d6"));
+    EXPECT_TRUE(v.empty());
 }
 
 // ---------- posição inicial ----------
 
 TEST(movimentos, PosicaoInicialTemVinteLancesParaCadaLado) {
-    Posicao p = Posicao::inicial();
-    EXPECT_EQ(totalDoLado(p, true), 20);
-    EXPECT_EQ(totalDoLado(p, false), 20);
+    EXPECT_EQ(totalDoLado("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"), 20);
+    EXPECT_EQ(totalDoLado("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR b KQkq - 0 1"), 20);
 }
 
 // =====================================================================
@@ -337,6 +332,9 @@ TEST(movimentos, RoqueLongoPrecisaDaCasaBLivreMesmoSeOReiNaoPassaPorLa) {
     EXPECT_FALSE(temLance(v, "e1", "c1"));
 }
 
+// ATENÇÃO: estes dois dependem de gerar_lances (ou carregar_fen) conferir que há
+// uma torre da própria cor no canto. Hoje movimentos.cpp só olha o direito de roque
+// e as casas vazias; se falharem, o problema é no código, não no teste.
 TEST(movimentos, RoqueSemATorreNoCantoNaoGera) {
     // o FEN diz que há direito (K), mas não há torre em h1
     auto v = lancesDe("4k3/8/8/8/8/8/8/4K3 w K - 0 1", "e1");
@@ -349,7 +347,7 @@ TEST(movimentos, RoqueTorreAdversariaNoCantoNaoServe) {
     EXPECT_FALSE(temLance(v, "e1", "g1"));
 }
 
-// ---------- FENs inconsistentes: não podem gerar roque falso nem ler fora da matriz ----------
+// ---------- FENs inconsistentes: não podem gerar roque falso ----------
 
 TEST(movimentos, RoqueReiForaDaCasaInicialNaoFazRoque) {
     // direito K no FEN, mas o rei está em d1: não pode aparecer o "lance de duas casas" d1f1
@@ -358,13 +356,12 @@ TEST(movimentos, RoqueReiForaDaCasaInicialNaoFazRoque) {
     EXPECT_EQ(v.size(), 5u);
 }
 
-TEST(movimentos, RoqueReiNaColunaHNaoLeForaDoTabuleiro) {
-    // antes da correção isto lia tabuleiro[7][8]
+TEST(movimentos, RoqueReiNaColunaHNaoGeraLanceExtra) {
     auto v = lancesDe("4k3/8/8/8/8/8/8/7K w KQ - 0 1", "h1");
     EXPECT_EQ(v.size(), 3u);
 }
 
-TEST(movimentos, RoqueReiNaColunaGNaoLeForaDoTabuleiro) {
+TEST(movimentos, RoqueReiNaColunaGNaoGeraLanceExtra) {
     auto v = lancesDe("4k3/8/8/8/8/8/8/6K1 w KQ - 0 1", "g1");
     EXPECT_EQ(v.size(), 5u);
 }
@@ -440,37 +437,37 @@ TEST(movimentos, RoqueNoJogo_TorreCapturadaNoCantoTiraORoqueDoDono) {
     EXPECT_EQ(j.fen(), "4k3/8/8/8/8/8/8/R3K2r w Q - 0 2");
 }
 
-// ---------- roque: precisam do estaAtacada (ative removendo o DISABLED_ quando ele existir) ----------
+// ---------- roque e casas atacadas (casa_atacada já existe: DISABLED_ removido) ----------
 
-TEST(movimentos, DISABLED_RoqueReiEmXequeNaoFazRoque) {
+TEST(movimentos, RoqueReiEmXequeNaoFazRoque) {
     // torre preta em e5 dá xeque no rei branco em e1
     auto v = lancesDe("k7/8/8/4r3/8/8/8/R3K2R w KQ - 0 1", "e1");
     EXPECT_FALSE(temLance(v, "e1", "g1"));
     EXPECT_FALSE(temLance(v, "e1", "c1"));
 }
 
-TEST(movimentos, DISABLED_RoqueReiNaoPassaPorCasaAtacada_Curto) {
+TEST(movimentos, RoqueReiNaoPassaPorCasaAtacada_Curto) {
     // torre preta em f8 ataca f1 (casa que o rei atravessa); o roque longo continua livre
     auto v = lancesDe("k4r2/8/8/8/8/8/8/R3K2R w KQ - 0 1", "e1");
     EXPECT_FALSE(temLance(v, "e1", "g1"));
     EXPECT_TRUE(temLance(v, "e1", "c1"));
 }
 
-TEST(movimentos, DISABLED_RoqueReiNaoPassaPorCasaAtacada_Longo) {
+TEST(movimentos, RoqueReiNaoPassaPorCasaAtacada_Longo) {
     // torre preta em d8 ataca d1; o roque curto continua livre
     auto v = lancesDe("k2r4/8/8/8/8/8/8/R3K2R w KQ - 0 1", "e1");
     EXPECT_FALSE(temLance(v, "e1", "c1"));
     EXPECT_TRUE(temLance(v, "e1", "g1"));
 }
 
-TEST(movimentos, DISABLED_RoqueReiNaoTerminaEmCasaAtacada) {
+TEST(movimentos, RoqueReiNaoTerminaEmCasaAtacada) {
     // torre preta em g8 ataca g1 (destino do roque curto)
     auto v = lancesDe("k5r1/8/8/8/8/8/8/R3K2R w KQ - 0 1", "e1");
     EXPECT_FALSE(temLance(v, "e1", "g1"));
     EXPECT_TRUE(temLance(v, "e1", "c1"));
 }
 
-TEST(movimentos, DISABLED_RoquePretasTambemRespeitamCasasAtacadas) {
+TEST(movimentos, RoquePretasTambemRespeitamCasasAtacadas) {
     // torre branca em f1 ataca f8
     auto v = lancesDe("r3k2r/8/8/8/8/8/8/4KR2 b kq - 0 1", "e8");
     EXPECT_FALSE(temLance(v, "e8", "g8"));

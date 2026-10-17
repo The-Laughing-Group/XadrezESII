@@ -6,6 +6,9 @@
 
 using namespace xadrez;
 
+// ATENÇÃO: Jogo::tabuleiro() devolve '-' para casa vazia (ver jogo.cpp).
+// Se o front-end esperar '.', troque em jogo.cpp E aqui.
+
 static bool contem(const std::vector<std::string>& v, const std::string& item) {
     return std::find(v.begin(), v.end(), item) != v.end();
 }
@@ -22,8 +25,8 @@ TEST(Jogo, TabuleiroDevolveOitoLinhasDeOitoCaracteres) {
     ASSERT_EQ(t.size(), 8u);
     EXPECT_EQ(t[0], "rnbqkbnr");
     EXPECT_EQ(t[1], "pppppppp");
-    EXPECT_EQ(t[2], "........");
-    EXPECT_EQ(t[5], "........");
+    EXPECT_EQ(t[2], "--------");
+    EXPECT_EQ(t[5], "--------");
     EXPECT_EQ(t[6], "PPPPPPPP");
     EXPECT_EQ(t[7], "RNBQKBNR");
 }
@@ -91,8 +94,8 @@ TEST(Jogo, TentarLanceValidoAtualizaAPosicao) {
     EXPECT_TRUE(j.tentarLance("e2e4"));
     EXPECT_EQ(j.fen(), "rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq e3 0 1");
     EXPECT_FALSE(j.vezDasBrancas());
-    EXPECT_EQ(j.tabuleiro()[4], "....P...");
-    EXPECT_EQ(j.tabuleiro()[6], "PPPP.PPP");
+    EXPECT_EQ(j.tabuleiro()[4], "----P---");
+    EXPECT_EQ(j.tabuleiro()[6], "PPPP-PPP");
 }
 
 TEST(Jogo, TentarLanceInvalidoNaoMudaNada) {

@@ -1,23 +1,26 @@
 #include <gtest/gtest.h>
 #include <stdexcept>
 #include "xadrez/posicao.hpp"
+#include "tabuleiro/tabuleiro.hpp"
 
 using namespace xadrez;
 
-TEST(Casas, TextoParaMatriz) {
+// Convenção nova (LERF): linha 0 = fileira 1, linha 7 = fileira 8.
+
+TEST(Casas, TextoParaCasa) {
     int l = -1, c = -1;
     ASSERT_TRUE(textoParaCasa("a8", l, c));
-    EXPECT_EQ(l, 0); EXPECT_EQ(c, 0);
+    EXPECT_EQ(l, 7); EXPECT_EQ(c, 0);
     ASSERT_TRUE(textoParaCasa("h1", l, c));
-    EXPECT_EQ(l, 7); EXPECT_EQ(c, 7);
+    EXPECT_EQ(l, 0); EXPECT_EQ(c, 7);
     ASSERT_TRUE(textoParaCasa("e4", l, c));
-    EXPECT_EQ(l, 4); EXPECT_EQ(c, 4);
+    EXPECT_EQ(l, 3); EXPECT_EQ(c, 4);
 }
 
-TEST(Casas, MatrizParaTexto) {
-    EXPECT_EQ(casaParaTexto(0, 0), "a8");
-    EXPECT_EQ(casaParaTexto(7, 7), "h1");
-    EXPECT_EQ(casaParaTexto(6, 4), "e2");
+TEST(Casas, CasaParaTexto) {
+    EXPECT_EQ(casaParaTexto(0, 0), "a1");
+    EXPECT_EQ(casaParaTexto(7, 7), "h8");
+    EXPECT_EQ(casaParaTexto(1, 4), "e2");
 }
 
 TEST(Casas, TextoInvalido) {
@@ -28,19 +31,23 @@ TEST(Casas, TextoInvalido) {
     EXPECT_FALSE(textoParaCasa("", l, c));
 }
 
-TEST(Fen, PosicaoInicialNaMatriz) {
+TEST(Fen, PosicaoInicialNoTabuleiro) {
     Posicao p = Posicao::inicial();
-    EXPECT_EQ(p.tabuleiro[0][0], 'r');   // torre preta em a8
-    EXPECT_EQ(p.tabuleiro[0][4], 'k');   // rei preto em e8
-    EXPECT_EQ(p.tabuleiro[1][3], 'p');   // peão preto em d7
-    EXPECT_EQ(p.tabuleiro[4][4], VAZIA); // e4 vazia
-    EXPECT_EQ(p.tabuleiro[6][4], 'P');   // peão branco em e2
-    EXPECT_EQ(p.tabuleiro[7][4], 'K');   // rei branco em e1
-    EXPECT_TRUE(p.vezDasBrancas);
-    EXPECT_TRUE(p.rocaBrancasRei && p.rocaBrancasDama && p.rocaPretasRei && p.rocaPretasDama);
-    EXPECT_EQ(p.passantLinha, -1);
-    EXPECT_EQ(p.meioLances, 0);
-    EXPECT_EQ(p.numeroLance, 1);
+    EXPECT_EQ(peca_em(p.b, Quadrado::a8).tpeca, TipoPeca::TORRE);
+    EXPECT_EQ(peca_em(p.b, Quadrado::a8).cor, Cor::PRETO);
+    EXPECT_EQ(peca_em(p.b, Quadrado::e8).tpeca, TipoPeca::REI);
+    EXPECT_EQ(peca_em(p.b, Quadrado::d7).tpeca, TipoPeca::PEAO);
+    EXPECT_EQ(peca_em(p.b, Quadrado::d7).cor, Cor::PRETO);
+    EXPECT_TRUE(casa_vazia(p.b, Quadrado::e4));
+    EXPECT_EQ(peca_em(p.b, Quadrado::e2).tpeca, TipoPeca::PEAO);
+    EXPECT_EQ(peca_em(p.b, Quadrado::e2).cor, Cor::BRANCO);
+    EXPECT_EQ(peca_em(p.b, Quadrado::e1).tpeca, TipoPeca::REI);
+    EXPECT_EQ(peca_em(p.b, Quadrado::e1).cor, Cor::BRANCO);
+
+    EXPECT_EQ(p.b.estado.lado_a_jogar, Cor::BRANCO);
+    EXPECT_EQ(p.b.estado.direitos_roque, TODOS_ROQUES);
+    EXPECT_EQ(p.b.estado.en_passant, Quadrado::quadrado_vazio);
+    EXPECT_EQ(p.b.estado.contador_50, 0);
 }
 
 TEST(Fen, IdaEVolta) {
@@ -56,8 +63,8 @@ TEST(Fen, IdaEVolta) {
 
 TEST(Fen, ComCamposOpcionaisAusentes) {
     Posicao p = Posicao::deFen("4k3/8/8/8/8/8/8/4K3 w - -");
-    EXPECT_EQ(p.meioLances, 0);
-    EXPECT_EQ(p.numeroLance, 1);
+    EXPECT_EQ(p.b.estado.contador_50, 0);
+    EXPECT_EQ(p.paraFen(), "4k3/8/8/8/8/8/8/4K3 w - - 0 1");
 }
 
 TEST(Fen, Invalidos) {

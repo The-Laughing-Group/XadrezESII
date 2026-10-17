@@ -1,13 +1,31 @@
 #include "xadrez/jogo.hpp"
 #include <stdexcept>
-#include "xadrez/movimentos.hpp"
+#include "xadrez/posicao.hpp"
+#include "tabuleiro/tabuleiro.hpp"
+#include "../../../infra-estrutura/movimentos.hpp"
+#include "lances.hpp"
+#include "../../engine/include/xadrez/tipos.hpp"
+#include <stdexcept>
+#include <vector>
+#include <string>
 
 namespace xadrez {
 
-// Converte um lance para texto UCI: origem + destino (+ peça de promoção, se houver).
-static std::string movimentoParaUci(const Movimento& m) {
-    std::string uci = casaParaTexto(m.deLinha, m.deColuna) + casaParaTexto(m.paraLinha, m.paraColuna);
-    if (m.promocao != 0) uci += m.promocao;
+// Auxiliar: Converte um Lance de 16 bits para a notação de texto UCI esperada pelo front-end (ex: "e2e4" ou "e7e8q")
+static std::string lanceParaUci(Lance m) {
+    Quadrado origem = origem_do_lance(m);
+    Quadrado destino = destino_do_lance(m);
+
+    std::string uci = casaParaTexto(static_cast<int>(linha_de(origem)), static_cast<int>(coluna_de(origem))) +
+                      casaParaTexto(static_cast<int>(linha_de(destino)), static_cast<int>(coluna_de(destino)));
+
+    if (eh_promocao(m)) {
+        TipoPeca promo = tipo_da_promocao(m);
+        if (promo == TipoPeca::DAMA) uci += 'q';
+        else if (promo == TipoPeca::TORRE) uci += 'r';
+        else if (promo == TipoPeca::BISPO) uci += 'b';
+        else if (promo == TipoPeca::CAVALO) uci += 'n';
+    }
     return uci;
 }
 
@@ -27,55 +45,85 @@ std::string Jogo::fen() const {
 }
 
 bool Jogo::vezDasBrancas() const {
-    return pos_.vezDasBrancas;
+    // Lê diretamente da estrutura de estado otimizada
+    return pos_.b.estado.lado_a_jogar == Cor::BRANCO;
 }
 
 std::vector<std::string> Jogo::tabuleiro() const {
     std::vector<std::string> linhas;
-    for (int l = 0; l < 8; ++l)
-        linhas.emplace_back(pos_.tabuleiro[l], 8);   // 8 caracteres da linha l
+    char CARACTERE[NUM_CORES][NUM_TIPOS] = {
+        {'P', 'N', 'B', 'R', 'Q', 'K'},   // brancas  (índice 0)
+        {'p', 'n', 'b', 'r', 'q', 'k'}    // pretas   (índice 1)
+    };
+
+    // O front-end espera que o índice 0 do vetor seja a linha 8 do xadrez, e o índice 7 seja a linha 1.
+    // Na nossa arquitetura LERF (0 a 63), a linha 7 corresponde à fileira 8. Logo, varremos de 7 a 0.
+    for (int l = 7; l >= 0; --l) {
+        std::string linha_str = "";
+        for (int c = 0; c < 8; ++c) {
+            Quadrado sq = criar_quadrado(static_cast<Coluna>(c), static_cast<Linha>(l));
+            if (casa_vazia(pos_.b, sq)) {
+                linha_str += '-'; // Mantém o caractere de casa vazia para o front-end ler corretamente
+            } else {
+                Peca p = peca_em(pos_.b, sq);
+                linha_str += CARACTERE[idx(p.cor)][idx(p.tpeca)];
+            }
+        }
+        linhas.emplace_back(linha_str);
+    }
     return linhas;
 }
 
 std::vector<std::string> Jogo::lancesDe(const std::string& casa) const {
     std::vector<std::string> lances;
-
     int linha = 0, coluna = 0;
+
     if (!textoParaCasa(casa, linha, coluna)) return lances;
 
-    // Só a peça de quem tem a vez pode se mover (casa vazia também cai aqui)
-    if (!pertenceAo(pos_.tabuleiro[linha][coluna], pos_.vezDasBrancas)) return lances;
+    Quadrado origem = criar_quadrado(static_cast<Coluna>(coluna), static_cast<Linha>(linha));
 
-    for (const Movimento& m : movimentos(pos_, linha, coluna))
-        lances.push_back(movimentoParaUci(m));
+    if (casa_vazia(pos_.b, origem)) return lances;
+
+    Peca p = peca_em(pos_.b, origem);
+    // O jogador só pode pedir lances da peça se for do lado que tem a vez
+    if (p.cor != pos_.b.estado.lado_a_jogar) return lances;
+
+    ListaLances lista;
+    gerar_lances(pos_.b, lista);
+
+    for (int i = 0; i < lista.quantidade; ++i) {
+        Lance m = lista.lances[i];
+        if (origem_do_lance(m) == origem) {
+            // Teste de legalidade: simula o lance para ver se o rei fica em xeque
+            Posicao copia = pos_;
+            if (fazer_lance(copia.b, m)) {
+                lances.push_back(lanceParaUci(m));
+            }
+        }
+    }
     return lances;
 }
 
-bool Jogo::tentarLance(const std::string& uci) {
-    // Formato UCI: 4 caracteres ("e2e4") ou 5 com a promoção ("e7e8q")
-    if (uci.size() != 4 && uci.size() != 5) return false;
+bool Jogo::tentarLance(const std::string& uci_in) {
+    if (uci_in.size() != 4 && uci_in.size() != 5) return false;
+    std::string uci = uci_in;
+    if (uci.size() == 5) uci[4] = static_cast<char>(std::tolower(static_cast<unsigned char>(uci[4])));
 
-    int deLinha = 0, deColuna = 0, paraLinha = 0, paraColuna = 0;
-    if (!textoParaCasa(uci.substr(0, 2), deLinha, deColuna)) return false;
-    if (!textoParaCasa(uci.substr(2, 2), paraLinha, paraColuna)) return false;
+    ListaLances lista;
+    gerar_lances(pos_.b, lista);
 
-    char promocao = 0;
-    if (uci.size() == 5) {
-        promocao = uci[4];
-        if (promocao >= 'A' && promocao <= 'Z') promocao = static_cast<char>(promocao - 'A' + 'a');
-    }
-
-    // Só a peça de quem tem a vez pode se mover
-    if (!pertenceAo(pos_.tabuleiro[deLinha][deColuna], pos_.vezDasBrancas)) return false;
-
-    // Validar = o lance precisa estar na lista de lances daquela peça
-    for (const Movimento& m : movimentos(pos_, deLinha, deColuna)) {
-        if (m.paraLinha == paraLinha && m.paraColuna == paraColuna && m.promocao == promocao) {
-            pos_ = aplicarLance(pos_, m);
-            return true;
+    // Varre os lances válidos gerados pelo motor procurando pelo UCI fornecido
+    for (int i = 0; i < lista.quantidade; ++i) {
+        Lance m = lista.lances[i];
+        if (lanceParaUci(m) == uci) {
+            Posicao copia = pos_;
+            if (fazer_lance(copia.b, m)) {
+                pos_ = copia; // O lance é legal, o jogo avança
+                return true;
+            }
         }
     }
     return false;
 }
 
-}
+} // namespace xadrez
