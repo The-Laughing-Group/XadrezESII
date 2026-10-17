@@ -9,23 +9,23 @@
 static uint8_t novos_direitos(uint8_t r, Quadrado origem, Quadrado destino) {
     for (Quadrado q : {origem, destino}) {
         switch (q) {
-            case e1: 
-                r &= ~(ROQUE_BRANCO_REI | ROQUE_BRANCO_DAMA); 
+            case e1:
+                r &= ~(ROQUE_BRANCO_REI | ROQUE_BRANCO_DAMA);
                 break;
-            case h1: 
-                r &= ~ROQUE_BRANCO_REI;  
+            case h1:
+                r &= ~ROQUE_BRANCO_REI;
                 break;
-            case a1: 
-                r &= ~ROQUE_BRANCO_DAMA; 
+            case a1:
+                r &= ~ROQUE_BRANCO_DAMA;
                 break;
-            case e8: 
-                r &= ~(ROQUE_PRETO_REI | ROQUE_PRETO_DAMA);   
+            case e8:
+                r &= ~(ROQUE_PRETO_REI | ROQUE_PRETO_DAMA);
                 break;
-            case h8: 
-                r &= ~ROQUE_PRETO_REI;   
+            case h8:
+                r &= ~ROQUE_PRETO_REI;
                 break;
-            case a8: 
-                r &= ~ROQUE_PRETO_DAMA;  
+            case a8:
+                r &= ~ROQUE_PRETO_DAMA;
                 break;
             default: break;
         }
@@ -53,7 +53,7 @@ bool fazer_lance(Tabuleiro& b, Lance m) {
 
     //Se for lance de peao ou captura, o contador de empate 50 volta pra zero
     if (tpeca == TipoPeca::PEAO || eh_captura(m)) b.estado.contador_50 = 0;
-    else b.estado.contador_50++;    
+    else b.estado.contador_50++;
 
     // O en passant antigo expira em qualquer lance (sai da chave, se existia)
     if (b.estado.en_passant != Quadrado::quadrado_vazio) chave ^= ZOBRIST[ZOB_EP + coluna_de(b.estado.en_passant)];
@@ -74,7 +74,7 @@ bool fazer_lance(Tabuleiro& b, Lance m) {
         Peca p = peca_em(b, cap);
         //O tipo de peça que foi capturada, serve para depois desempilhar
         b.estado.capturada = p.tpeca;
-    
+
         remover_peca(b, cor_oponente, b.estado.capturada, cap);
         chave ^= ZOBRIST[zob_peca(cor_oponente, p.tpeca, cap)];
     }
@@ -92,7 +92,7 @@ bool fazer_lance(Tabuleiro& b, Lance m) {
             mover_peca(b, cor_atual, TipoPeca::PEAO, origem, destino);
             b.estado.en_passant = static_cast<Quadrado>((origem + destino) / 2);
             chave ^= ZOBRIST[ZOB_EP + coluna_de(b.estado.en_passant)];
-        } 
+        }
         //Se não, movemos a peça normalmente
         else mover_peca(b, cor_atual, tpeca, origem, destino);
 
@@ -108,7 +108,7 @@ bool fazer_lance(Tabuleiro& b, Lance m) {
         const Quadrado t_destino = lado_rei ? (branco ? f1 : f8) : (branco ? d1 : d8);
 
         mover_peca(b, cor_atual, TipoPeca::TORRE, t_origem, t_destino);
-        chave ^= ZOBRIST[zob_peca(cor_atual, TipoPeca::TORRE, t_origem)] 
+        chave ^= ZOBRIST[zob_peca(cor_atual, TipoPeca::TORRE, t_origem)]
               ^  ZOBRIST[zob_peca(cor_atual, TipoPeca::TORRE, t_destino)];
     }
 
@@ -139,7 +139,7 @@ void desfazer_lance(Tabuleiro& b, Lance m) {
     //Lado a jogar foi atualizado, desatualize ele (troque de cor)
 
     Quadrado origem = origem_do_lance(m), destino = destino_do_lance(m);
-    Cor cor_atual = oposta(b.estado.lado_a_jogar), cor_oponente = b.estao.lado_a_jogar;
+    Cor cor_atual = oposta(b.estado.lado_a_jogar), cor_oponente = b.estado.lado_a_jogar;
     TipoPeca tpeca = peca_em(b, destino).tpeca;
 
     if (eh_promocao(m)) {
@@ -169,9 +169,9 @@ void desfazer_lance(Tabuleiro& b, Lance m) {
         Quadrado origem_mov, destino_mov;
         bool branco = (cor_atual == Cor::BRANCO);
         bool lado_rei = flags_do_lance(m) == LANCE_ROQUE_REI;
-        origem_mov = lado_rei ? (branco ? f1 : f8) : (branco ? d1 : d8); 
+        origem_mov = lado_rei ? (branco ? f1 : f8) : (branco ? d1 : d8);
         destino_mov = lado_rei ? (branco ? h1 : h8) : (branco ? a1 : a8);
-        
+
         mover_peca(b, cor_atual, TipoPeca::TORRE, origem_mov, destino_mov);
     }
 

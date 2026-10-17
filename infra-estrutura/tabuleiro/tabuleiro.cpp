@@ -1,5 +1,5 @@
 #include "tabuleiro.hpp"
-#include "bitboard.hpp"
+#include "../../infra-estrutura/bitboard/bitboard.hpp"
 #include <iostream>
 
 void limpar(Tabuleiro& b) {
