@@ -6,6 +6,7 @@
 namespace xadrez {
     struct Posicao {
         Tabuleiro b;
+        int numeroLance = 1;   // número do lance completo da FEN (sobe depois do lance das pretas)
 
         Posicao();
         static Posicao inicial();

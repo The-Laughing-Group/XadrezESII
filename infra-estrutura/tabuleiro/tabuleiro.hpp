@@ -54,7 +54,7 @@ bool verificar_consistencia(const Tabuleiro& b);
 void imprimir(const Tabuleiro& b);
 
 // Monta uma posição a partir de uma FEN (para testes). Devolve false se a FEN for inválida.
-bool carregar_fen(Tabuleiro& b, const std::string& fen);
+// bool carregar_fen(Tabuleiro& b, const std::string& fen); // movido para engine
 
 // Gera a FEN da posição atual.
 /*
@@ -86,4 +86,4 @@ KQkq: Ambos os lados têm direito a ambos os roques.
 
 1: Lance número 1.
 */
-std::string gerar_fen(const Tabuleiro& b);
+// std::string gerar_fen(const Tabuleiro& b); // movido para engine
