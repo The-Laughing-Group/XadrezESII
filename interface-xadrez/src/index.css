@@ -16,17 +16,6 @@ body {
     margin: 0;
 }
 
-#game {
-    padding: 20px;
-    background-image: url("./assets/fundos/bg4.gif");
-    background-position: center;        
-    background-size: cover;
-    background-repeat: no-repeat;
-    image-rendering: pixelated;
-    box-sizing: border-box;           
-    min-height: 100vh;
-}
-
 #inicial {
     box-sizing: border-box;
     min-height: 100vh;
@@ -61,7 +50,6 @@ body {
     flex-direction: column;
     align-items: stretch;        
     gap: 20px;
-    width: clamp(180px, 20vw, 260px);
 }
 
 .menu-inicial .botao-pixel {
@@ -112,6 +100,62 @@ body {
 @keyframes subir {
     from { transform: translateY(100vh); }    /* começa abaixo da tela */
     to   { transform: translateY(-20vh); }    /* termina acima da tela */
+}
+
+#modos {
+    display: flex;
+    gap: 60px;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    min-width: 100vw;
+    background-color: black;
+
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+
+    --moldura:
+        0 calc(-1 * var(--pixel-ui)) 0 0 var(--claro),
+        0 var(--pixel-ui) 0 0 var(--claro),
+        calc(-1 * var(--pixel-ui)) 0 0 0 var(--claro),
+        var(--pixel-ui) 0 0 0 var(--claro);
+}
+
+.botao-pixel-modo {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    padding: 8% 5%;
+    
+    font-size: 30px;
+    text-decoration: none;
+    color: var(--escuro);
+
+    background-color: var(--claro);
+    box-shadow: var(--moldura);
+}
+
+.botao-pixel-modo:hover {
+    transform: translateY(-2%);
+    cursor: pointer;
+}
+
+.botao-pixel-modo img {
+    image-rendering: pixelated;
+}
+
+#game {
+    padding: 20px;
+    background-image: url("./assets/fundos/bg4.gif");
+    background-position: center;        
+    background-size: cover;
+    background-repeat: no-repeat;
+    image-rendering: pixelated;
+    box-sizing: border-box;           
+    min-height: 100vh;
 }
 
 .painel {
@@ -352,6 +396,19 @@ body {
 @media (max-width: 900px) {
     :root {
         --casa-largura: min(10.5vw, 16vh, 100px);   /* sem histórico ao lado, o tabuleiro pode ocupar mais */
+    }
+
+    .logo-jogo {
+        width: 90vw;
+    }
+
+    #modos {
+        flex-direction: column;
+    }
+
+    .botao-pixel-modo {
+        /* padding: ; */
+        font-size: 22px;
     }
 
     .painel {
