@@ -1,7 +1,6 @@
 :root {
     --casa-largura: min(7.5vw, 16vh, 100px);   
     --casa-altura: calc(var(--casa-largura) * 0.6);  /* altura do PNG / largura do PNG */
-    --creme: #fffcf0;
     --claro: #FAF5F0;
     --escuro: #333333;
     --pixel-ui: 3px;  
@@ -26,6 +25,93 @@ body {
     image-rendering: pixelated;
     box-sizing: border-box;           
     min-height: 100vh;
+}
+
+#inicial {
+    box-sizing: border-box;
+    min-height: 100vh;
+    padding: 20px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around; 
+    
+    position: relative;
+    overflow: hidden;              /* peças que saem da tela não criam rolagem */
+    isolation: isolate;            /* mantém o z-index: -1 preso dentro desta tela */
+
+    background-color: #000;  
+    
+    --moldura:
+        0 calc(-1 * var(--pixel-ui)) 0 0 var(--claro),
+        0 var(--pixel-ui) 0 0 var(--claro),
+        calc(-1 * var(--pixel-ui)) 0 0 0 var(--claro),
+        var(--pixel-ui) 0 0 0 var(--claro);
+}
+
+.logo-jogo {
+    width: clamp(200px, 40vw, 480px);
+    height: auto;
+    image-rendering: pixelated;
+}
+
+.menu-inicial {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;        
+    gap: 20px;
+    width: clamp(180px, 20vw, 260px);
+}
+
+.menu-inicial .botao-pixel {
+    display: flex;                 
+    align-items: center;
+    justify-content: left;
+    gap: 15px;
+    text-decoration: none;
+    padding: 5px 10px;
+}
+
+.icone-botao {  
+    width: 40px;                   
+    height: 46px;                  
+    object-fit: contain;           
+    image-rendering: pixelated;
+}
+
+.icone-inclinado{
+    transform: rotate(10deg);
+}
+
+.menu-inicial .botao-pixel:hover {
+    background-color: var(--claro);
+}
+
+.fundo-pecas {
+    position: absolute;
+    inset: 0;
+    z-index: -1;                   /* atrás do logo e dos botões */
+    opacity: 0.25;                 /* 0 = invisível, 1 = totalmente visível */
+    pointer-events: none;          /* não atrapalha os cliques */
+}
+
+.peca-fundo {
+    position: absolute;
+    top: 0;
+    left: var(--x);
+
+    height: var(--tamanho);
+    width: auto;
+    image-rendering: pixelated;
+
+    animation: subir var(--duracao) linear infinite;
+    animation-delay: var(--atraso);
+}
+
+@keyframes subir {
+    from { transform: translateY(100vh); }    /* começa abaixo da tela */
+    to   { transform: translateY(-20vh); }    /* termina acima da tela */
 }
 
 .painel {
@@ -69,7 +155,7 @@ body {
     content: "";
     width: 14px;
     height: 14px;
-    background-color: var(--creme);
+    background-color: var(--claro);
     box-shadow: 0 0 0 var(--pixel-ui) var(--escuro);
 }
 
@@ -77,12 +163,12 @@ body {
     display: flex;
     align-items: center;
     gap: 15px;
-    color: var(--creme);
+    color: var(--claro);
 }
 
 .botao-pixel {
     color: var(--escuro);
-    background-color: var(--creme);
+    background-color: var(--claro);
     border: 0;
     box-shadow: var(--moldura); 
     font-size: 25px;
@@ -234,20 +320,20 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.08em;
 
-    background-color: var(--creme);
+    background-color: var(--claro);
     color: var(--escuro);
 }
 
 .coluna-movimentos:first-child h3 {
-    border-bottom: 2px solid var(--creme);
+    border-bottom: 2px solid var(--claro);
     background-color: var(--escuro);
-    color: var(--creme);
+    color: var(--claro);
 }
 
 .coluna-movimentos:last-child h3 {
-    border-bottom: 2px solid var(--creme);
+    border-bottom: 2px solid var(--claro);
     background-color: var(--escuro);
-    color: var(--creme);
+    color: var(--claro);
 }
 
 .coluna-movimentos p {
