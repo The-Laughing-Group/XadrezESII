@@ -16,6 +16,39 @@ body {
     margin: 0;
 }
 
+#layout-fundo {
+    position: relative;
+    background-color: black;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.fundo-pecas {
+    position: absolute;
+    inset: 0;
+    z-index: -1;                   /* atrás do logo e dos botões */
+    opacity: 0.25;                 /* 0 = invisível, 1 = totalmente visível */
+    pointer-events: none;          /* não atrapalha os cliques */
+}
+
+.peca-fundo {
+    position: absolute;
+    top: 0;
+    left: var(--x);
+
+    height: var(--tamanho);
+    width: auto;
+    image-rendering: pixelated;
+
+    animation: subir var(--duracao) linear infinite;
+    animation-delay: var(--atraso);
+}
+
+@keyframes subir {
+    from { transform: translateY(100vh); }    /* começa abaixo da tela */
+    to   { transform: translateY(-20vh); }    /* termina acima da tela */
+}
+
 #inicial {
     box-sizing: border-box;
     min-height: 100vh;
@@ -25,12 +58,6 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: space-around; 
-    
-    position: relative;
-    overflow: hidden;              /* peças que saem da tela não criam rolagem */
-    isolation: isolate;            /* mantém o z-index: -1 preso dentro desta tela */
-
-    background-color: #000;  
     
     --moldura:
         0 calc(-1 * var(--pixel-ui)) 0 0 var(--claro),
@@ -76,32 +103,6 @@ body {
     background-color: var(--claro);
 }
 
-.fundo-pecas {
-    position: absolute;
-    inset: 0;
-    z-index: -1;                   /* atrás do logo e dos botões */
-    opacity: 0.25;                 /* 0 = invisível, 1 = totalmente visível */
-    pointer-events: none;          /* não atrapalha os cliques */
-}
-
-.peca-fundo {
-    position: absolute;
-    top: 0;
-    left: var(--x);
-
-    height: var(--tamanho);
-    width: auto;
-    image-rendering: pixelated;
-
-    animation: subir var(--duracao) linear infinite;
-    animation-delay: var(--atraso);
-}
-
-@keyframes subir {
-    from { transform: translateY(100vh); }    /* começa abaixo da tela */
-    to   { transform: translateY(-20vh); }    /* termina acima da tela */
-}
-
 #modos {
     display: flex;
     gap: 60px;
@@ -109,11 +110,6 @@ body {
     align-items: center;
     min-height: 100vh;
     min-width: 100vw;
-    background-color: black;
-
-    position: relative;
-    overflow: hidden;
-    isolation: isolate;
 
     --moldura:
         0 calc(-1 * var(--pixel-ui)) 0 0 var(--claro),
@@ -407,7 +403,6 @@ body {
     }
 
     .botao-pixel-modo {
-        /* padding: ; */
         font-size: 22px;
     }
 
