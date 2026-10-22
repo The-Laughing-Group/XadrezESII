@@ -23,3 +23,9 @@
   - cd interface-xadrez
   - npm i
   - npm run dev
+
+
+## Direitos autorais
+- [Peças e tabuleiro](https://deja-view.itch.io/chess-assets)
+- [Asset para IA](https://opengameart.org/content/android-robot-animated)
+- [Animação de fundo](https://anasabdin.com/#home)
