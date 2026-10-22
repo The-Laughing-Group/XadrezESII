@@ -1,16 +1,20 @@
 #include "xadrez/posicao.hpp"
-#include <sstream>
+#include "tabuleiro/tabuleiro.hpp"
 #include <stdexcept>
+#include <sstream>
+#include <string>
+#include <vector>
+#include "otimizacao/zobrist.hpp"
+#include "../../../infra-estrutura/movimentos.hpp"   // casa_atacada
+
+void init_raios();   // infra-estrutura/movimentos.cpp: tabelas de raios das peças deslizantes
 
 namespace xadrez {
 
-// ---------- casas ----------
-
 std::string casaParaTexto(int linha, int coluna) {
-    // coluna 0..7 vira 'a'..'h'; linha 0 é a 8ª fileira, então fileira = 8 - linha
     std::string texto;
     texto += static_cast<char>('a' + coluna);
-    texto += static_cast<char>('0' + (8 - linha));
+    texto += static_cast<char>('1' + linha);
     return texto;
 }
 
@@ -19,131 +23,229 @@ bool textoParaCasa(const std::string& texto, int& linha, int& coluna) {
     if (texto[0] < 'a' || texto[0] > 'h') return false;
     if (texto[1] < '1' || texto[1] > '8') return false;
     coluna = texto[0] - 'a';
-    linha = 8 - (texto[1] - '0');
+    linha = texto[1] - '1';
     return true;
 }
 
-// ---------- Posicao ----------
+// ============================================================================
+// FEN (mantido na engine; o Tabuleiro da infra-estrutura não conhece FEN)
+// ============================================================================
+namespace {
+
+// Letras de peça por [cor][tipo]: P N B R Q K / p n b r q k
+const char LETRA_PECA[NUM_CORES][NUM_TIPOS] = {
+    {'P', 'N', 'B', 'R', 'Q', 'K'},
+    {'p', 'n', 'b', 'r', 'q', 'k'}
+};
+
+// Chave Zobrist calculada do zero, na mesma convenção de fazer_lance:
+// peças + direitos de roque (sempre) + coluna do en passant (se houver)
+// + ZOB_LADO quando a vez é das pretas.
+uint64_t calcularChave(const Tabuleiro& b) {
+    uint64_t chave = 0;
+    for (int sq = 0; sq < NUM_CASAS; ++sq) {
+        const Peca p = b.casas[sq];
+        if (p.tpeca != TipoPeca::PECA_VAZIA)
+            chave ^= ZOBRIST[zob_peca(p.cor, p.tpeca, static_cast<Quadrado>(sq))];
+    }
+    chave ^= ZOBRIST[ZOB_ROQUE + b.estado.direitos_roque];
+    if (b.estado.en_passant != Quadrado::quadrado_vazio)
+        chave ^= ZOBRIST[ZOB_EP + coluna_de(b.estado.en_passant)];
+    if (b.estado.lado_a_jogar == Cor::PRETO)
+        chave ^= ZOBRIST[ZOB_LADO];
+    return chave;
+}
+
+bool soDigitos(const std::string& s, int& valor) {
+    if (s.empty() || s.size() > 6) return false;
+    valor = 0;
+    for (char c : s) {
+        if (c < '0' || c > '9') return false;
+        valor = valor * 10 + (c - '0');
+    }
+    return true;
+}
+
+// Preenche `p` a partir da FEN (4 a 6 campos; meios-lances e número do lance são opcionais).
+// Valida: 8 fileiras de 8 casas, peças conhecidas, um rei de cada cor, nenhum peão na
+// 1ª/8ª fileira, lado, roque, en passant (fileira coerente com o lado) e números.
+// Direitos de roque sem rei/torre na casa de origem são descartados.
+// Em caso de erro devolve false e `p` fica em estado indefinido (deFen descarta).
+bool lerFen(Posicao& p, const std::string& fen) {
+    std::vector<std::string> campos;
+    std::istringstream ss(fen);
+    std::string tok;
+    while (ss >> tok) campos.push_back(tok);
+    if (campos.size() < 4 || campos.size() > 6) return false;
+
+    Tabuleiro& t = p.b;
+    limpar(t);
+
+    // 1) Posição das peças (fileira 8 primeiro)
+    int linha = 7, col = 0;
+    for (char ch : campos[0]) {
+        if (ch == '/') {
+            if (col != 8 || linha == 0) return false;
+            --linha;
+            col = 0;
+        } else if (ch >= '1' && ch <= '8') {
+            col += ch - '0';
+            if (col > 8) return false;
+        } else {
+            const bool branca = (ch >= 'A' && ch <= 'Z');
+            const char minus = branca ? static_cast<char>(ch - 'A' + 'a') : ch;
+            TipoPeca tp;
+            switch (minus) {
+                case 'p': tp = TipoPeca::PEAO;   break;
+                case 'n': tp = TipoPeca::CAVALO; break;
+                case 'b': tp = TipoPeca::BISPO;  break;
+                case 'r': tp = TipoPeca::TORRE;  break;
+                case 'q': tp = TipoPeca::DAMA;   break;
+                case 'k': tp = TipoPeca::REI;    break;
+                default: return false;
+            }
+            if (col >= 8) return false;
+            if (tp == TipoPeca::PEAO && (linha == 0 || linha == 7)) return false;
+            colocar_peca(t, branca ? Cor::BRANCO : Cor::PRETO, tp,
+                         criar_quadrado(static_cast<Coluna>(col), static_cast<Linha>(linha)));
+            ++col;
+        }
+    }
+    if (linha != 0 || col != 8) return false;
+    if (quantidade_de(t, Cor::BRANCO, TipoPeca::REI) != 1) return false;
+    if (quantidade_de(t, Cor::PRETO,  TipoPeca::REI) != 1) return false;
+
+    // 2) Lado a jogar
+    if (campos[1] == "w") t.estado.lado_a_jogar = Cor::BRANCO;
+    else if (campos[1] == "b") t.estado.lado_a_jogar = Cor::PRETO;
+    else return false;
+    const bool brancas = (t.estado.lado_a_jogar == Cor::BRANCO);
+
+    // 3) Direitos de roque
+    uint8_t d = SEM_ROQUE;
+    if (campos[2] != "-") {
+        for (char ch : campos[2]) {
+            switch (ch) {
+                case 'K': d |= ROQUE_BRANCO_REI;  break;
+                case 'Q': d |= ROQUE_BRANCO_DAMA; break;
+                case 'k': d |= ROQUE_PRETO_REI;   break;
+                case 'q': d |= ROQUE_PRETO_DAMA;  break;
+                default: return false;
+            }
+        }
+    }
+    auto tem = [&](Cor c, TipoPeca tp, Quadrado q) {
+        const Peca x = peca_em(t, q);
+        return x.cor == c && x.tpeca == tp;
+    };
+    if (!(tem(Cor::BRANCO, TipoPeca::REI, Quadrado::e1) && tem(Cor::BRANCO, TipoPeca::TORRE, Quadrado::h1)))
+        d = static_cast<uint8_t>(d & ~ROQUE_BRANCO_REI);
+    if (!(tem(Cor::BRANCO, TipoPeca::REI, Quadrado::e1) && tem(Cor::BRANCO, TipoPeca::TORRE, Quadrado::a1)))
+        d = static_cast<uint8_t>(d & ~ROQUE_BRANCO_DAMA);
+    if (!(tem(Cor::PRETO, TipoPeca::REI, Quadrado::e8) && tem(Cor::PRETO, TipoPeca::TORRE, Quadrado::h8)))
+        d = static_cast<uint8_t>(d & ~ROQUE_PRETO_REI);
+    if (!(tem(Cor::PRETO, TipoPeca::REI, Quadrado::e8) && tem(Cor::PRETO, TipoPeca::TORRE, Quadrado::a8)))
+        d = static_cast<uint8_t>(d & ~ROQUE_PRETO_DAMA);
+    t.estado.direitos_roque = d;
+
+    // 4) En passant: fileira 6 se as brancas jogam, fileira 3 se as pretas jogam
+    t.estado.en_passant = Quadrado::quadrado_vazio;
+    if (campos[3] != "-") {
+        const std::string& e = campos[3];
+        if (e.size() != 2 || e[0] < 'a' || e[0] > 'h') return false;
+        if (e[1] != (brancas ? '6' : '3')) return false;
+        t.estado.en_passant = criar_quadrado(static_cast<Coluna>(e[0] - 'a'),
+                                             static_cast<Linha>(e[1] - '1'));
+    }
+    
+    // 4b) Posição impossível: o lado que NÃO tem a vez não pode estar em xeque.
+    // Isso também rejeita reis adjacentes (um rei ataca o outro).
+    {
+        const Cor aJogar = t.estado.lado_a_jogar;
+        if (casa_atacada(t, casa_do_rei(t, oposta(aJogar)), aJogar)) return false;
+    }
+    
+    // 5) Meios-lances e número do lance (opcionais)
+    int meios = 0, numero = 1;
+    if (campos.size() >= 5 && !soDigitos(campos[4], meios)) return false;
+    if (campos.size() >= 6 && (!soDigitos(campos[5], numero) || numero < 1)) return false;
+    t.estado.contador_50 = meios;
+    p.numeroLance = numero;
+
+    t.estado.chave_zobrist = calcularChave(t);
+    return true;
+}
+
+} // namespace
+
+// ============================================================================
+// Posicao
+// ============================================================================
 
 Posicao::Posicao() {
-    for (int l = 0; l < 8; ++l)
-        for (int c = 0; c < 8; ++c)
-            tabuleiro[l][c] = VAZIA;
+    iniciar_zobrist();
+    static const bool raiosProntos = (init_raios(), true);   // roda uma única vez
+    (void)raiosProntos;
+    limpar(b);
 }
 
 Posicao Posicao::inicial() {
-    return deFen(FEN_INICIAL);
-}
-
-static bool pecaValida(char c) {
-    const std::string validas = "pnbrqkPNBRQK";
-    return validas.find(c) != std::string::npos;
+    Posicao p;
+    posicao_inicial(p.b);
+    p.b.estado.chave_zobrist = calcularChave(p.b);   // a infra deixa a chave em 0
+    p.numeroLance = 1;
+    return p;
 }
 
 Posicao Posicao::deFen(const std::string& fen) {
-    // Um FEN tem 6 campos separados por espaço:
-    //   peças  lado  roques  en-passant  meio-lances  número-do-lance
-    std::istringstream entrada(fen);
-    std::string pecas, lado, roques, passant;
-    if (!(entrada >> pecas >> lado >> roques >> passant))
-        throw std::invalid_argument("FEN: campos faltando");
-
-    int meios = 0, numero = 1;
-    entrada >> meios >> numero;   // opcionais: se faltarem, ficam com o valor padrão
-
     Posicao p;
-
-    // 1) Peças. O FEN lista da 8ª fileira para a 1ª, da coluna 'a' para 'h',
-    //    que é exatamente a ordem da nossa matriz: linha 0 primeiro.
-    int linha = 0, coluna = 0;
-    int reisBrancos = 0, reisPretos = 0;
-    for (char c : pecas) {
-        if (c == '/') {
-            if (coluna != 8) throw std::invalid_argument("FEN: fileira não tem 8 casas");
-            ++linha;
-            coluna = 0;
-            if (linha > 7) throw std::invalid_argument("FEN: fileiras demais");
-        } else if (c >= '1' && c <= '8') {
-            coluna += c - '0';                 // dígito = quantidade de casas vazias
-            if (coluna > 8) throw std::invalid_argument("FEN: fileira passou de 8 casas");
-        } else {
-            if (coluna >= 8) throw std::invalid_argument("FEN: fileira passou de 8 casas");
-            if (!pecaValida(c)) throw std::invalid_argument(std::string("FEN: peça inválida '") + c + "'");
-            p.tabuleiro[linha][coluna] = c;
-            if (c == 'K') ++reisBrancos;
-            if (c == 'k') ++reisPretos;
-            ++coluna;
-        }
+    if (!lerFen(p, fen)) {
+        throw std::invalid_argument("FEN invalida ou incompleta");
     }
-    if (linha != 7 || coluna != 8) throw std::invalid_argument("FEN: tabuleiro incompleto");
-    if (reisBrancos != 1 || reisPretos != 1)
-        throw std::invalid_argument("FEN: cada lado precisa de exatamente um rei");
-
-    // 2) De quem é a vez
-    if (lado == "w") p.vezDasBrancas = true;
-    else if (lado == "b") p.vezDasBrancas = false;
-    else throw std::invalid_argument("FEN: o lado deve ser 'w' ou 'b'");
-
-    // 3) Direitos de roque ("-" significa nenhum)
-    if (roques != "-") {
-        for (char c : roques) {
-            if (c == 'K') p.rocaBrancasRei = true;
-            else if (c == 'Q') p.rocaBrancasDama = true;
-            else if (c == 'k') p.rocaPretasRei = true;
-            else if (c == 'q') p.rocaPretasDama = true;
-            else throw std::invalid_argument("FEN: direitos de roque inválidos");
-        }
-    }
-
-    // 4) Casa de en passant ("-" significa nenhuma)
-    if (passant != "-") {
-        if (!textoParaCasa(passant, p.passantLinha, p.passantColuna))
-            throw std::invalid_argument("FEN: casa de en passant inválida");
-    }
-
-    p.meioLances = meios;
-    p.numeroLance = numero;
     return p;
 }
 
 std::string Posicao::paraFen() const {
-    std::ostringstream saida;
+    std::string s;
 
-    // Peças: cada fileira conta as casas vazias seguidas e escreve o número quando a sequência acaba
-    for (int l = 0; l < 8; ++l) {
+    for (int linha = 7; linha >= 0; --linha) {
         int vazias = 0;
-        for (int c = 0; c < 8; ++c) {
-            if (ehVazia(tabuleiro[l][c])) {
+        for (int col = 0; col < 8; ++col) {
+            const Peca p = b.casas[linha * 8 + col];
+            if (p.tpeca == TipoPeca::PECA_VAZIA) {
                 ++vazias;
             } else {
-                if (vazias > 0) {
-                    saida << vazias;
-                    vazias = 0;
-                }
-                saida << tabuleiro[l][c];
+                if (vazias) { s += static_cast<char>('0' + vazias); vazias = 0; }
+                s += LETRA_PECA[idx(p.cor)][idx(p.tpeca)];
             }
         }
-        if (vazias > 0) saida << vazias;
-        if (l < 7) saida << '/';
+        if (vazias) s += static_cast<char>('0' + vazias);
+        if (linha > 0) s += '/';
     }
 
-    saida << ' ' << (vezDasBrancas ? 'w' : 'b') << ' ';
+    s += (b.estado.lado_a_jogar == Cor::BRANCO) ? " w " : " b ";
 
-    if (!rocaBrancasRei && !rocaBrancasDama && !rocaPretasRei && !rocaPretasDama) {
-        saida << '-';
+    const uint8_t d = b.estado.direitos_roque;
+    if (d == SEM_ROQUE) {
+        s += '-';
     } else {
-        if (rocaBrancasRei)  saida << 'K';
-        if (rocaBrancasDama) saida << 'Q';
-        if (rocaPretasRei)   saida << 'k';
-        if (rocaPretasDama)  saida << 'q';
+        if (d & ROQUE_BRANCO_REI)  s += 'K';
+        if (d & ROQUE_BRANCO_DAMA) s += 'Q';
+        if (d & ROQUE_PRETO_REI)   s += 'k';
+        if (d & ROQUE_PRETO_DAMA)  s += 'q';
     }
 
-    saida << ' ';
-    if (passantLinha < 0) saida << '-';
-    else saida << casaParaTexto(passantLinha, passantColuna);
+    s += ' ';
+    if (b.estado.en_passant == Quadrado::quadrado_vazio) {
+        s += '-';
+    } else {
+        s += casaParaTexto(static_cast<int>(linha_de(b.estado.en_passant)),
+                           static_cast<int>(coluna_de(b.estado.en_passant)));
+    }
 
-    saida << ' ' << meioLances << ' ' << numeroLance;
-    return saida.str();
+    s += ' ' + std::to_string(b.estado.contador_50);
+    s += ' ' + std::to_string(numeroLance);
+    return s;
 }
 
-}
+} // namespace xadrez

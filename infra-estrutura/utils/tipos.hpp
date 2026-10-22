@@ -85,7 +85,7 @@ constexpr Bitboard get_mascara_linha(Linha l)   { return MASCARA_LINHAS[l]; }
 constexpr int diagonal_index(int sq) {
     int rank = sq / 8;
     int file = sq % 8;
-    return (rank - file) + 7;
+    return 7 - (rank - file);
 }
 // Retorna o índice da antidiagonal (0 a 14) contendo a casa sq (0 a 63)
 constexpr int antidiagonal_index(int sq) {
