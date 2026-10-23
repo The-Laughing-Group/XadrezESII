@@ -7,19 +7,22 @@ import Modos from './pages/Modos.tsx'
 import Game from './pages/Game.tsx'
 import Configuracao from './pages/Configuracao.tsx'
 import LayoutFundo from './components/LayoutFundo.tsx'
+import { ConfiguracoesProvider } from './contexts/ConfiguracaoContext.tsx'
 
 const router = createBrowserRouter([
   { element: <LayoutFundo />, 
     children: [
       { path: "/", element: <Inicial /> },
       { path: "/modos", element: <Modos /> },
+      { path: "/configuracoes", element: <Configuracao /> },
   ]},
   { path: "/game", element: <Game /> },
-  { path: "/configuracoes", element: <Configuracao /> },
 ])
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <ConfiguracoesProvider>
+      <RouterProvider router={router} />
+  </ConfiguracoesProvider>
   </StrictMode>,
 )

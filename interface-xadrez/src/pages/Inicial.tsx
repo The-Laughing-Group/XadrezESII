@@ -8,7 +8,7 @@ const Inicial = () => {
         <div id="inicial">
             <img src={logo} className="logo-jogo" alt="Nome do jogo" draggable={false}/>
             <nav className="menu-inicial">
-                <Link className="botao-pixel" to="/modos"><img className="icone-botao icone-inclinado" src={K}/>Modos</Link>
+                <Link className="botao-pixel" to="/modos"><img className="icone-botao icone-inclinado" src={K}/>Jogar</Link>
                 <Link className="botao-pixel" to="/configuracoes"><img className="icone-botao" src={config}/>Configurações</Link>
             </nav>
         </div>

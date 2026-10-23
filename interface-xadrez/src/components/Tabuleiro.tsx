@@ -14,9 +14,15 @@ import N from "../assets/pecas/cavaloBranco.png";
 import B from "../assets/pecas/bispoBranco.png";
 import Q from "../assets/pecas/rainhaBranca.png";
 import K from "../assets/pecas/reiBranco.png";
+
+import config from "../assets/icones/config.png"
+import voltar from "../assets/icones/voltar.png"
+
 import type { Partida } from "../hooks/usePartida";
 
 import { useState } from "react";
+import { useSom } from "../hooks/useSom";
+import { Link } from "react-router-dom";
 
 const criarPeca = (tipo: TipoPeca): Peca => {
 
@@ -70,6 +76,8 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
 
     const [promocao, setPromocao] = useState<{origem: Posicao; destino: Posicao} | null>(null);
 
+    const tocarMovimento = useSom(); 
+
     const casaEstaSelecionada = (row: number, col: number): boolean => {
         return casaSelecionada?.row === row && casaSelecionada?.col === col;
     };
@@ -86,6 +94,7 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
     }
 
     const addMovimentoHistorico = (row: number, col: number, { promocao = "", captura = "" }):void => {
+        tocarMovimento();
         const destino = posicaoToUci(row, col);
         if(!casaSelecionada) return;
         const peca = tabuleiro[casaSelecionada.row][casaSelecionada.col];
@@ -171,6 +180,14 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
     return (
         <>
             <div className="barra-superior">
+                <Link className="botao-pixel botao-icone" to="/"
+                    aria-label="Voltar" title="Voltar">
+                    <img src={voltar} className="icone-botao" alt="" draggable={false} />
+                </Link>
+                <Link className="botao-pixel botao-icone" to="/configuracoes"
+                    aria-label="Configurações" title="Configurações">
+                    <img src={config} className="icone-botao" alt="" draggable={false} />
+                </Link>
                 <div className={`indicador-vez ${partida.vezDasBrancas ? "indicador-vez-branca" : "indicador-vez-preta"}`}>Vez das {partida.vezDasBrancas ? "brancas" : "pretas"}</div>
                  <div className="promocao">
                     { promocao && (

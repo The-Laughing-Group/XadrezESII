@@ -1,8 +1,60 @@
+import { Link } from "react-router-dom";      
+import { useConfiguracoes } from "../contexts/ConfiguracaoContext";
+import { useSom } from "../hooks/useSom";
+
+import voltar from "../assets/icones/voltar.png"
+
 const Configuracao = () => {
+    const { config, atualizar } = useConfiguracoes();
+    const tocarMovimento = useSom();
+
     return (
-        <>
-            <div>Configuracao</div>
-        </>
+        <div id="configuracoes">
+            <h1>Configurações</h1>
+
+            <section className="grupo-config">
+                <h2>Visual</h2>
+
+                <label className="linha-config">
+                    <span>Tamanho do tabuleiro</span>
+                    <input type="range" min="0.6" max="1" step="0.05"
+                           value={config.escala}
+                           onChange={(e) => atualizar({ escala: Number(e.target.value) })} />
+                </label>
+
+                <label className="linha-config">
+                    <span>Histórico de lances</span>
+                    <input type="checkbox" className="interruptor"
+                           checked={config.mostrarHistorico}
+                           onChange={(e) => atualizar({ mostrarHistorico: e.target.checked })} />
+                </label>
+            </section>
+
+            <section className="grupo-config">
+                <h2>Som</h2>
+
+                <label className="linha-config">
+                    <span>Efeitos sonoros</span>
+                    <input type="checkbox" className="interruptor"
+                           checked={config.somLigado}
+                           onChange={(e) => atualizar({ somLigado: e.target.checked })} />
+                </label>
+
+                <label className="linha-config">
+                    <span>Volume {Math.round(config.volume * 100)}%</span>
+                    <input type="range" min="0" max="1" step="0.05"
+                           value={config.volume}
+                           disabled={!config.somLigado}
+                           onChange={(e) => atualizar({ volume: Number(e.target.value) })}
+                           onPointerUp={tocarMovimento} />   {/* toca um exemplo ao soltar o controle */}
+                </label>
+            </section>
+
+            <Link className="botao-pixel botao-icone" to="/"
+                    aria-label="Voltar" title="Voltar">
+                    <img src={voltar} className="icone-botao" alt="" draggable={false} />
+                </Link>
+        </div>
     )
 }
-export default Configuracao
+export default Configuracao;
