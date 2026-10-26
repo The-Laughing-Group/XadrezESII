@@ -2,6 +2,9 @@ import { useEffect, useRef } from "react";
 import { useConfiguracoes } from "./useConfiguracoes";     
 import musica from "../assets/sons/musica.m4a";
 
+
+const GESTOS = ["pointerdown", "pointerup", "keydown"] as const;
+
 export const useMusica = () => {
     const { config } = useConfiguracoes();
     const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -27,11 +30,21 @@ export const useMusica = () => {
             audio.pause();
             return;
         }
+        
+        let ativo = true;                                              
 
-        const tocar = () => audio.play().catch(() => {});
+        const tocar = () => {
+            if (ativo) audio.play().catch(() => {});                  
+        };
+        
+        audio.play().catch(() => {
+            if (!ativo) return;                                        
+            GESTOS.forEach((g) => window.addEventListener(g, tocar, { once: true }));  
+        });
 
-        audio.play().catch(() => window.addEventListener("pointerdown", tocar, { once: true }));
-
-        return () => window.removeEventListener("pointerdown", tocar);
+        return () => {
+            ativo = false;                                             
+            GESTOS.forEach((g) => window.removeEventListener(g, tocar));               
+        };
     }, [config.musicaLigada, config.volumeMusica]);
 };
