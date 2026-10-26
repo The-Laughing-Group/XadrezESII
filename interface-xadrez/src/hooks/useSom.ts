@@ -1,21 +1,18 @@
-import { useConfiguracoes } from "../contexts/ConfiguracaoContext";
+import { useConfiguracoes } from "../hooks/useConfiguracoes";
 import movimento from "../assets/sons/movimento.m4a";
 import promocao from "../assets/sons/promocao.mp3";
 
-export const useSom = (tipo: String) => {
-    const { config } = useConfiguracoes();
+const SONS = { movimento, promocao } as const;
 
-    let audio: HTMLAudioElement;
+type TipoSom = keyof typeof SONS;
+
+export const useSom = (tipo: TipoSom = "movimento") => {
+    const { config } = useConfiguracoes();
 
     return () => {
         if (!config.somLigado) return;
 
-        if(tipo === "movimento") {
-            audio = new Audio(movimento);
-        }
-        else if(tipo === "promocao") {
-            audio = new Audio(promocao);
-        }
+        const audio = new Audio(SONS[tipo]);
 
         audio.volume = config.volume;
         audio.play().catch(() => {});   

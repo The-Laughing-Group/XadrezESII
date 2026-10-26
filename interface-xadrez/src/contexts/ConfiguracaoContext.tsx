@@ -1,25 +1,5 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-
-type Configuracoes = {
-    escala: number;             
-    mostrarHistorico: boolean;
-    somLigado: boolean;
-    volume: number;             
-};
-
-const PADRAO: Configuracoes = {
-    escala: 1,
-    mostrarHistorico: true,
-    somLigado: true,
-    volume: 0.5,
-};
-
-type Contexto = {
-    config: Configuracoes;
-    atualizar: (mudanca: Partial<Configuracoes>) => void;
-};
-
-const ConfiguracoesContext = createContext<Contexto | null>(null);
+import { useEffect, useState, type ReactNode } from "react";
+import { ConfiguracoesContext, PADRAO, type Configuracoes } from "./ConfiguracoesContext";
 
 export const ConfiguracoesProvider = ({ children }: { children: ReactNode }) => {
 
@@ -48,10 +28,4 @@ export const ConfiguracoesProvider = ({ children }: { children: ReactNode }) => 
             {children}
         </ConfiguracoesContext.Provider>
     );
-};
-
-export const useConfiguracoes = () => {
-    const contexto = useContext(ConfiguracoesContext);
-    if (!contexto) throw new Error("useConfiguracoes precisa estar dentro do ConfiguracoesProvider");
-    return contexto;
 };

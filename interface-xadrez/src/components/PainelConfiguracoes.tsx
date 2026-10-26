@@ -1,4 +1,4 @@
-import { useConfiguracoes } from "../contexts/ConfiguracaoContext";
+import { useConfiguracoes } from "../hooks/useConfiguracoes";
 import { useSom } from "../hooks/useSom";
 
 const PainelConfiguracoes = () => {
