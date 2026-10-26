@@ -27,7 +27,7 @@ const PainelConfiguracoes = () => {
                 </section>
 
                 <section className="grupo-config">
-                    <h2>Som</h2>
+                    <h2>Sons</h2>
 
                     <label className="linha-config">
                         <span>Efeitos sonoros</span>
@@ -43,6 +43,20 @@ const PainelConfiguracoes = () => {
                             disabled={!config.somLigado}
                             onChange={(e) => atualizar({ volume: Number(e.target.value) })}
                             onPointerUp={tocarMovimento} />
+                    </label>
+                    <label className="linha-config">
+                        <span>Música ambiente</span>
+                        <input type="checkbox" className="interruptor"
+                            checked={config.musicaLigada}
+                            onChange={(e) => atualizar({ musicaLigada: e.target.checked })} />
+                    </label>
+
+                    <label className="linha-config">
+                        <span>Volume {Math.round(config.volumeMusica * 100)}%</span>
+                        <input type="range" min="0" max="1" step="0.05"
+                            value={config.volumeMusica}
+                            disabled={!config.musicaLigada}
+                            onChange={(e) => atualizar({ volumeMusica: Number(e.target.value) })} />
                     </label>
                 </section>
             </div>

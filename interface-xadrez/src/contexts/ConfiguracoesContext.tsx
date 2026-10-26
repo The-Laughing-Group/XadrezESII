@@ -4,7 +4,9 @@ export type Configuracoes = {
     escala: number;             
     mostrarHistorico: boolean;
     somLigado: boolean;
-    volume: number;             
+    volume: number;    
+    musicaLigada: boolean;  
+    volumeMusica: number;      
 };
 
 export const PADRAO: Configuracoes = {
@@ -12,6 +14,8 @@ export const PADRAO: Configuracoes = {
     mostrarHistorico: true,
     somLigado: true,
     volume: 0.5,
+    musicaLigada: true,
+    volumeMusica: 0.3, 
 };
 
 export type Contexto = {

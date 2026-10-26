@@ -1,9 +1,12 @@
 import { useState } from "react";
 import Tabuleiro from "../components/Tabuleiro"
 import { usePartida } from "../hooks/usePartida"
+import { useMusica } from "../hooks/useMusica";
 // import { useSearchParams } from "react-router-dom";
 
 const Game = () => {
+    useMusica();
+    
     const partida = usePartida();
 
     const [historicoMovimentos] = useState<(string)[]>([]);
