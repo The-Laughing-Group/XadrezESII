@@ -83,7 +83,8 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
 
     const [promocao, setPromocao] = useState<{origem: Posicao; destino: Posicao} | null>(null);
 
-    const tocarMovimento = useSom(); 
+    const tocarMovimento = useSom("movimento"); 
+    const tocarPromocao = useSom("promocao"); 
 
     const casaEstaSelecionada = (row: number, col: number): boolean => {
         return casaSelecionada?.row === row && casaSelecionada?.col === col;
@@ -101,7 +102,6 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
     }
 
     const addMovimentoHistorico = (row: number, col: number, { promocao = "", captura = "" }):void => {
-        tocarMovimento();
         const destino = posicaoToUci(row, col);
         if(!casaSelecionada) return;
         const peca = tabuleiro[casaSelecionada.row][casaSelecionada.col];
@@ -129,6 +129,7 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
                        posicaoToUci(promocao.destino.row, 
                                     promocao.destino.col) + 
                        letra)) {
+            tocarPromocao();
             addMovimentoHistorico(promocao.destino.row, 
                                  promocao.destino.col, 
                                  { promocao: letra.toUpperCase(),
@@ -161,6 +162,7 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
             const captura = tabuleiro[row][col] === "." ? "" : uci.slice(0, 1);
 
             if(tentarLance(posicaoToUci(casaSelecionada.row, casaSelecionada.col) + posicaoToUci(row, col))) {
+                tocarMovimento();
                 addMovimentoHistorico(row, col, { captura: captura });
             }
             limparSelecao();

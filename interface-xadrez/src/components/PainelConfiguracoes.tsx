@@ -3,7 +3,7 @@ import { useSom } from "../hooks/useSom";
 
 const PainelConfiguracoes = () => {
     const { config, atualizar } = useConfiguracoes();
-    const tocarMovimento = useSom();
+    const tocarMovimento = useSom("movimento");
 
     return (
         <>
