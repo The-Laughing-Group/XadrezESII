@@ -1,13 +1,14 @@
 :root {
-    --casa-largura: min(7.5vw, 16vh, 100px);   
     --altura-barra: clamp(34px, 6vw, 44px);   /* altura de TUDO na barra superior */
     --espaco-barra: 16px;                      /* espaço regular entre os itens */
     --historico-largura: 28vw;
+    --casa-largura: calc(min(7.5vw, 16vh, 100px) * var(--escala, 1));
     --casa-altura: calc(var(--casa-largura) * 0.6);  /* altura do PNG / largura do PNG */
     --claro: #FAF5F0;
     --escuro: #333333;
     --pixel-ui: 3px;  
     --moldura: 0 calc(-1 * var(--pixel-ui)) 0 0 var(--escuro), 0 var(--pixel-ui) 0 0 var(--escuro), calc(-1 * var(--pixel-ui)) 0 0 0 var(--escuro), var(--pixel-ui) 0 0 0 var(--escuro);      
+    --moldura-branca: 0 calc(-1 * var(--pixel-ui)) 0 0 var(--claro), 0 var(--pixel-ui) 0 0 var(--claro), calc(-1 * var(--pixel-ui)) 0 0 0 var(--claro), var(--pixel-ui) 0 0 0 var(--claro);
 }
 
 body {
@@ -61,12 +62,6 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: space-around; 
-    
-    --moldura:
-        0 calc(-1 * var(--pixel-ui)) 0 0 var(--claro),
-        0 var(--pixel-ui) 0 0 var(--claro),
-        calc(-1 * var(--pixel-ui)) 0 0 0 var(--claro),
-        var(--pixel-ui) 0 0 0 var(--claro);
 }
 
 .logo-jogo {
@@ -89,6 +84,7 @@ body {
     gap: 15px;
     text-decoration: none;
     padding: 5px 10px;
+    box-shadow: var(--moldura-branca);
 }
 
 .icone-botao {  
@@ -102,8 +98,162 @@ body {
     transform: rotate(10deg);
 }
 
-.menu-inicial .botao-pixel:hover {
+#configuracoes {
+    box-sizing: border-box;
+    min-height: 100vh;
+    padding: 20px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#configuracoes h1 {
+    font-size: 40px;
+    text-transform: uppercase;
+    color: var(--claro);
+    margin-top: 10vh;
+}
+
+#configuracoes > .botao-pixel, #modos > .botao-pixel {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+}
+
+.modal-fundo {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: grid;
+    place-items: center;
+    z-index: 2000;
+}
+
+.modal-caixa {
+    position: relative;
+    box-sizing: border-box;
+    width: min(90vw, 460px);
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 20px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+
+    background-color: black;
+    box-shadow: var(--moldura-branca);
+}
+
+.modal-caixa h1 {
+    margin: 0;
+    text-transform: uppercase;
+    color: var(--claro);
+}
+
+.modal-fechar {
+    position: absolute;
+    color: var(--claro);
+    background-color: transparent;
+    border: none;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    font-size: 25px;
+}
+
+.modal-fechar:hover {
+    transform: translateY(-6%);
+    cursor: pointer;
+}
+
+.sections-config {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+#configuracoes .sections-config {
+    height: 60vh;
+    justify-content: center;
+}
+
+.grupo-config {
+    box-sizing: border-box;
+    width: min(100%, 420px);
+    padding: 16px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
     background-color: var(--claro);
+    box-shadow: var(--moldura-branca);
+}
+
+.grupo-config h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+}
+
+.linha-config {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.interruptor {
+    appearance: none;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    margin: 0;
+    background-color: var(--claro);
+    box-shadow: var(--moldura);
+    cursor: pointer;
+}
+
+.interruptor:checked {
+    background-color: var(--escuro);
+    box-shadow: var(--moldura), inset 0 0 0 5px var(--claro);
+}
+
+.linha-config input[type="range"] {
+    appearance: none;
+    width: 160px;
+    height: 12px;
+    background-color: var(--claro);
+    box-shadow: var(--moldura);
+    cursor: pointer;
+}
+
+.linha-config input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 24px;
+    border: 0;
+    border-radius: 0;
+    background-color: var(--escuro);
+}
+
+.linha-config input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 24px;
+    border: 0;
+    border-radius: 0;
+    background-color: var(--escuro);
+}
+
+.linha-config input[type="range"]:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
 }
 
 #modos {
@@ -113,12 +263,7 @@ body {
     align-items: center;
     min-height: 100vh;
     min-width: 100vw;
-
-    --moldura:
-        0 calc(-1 * var(--pixel-ui)) 0 0 var(--claro),
-        0 var(--pixel-ui) 0 0 var(--claro),
-        calc(-1 * var(--pixel-ui)) 0 0 0 var(--claro),
-        var(--pixel-ui) 0 0 0 var(--claro);
+    overflow: hidden;
 }
 
 .botao-pixel-modo {
@@ -134,7 +279,7 @@ body {
     color: var(--escuro);
 
     background-color: var(--claro);
-    box-shadow: var(--moldura);
+    box-shadow: var(--moldura-branca);
 }
 
 .botao-pixel-modo:hover {
@@ -173,7 +318,7 @@ body {
     justify-content: space-between;
     width: 65vw;
     align-items: center;
-    flex-wrap: wrap;             /* em telas estreitas, o grupo da direita desce */
+    flex-wrap: wrap;
     gap: 16px;
     position: relative;               /* era absolute */
     z-index: 1;                       /* fica sempre acima do tabuleiro */
@@ -241,7 +386,7 @@ body {
     color: var(--escuro);
     background-color: var(--claro);
     border: 0;
-    box-shadow: var(--moldura); 
+    box-shadow: var(--moldura);
     font-size: 25px;
     padding: 2px 8px;
     display: flex;
@@ -316,9 +461,7 @@ body {
 
 .movimento-possivel-preto  { 
     background-image: url("./assets/casas/casaPretaDestino.png");
-    cursor: pointer;
-}
-
+    cursor: pointer;}
 
 .peca {
     --altura-rel: 0.5;   /* altura da peça, em frações da largura da casa */
@@ -425,9 +568,13 @@ body {
     background-color: rgba(51, 51, 51, 0.06);
 }
 
+.sem-historico #historico-movimentos { display: none; }
+
+.sem-historico .painel, .sem-historico .barra-superior { width: 100%; }
+
 @media (max-width: 930px) {
     :root {
-        --casa-largura: min(10.5vw, 16vh, 100px);   /* sem histórico ao lado, o tabuleiro pode ocupar mais */
+        --casa-largura: calc(min(10.5vw, 16vh, 100px) * var(--escala, 1));
     }
 
     .logo-jogo {
@@ -439,6 +586,7 @@ body {
     }
 
     .botao-pixel-modo {
+        padding: 3%;
         font-size: 22px;
     }
 
@@ -469,102 +617,4 @@ body {
     .coluna-movimentos h3 {
         font-size: clamp(0.7rem, 3.6vw, 1.1rem);
     }
-}
-
-@media (max-width: 900px) {
-    :root {
-        --casa-largura: calc(min(10.5vw, 16vh, 100px) * var(--escala, 1));
-    }
-}
-
-.sem-historico #historico-movimentos { display: none; }
-
-#configuracoes {
-    box-sizing: border-box;
-    min-height: 100vh;
-    padding: 20px;
-
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 24px;
-}
-
-#configuracoes h1 {
-    margin: 0;
-    text-transform: uppercase;
-    color: var(--claro)
-}
-
-.grupo-config {
-    box-sizing: border-box;
-    width: min(100%, 420px);
-    padding: 16px;
-
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-
-    background-color: var(--claro);
-    box-shadow: var(--moldura);
-}
-
-.grupo-config h2 {
-    margin: 0;
-    font-size: 1.1rem;
-    text-transform: uppercase;
-}
-
-.linha-config {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-}
-
-.interruptor {
-    appearance: none;
-    flex-shrink: 0;
-    width: 28px;
-    height: 28px;
-    margin: 0;
-    background-color: var(--creme);
-    box-shadow: var(--moldura);
-    cursor: pointer;
-}
-
-.interruptor:checked {
-    background-color: var(--escuro);
-    box-shadow: var(--moldura), inset 0 0 0 5px var(--creme);
-}
-
-.linha-config input[type="range"] {
-    appearance: none;
-    width: 160px;
-    height: 12px;
-    background-color: var(--creme);
-    box-shadow: var(--moldura);
-    cursor: pointer;
-}
-
-.linha-config input[type="range"]::-webkit-slider-thumb {
-    appearance: none;
-    width: 16px;
-    height: 24px;
-    border: 0;
-    border-radius: 0;
-    background-color: var(--escuro);
-}
-
-.linha-config input[type="range"]::-moz-range-thumb {
-    width: 16px;
-    height: 24px;
-    border: 0;
-    border-radius: 0;
-    background-color: var(--escuro);
-}
-
-.linha-config input[type="range"]:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
 }

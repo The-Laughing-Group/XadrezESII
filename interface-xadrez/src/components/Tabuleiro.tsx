@@ -1,5 +1,12 @@
+import { useState } from "react";
+import { useSom } from "../hooks/useSom";
+import { Link } from "react-router-dom";
+
 import Casa from "./Casa";
+import ModalConfiguracoes from "./ModalConfiguracoes";
+
 import type { Peca, TipoPeca } from "../interfaces/Peca";
+import type { Partida } from "../hooks/usePartida";
 
 import p from "../assets/pecas/peaoPreto.png";
 import r from "../assets/pecas/torrePreta.png";
@@ -16,13 +23,7 @@ import Q from "../assets/pecas/rainhaBranca.png";
 import K from "../assets/pecas/reiBranco.png";
 
 import config from "../assets/icones/config.png"
-import voltar from "../assets/icones/voltar.png"
-
-import type { Partida } from "../hooks/usePartida";
-
-import { useState } from "react";
-import { useSom } from "../hooks/useSom";
-import { Link } from "react-router-dom";
+import casa from "../assets/icones/casa.png"
 
 const criarPeca = (tipo: TipoPeca): Peca => {
 
@@ -69,6 +70,12 @@ const OPCOES_DE_PROMOCAO = [
 const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, historicoMovimentos: (string)[] }) => {
 
     const {pronta, tabuleiro, vezDasBrancas, lancesDe, tentarLance } = partida;
+
+    // fen do henrique
+    // partida.carregarFen(fen do henrique)
+    // partida.tabuleiro
+
+    const [configAberta, setConfigAberta] = useState(false);
 
     const [casaSelecionada, setCasaSelecionada] = useState<Posicao| null>(null);
 
@@ -182,13 +189,14 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
             <div className="barra-superior">
                 <div className="barra-esq">
                     <Link className="botao-pixel botao-icone" to="/"
-                        aria-label="Voltar" title="Voltar">
-                        <img src={voltar} className="icone-botao" alt="" draggable={false} />
+                        aria-label="Casa" title="Casa">
+                        <img src={casa} className="icone-botao" alt="" draggable={false} />
                     </Link>
-                    <Link className="botao-pixel botao-icone" to="/configuracoes"
+                    <button className="botao-pixel"
+                        onClick={() => setConfigAberta(true)}
                         aria-label="Configurações" title="Configurações">
                         <img src={config} className="icone-botao" alt="" draggable={false} />
-                    </Link>
+                    </button>
                     <div className={`indicador-vez ${partida.vezDasBrancas ? "indicador-vez-branca" : "indicador-vez-preta"}`}>Vez das {partida.vezDasBrancas ? "brancas" : "pretas"}</div>
                 </div>
                 <div className="promocao">
@@ -204,24 +212,28 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
                     )}
                 </div>   
             </div>
-            <div id="tabuleiro">
-                {tabuleiro.flatMap((linha, row) =>
-                    Array.from(linha).map((tipo, col) => {
-                        return (
-                            <Casa
-                                key={`${row}-${col}`}
-                                row={row}
-                                col={col}
-                                peca={tipo === "." ? null : criarPeca(FEN_PARA_TIPO[tipo])}
-                                selecionada={casaEstaSelecionada(row,col)}
-                                onSelecionar={selecionarCasa}
-                                movimentoPossivel={eMovimentoPossivel(row, col)}
-                                podeSelecionar={podeSelecionar(row,col)}
-                            />
-                        );
-                    })
-                )}
+            <div className="tabuleiro">
+                <div id="tabuleiro">
+                    {tabuleiro.flatMap((linha, row) =>
+                        Array.from(linha).map((tipo, col) => {
+                            return (
+                                <Casa
+                                    key={`${row}-${col}`}
+                                    row={row}
+                                    col={col}
+                                    peca={tipo === "." ? null : criarPeca(FEN_PARA_TIPO[tipo])}
+                                    selecionada={casaEstaSelecionada(row,col)}
+                                    onSelecionar={selecionarCasa}
+                                    movimentoPossivel={eMovimentoPossivel(row, col)}
+                                    podeSelecionar={podeSelecionar(row,col)}
+                                />
+                            );
+                        })
+                    )}
+                </div>
             </div>
+
+            <ModalConfiguracoes aberto={configAberta} aoFechar={() => setConfigAberta(false)} />
         </>
     );
 };
