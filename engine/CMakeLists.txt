@@ -6,8 +6,26 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Biblioteca com TODA a lógica (regras, e depois a IA). Não depende de JS nem de testes.
 file(GLOB_RECURSE CORE_SRC CONFIGURE_DEPENDS src/core/*.cpp src/rules/*.cpp src/game/*.cpp src/ai/*.cpp)
-add_library(chess_core STATIC ${CORE_SRC})
-target_include_directories(chess_core PUBLIC include)
+
+# Fontes da infra-estrutura (bitboards, tabuleiro, fazer/desfazer lance).
+# teste_headers.cpp fica de fora: é só verificação de headers.
+set(INFRA_DIR
+  ${CMAKE_CURRENT_SOURCE_DIR}/../infra-estrutura
+)
+set(INFRA_SRC
+    ${INFRA_DIR}/lances.cpp
+    ${INFRA_DIR}/movimentos.cpp
+    ${INFRA_DIR}/tabuleiro/tabuleiro.cpp
+    ${INFRA_DIR}/bitboard/bitboard.cpp
+    ${INFRA_DIR}/otimizacao/zobrist.cpp
+)
+
+add_library(chess_core STATIC ${CORE_SRC} ${INFRA_SRC})
+# target_include_directories(chess_core PUBLIC include)
+target_include_directories(chess_core PUBLIC
+    include
+    ${CMAKE_CURRENT_SOURCE_DIR}/../infra-estrutura
+)
 if(MSVC)
   target_compile_options(chess_core PRIVATE /W4)
 else()
