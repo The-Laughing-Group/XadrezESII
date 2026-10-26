@@ -1,11 +1,16 @@
 import { useState } from "react";
 import Tabuleiro from "../components/Tabuleiro"
 import { usePartida } from "../hooks/usePartida"
+// import { useSearchParams } from "react-router-dom";
 
 const Game = () => {
     const partida = usePartida();
 
     const [historicoMovimentos] = useState<(string)[]>([]);
+
+    // const [searchParams] = useSearchParams();
+  
+    // const modo = searchParams.get('modo');
     
     return (
         <div id="game">

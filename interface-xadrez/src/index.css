@@ -1,11 +1,14 @@
 :root {
-    --casa-largura: min(7.5vw, 16vh, 100px);   
+    --altura-barra: clamp(34px, 6vw, 44px);   /* altura de TUDO na barra superior */
+    --espaco-barra: 16px;                      /* espaço regular entre os itens */
+    --historico-largura: 28vw;
+    --casa-largura: calc(min(7.5vw, 16vh, 100px) * var(--escala, 1));
     --casa-altura: calc(var(--casa-largura) * 0.6);  /* altura do PNG / largura do PNG */
-    --creme: #fffcf0;
     --claro: #FAF5F0;
     --escuro: #333333;
     --pixel-ui: 3px;  
-    --moldura: 0 calc(-1 * var(--pixel-ui)) 0 0 var(--escuro), 0 var(--pixel-ui) 0 0 var(--escuro), calc(-1 * var(--pixel-ui)) 0 0 0 var(--escuro), var(--pixel-ui) 0 0 0 var(--escuro);
+    --moldura: 0 calc(-1 * var(--pixel-ui)) 0 0 var(--escuro), 0 var(--pixel-ui) 0 0 var(--escuro), calc(-1 * var(--pixel-ui)) 0 0 0 var(--escuro), var(--pixel-ui) 0 0 0 var(--escuro);      
+    --moldura-branca: 0 calc(-1 * var(--pixel-ui)) 0 0 var(--claro), 0 var(--pixel-ui) 0 0 var(--claro), calc(-1 * var(--pixel-ui)) 0 0 0 var(--claro), var(--pixel-ui) 0 0 0 var(--claro);
 }
 
 body {
@@ -15,6 +18,277 @@ body {
     font-style: normal;
     color: var(--escuro);
     margin: 0;
+}
+
+#layout-fundo {
+    position: relative;
+    background-color: black;
+    overflow: hidden;
+    isolation: isolate;
+}
+
+.fundo-pecas {
+    position: absolute;
+    inset: 0;
+    z-index: -1;                   /* atrás do logo e dos botões */
+    opacity: 0.25;                 /* 0 = invisível, 1 = totalmente visível */
+    pointer-events: none;          /* não atrapalha os cliques */
+}
+
+.peca-fundo {
+    position: absolute;
+    top: 0;
+    left: var(--x);
+
+    height: var(--tamanho);
+    width: auto;
+    image-rendering: pixelated;
+
+    animation: subir var(--duracao) linear infinite;
+    animation-delay: var(--atraso);
+}
+
+@keyframes subir {
+    from { transform: translateY(100vh); }    /* começa abaixo da tela */
+    to   { transform: translateY(-20vh); }    /* termina acima da tela */
+}
+
+#inicial {
+    box-sizing: border-box;
+    min-height: 100vh;
+    padding: 20px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around; 
+}
+
+.logo-jogo {
+    width: clamp(200px, 40vw, 480px);
+    height: auto;
+    image-rendering: pixelated;
+}
+
+.menu-inicial {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;        
+    gap: 20px;
+}
+
+.menu-inicial .botao-pixel {
+    display: flex;                 
+    align-items: center;
+    justify-content: left;
+    gap: 15px;
+    text-decoration: none;
+    padding: 5px 10px;
+    box-shadow: var(--moldura-branca);
+}
+
+.icone-botao {  
+    width: 40px;                   
+    height: 46px;                  
+    object-fit: contain;           
+    image-rendering: pixelated;
+}
+
+.icone-inclinado{
+    transform: rotate(10deg);
+}
+
+#configuracoes {
+    box-sizing: border-box;
+    min-height: 100vh;
+    padding: 20px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#configuracoes h1 {
+    font-size: 40px;
+    text-transform: uppercase;
+    color: var(--claro);
+    margin-top: 10vh;
+}
+
+#configuracoes > .botao-pixel, #modos > .botao-pixel {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 100;
+}
+
+.modal-fundo {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: grid;
+    place-items: center;
+    z-index: 2000;
+}
+
+.modal-caixa {
+    position: relative;
+    box-sizing: border-box;
+    width: min(90vw, 460px);
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 20px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+
+    background-color: black;
+    box-shadow: var(--moldura-branca);
+}
+
+.modal-caixa h1 {
+    margin: 0;
+    text-transform: uppercase;
+    color: var(--claro);
+}
+
+.modal-fechar {
+    position: absolute;
+    color: var(--claro);
+    background-color: transparent;
+    border: none;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    font-size: 25px;
+}
+
+.modal-fechar:hover {
+    transform: translateY(-6%);
+    cursor: pointer;
+}
+
+.sections-config {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+#configuracoes .sections-config {
+    height: 60vh;
+    justify-content: center;
+}
+
+.grupo-config {
+    box-sizing: border-box;
+    width: min(100%, 420px);
+    padding: 16px;
+
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+
+    background-color: var(--claro);
+    box-shadow: var(--moldura-branca);
+}
+
+.grupo-config h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+}
+
+.linha-config {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.interruptor {
+    appearance: none;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    margin: 0;
+    background-color: var(--claro);
+    box-shadow: var(--moldura);
+    cursor: pointer;
+}
+
+.interruptor:checked {
+    background-color: var(--escuro);
+    box-shadow: var(--moldura), inset 0 0 0 5px var(--claro);
+}
+
+.linha-config input[type="range"] {
+    appearance: none;
+    width: 160px;
+    height: 12px;
+    background-color: var(--claro);
+    box-shadow: var(--moldura);
+    cursor: pointer;
+}
+
+.linha-config input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 16px;
+    height: 24px;
+    border: 0;
+    border-radius: 0;
+    background-color: var(--escuro);
+}
+
+.linha-config input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 24px;
+    border: 0;
+    border-radius: 0;
+    background-color: var(--escuro);
+}
+
+.linha-config input[type="range"]:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+#modos {
+    display: flex;
+    gap: 60px;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    min-width: 100vw;
+    overflow: hidden;
+}
+
+.botao-pixel-modo {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    padding: 8% 5%;
+    
+    font-size: 30px;
+    text-decoration: none;
+    color: var(--escuro);
+
+    background-color: var(--claro);
+    box-shadow: var(--moldura-branca);
+}
+
+.botao-pixel-modo:hover {
+    transform: translateY(-2%);
+    cursor: pointer;
+}
+
+.botao-pixel-modo img {
+    image-rendering: pixelated;
 }
 
 #game {
@@ -33,24 +307,59 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-around;
+    justify-content: flex-start;
     height: 90vh;
-    width: 65vw;
+    /* tela - histórico - 20px (margem do jogo) - 20px (margem do histórico) - 24px (folga) */
+    width: calc(100vw - var(--historico-largura) - 64px);   /* era 65vw */
 }
 
 .barra-superior {
     display: flex;
     justify-content: space-between;
     width: 65vw;
-    position: absolute;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    position: relative;               /* era absolute */
+    z-index: 1;                       /* fica sempre acima do tabuleiro */
     top: 0;
     left: 0;
+}
+
+/* botões da barra (voltar, config, promoção, cancelar): quadrados */
+.barra-superior .botao-pixel {
+    box-sizing: border-box;
+    width: var(--altura-barra);
+    height: var(--altura-barra);
+    padding: 0;
+    margin: 0;
+}
+
+.barra-superior .botao-pixel img {
+    width: auto;
+    height: 60%;
+    image-rendering: pixelated;
+}
+
+.barra-esq{
+    display: flex;
+    justify-content: flex-start;
+    gap: var(--espaco-barra);
+}
+
+.promocao {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: var(--claro);
 }
 
 .indicador-vez {
     display: inline-flex;
     align-items: center;
+    box-sizing: border-box;
     gap: 10px;
+    height: var(--altura-barra);
     padding: 6px 12px;
     font-size: 1.1rem;
     background-color: var(--claro);
@@ -69,24 +378,21 @@ body {
     content: "";
     width: 14px;
     height: 14px;
-    background-color: var(--creme);
+    background-color: var(--claro);
     box-shadow: 0 0 0 var(--pixel-ui) var(--escuro);
-}
-
-.promocao {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    color: var(--creme);
 }
 
 .botao-pixel {
     color: var(--escuro);
-    background-color: var(--creme);
+    background-color: var(--claro);
     border: 0;
-    box-shadow: var(--moldura); 
+    box-shadow: var(--moldura);
     font-size: 25px;
-    padding: 0 8px;
+    padding: 2px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--altura-barra);
 }
 
 .botao-pixel:hover {
@@ -155,9 +461,7 @@ body {
 
 .movimento-possivel-preto  { 
     background-image: url("./assets/casas/casaPretaDestino.png");
-    cursor: pointer;
-}
-
+    cursor: pointer;}
 
 .peca {
     --altura-rel: 0.5;   /* altura da peça, em frações da largura da casa */
@@ -198,7 +502,8 @@ body {
     gap: 16px;
     align-content: start;
 
-    width: 28vw;
+    box-sizing: border-box;                 
+    width: var(--historico-largura);        
     max-height: 92vh;
 
     overflow-y: auto;
@@ -208,8 +513,18 @@ body {
     box-shadow: var(--moldura);
 }
 
-#historico-movimentos::-webkit-scrollbar { width: 5px; }
-#historico-movimentos::-webkit-scrollbar-thumb { background: rgba(51, 51, 51, 0.06); }
+#historico-movimentos::-webkit-scrollbar {
+    width: 5px;
+}
+
+#historico-movimentos::-webkit-scrollbar-thumb {
+    background: rgba(51, 51, 51, 0.25);
+    border-radius: 999px;
+}
+
+#historico-movimentos::-webkit-scrollbar-thumb:hover { 
+    background: rgba(51, 51, 51, 0.4);
+}
 
 .coluna-movimentos {
     min-width: 0;
@@ -224,7 +539,7 @@ body {
     padding-top: 8px;
     padding-bottom: 8px;
 
-    border-top: 12px solid transparent;
+    border-top: 12px solid var(--claro);
     border-bottom: 2px solid var(--escuro);
     background-clip: padding-box;
 
@@ -234,20 +549,20 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.08em;
 
-    background-color: var(--creme);
+    background-color: var(--claro);
     color: var(--escuro);
 }
 
 .coluna-movimentos:first-child h3 {
-    border-bottom: 2px solid var(--creme);
+    border-bottom: 2px solid var(--claro);
     background-color: var(--escuro);
-    color: var(--creme);
+    color: var(--claro);
 }
 
 .coluna-movimentos:last-child h3 {
-    border-bottom: 2px solid var(--creme);
+    border-bottom: 2px solid var(--claro);
     background-color: var(--escuro);
-    color: var(--creme);
+    color: var(--claro);
 }
 
 .coluna-movimentos p {
@@ -263,16 +578,31 @@ body {
     background-color: rgba(51, 51, 51, 0.06);
 }
 
-@media (max-width: 900px) {
+.sem-historico #historico-movimentos { display: none; }
+
+.sem-historico .painel, .sem-historico .barra-superior { width: 100%; }
+
+@media (max-width: 930px) {
     :root {
-        --casa-largura: min(10.5vw, 16vh, 100px);   /* sem histórico ao lado, o tabuleiro pode ocupar mais */
+        --casa-largura: calc(min(10.5vw, 16vh, 100px) * var(--escala, 1));
+    }
+
+    .logo-jogo {
+        width: 90vw;
+    }
+
+    #modos {
+        flex-direction: column;
+    }
+
+    .botao-pixel-modo {
+        padding: 3%;
+        font-size: 22px;
     }
 
     .painel {
         width: 100%;
         height: auto;
-        padding-top: 60px;           /* espaço para a barra superior, que é absoluta */
-        justify-content: flex-start;
     }
 
     .barra-superior {
@@ -284,6 +614,7 @@ body {
     .promocao {
         flex-wrap: wrap;
         gap: 8px;
+        margin-left:unset;
     }
 
     #historico-movimentos {

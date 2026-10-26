@@ -1,5 +1,12 @@
+import { useState } from "react";
+import { useSom } from "../hooks/useSom";
+import { Link } from "react-router-dom";
+
 import Casa from "./Casa";
+import ModalConfiguracoes from "./ModalConfiguracoes";
+
 import type { Peca, TipoPeca } from "../interfaces/Peca";
+import type { Partida } from "../hooks/usePartida";
 
 import p from "../assets/pecas/peaoPreto.png";
 import r from "../assets/pecas/torrePreta.png";
@@ -14,9 +21,9 @@ import N from "../assets/pecas/cavaloBranco.png";
 import B from "../assets/pecas/bispoBranco.png";
 import Q from "../assets/pecas/rainhaBranca.png";
 import K from "../assets/pecas/reiBranco.png";
-import type { Partida } from "../hooks/usePartida";
 
-import { useState } from "react";
+import config from "../assets/icones/config.png"
+import casa from "../assets/icones/casa.png"
 
 const criarPeca = (tipo: TipoPeca): Peca => {
 
@@ -64,11 +71,20 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
 
     const {pronta, tabuleiro, vezDasBrancas, lancesDe, tentarLance } = partida;
 
+    // fen do henrique
+    // partida.carregarFen(fen do henrique)
+    // partida.tabuleiro
+
+    const [configAberta, setConfigAberta] = useState(false);
+
     const [casaSelecionada, setCasaSelecionada] = useState<Posicao| null>(null);
 
     const [movimentosPossiveis, setMovimentosPossiveis] = useState<Posicao[]>([]);
 
     const [promocao, setPromocao] = useState<{origem: Posicao; destino: Posicao} | null>(null);
+
+    const tocarMovimento = useSom("movimento"); 
+    const tocarPromocao = useSom("promocao"); 
 
     const casaEstaSelecionada = (row: number, col: number): boolean => {
         return casaSelecionada?.row === row && casaSelecionada?.col === col;
@@ -113,6 +129,7 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
                        posicaoToUci(promocao.destino.row, 
                                     promocao.destino.col) + 
                        letra)) {
+            tocarPromocao();
             addMovimentoHistorico(promocao.destino.row, 
                                  promocao.destino.col, 
                                  { promocao: letra.toUpperCase(),
@@ -145,6 +162,7 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
             const captura = tabuleiro[row][col] === "." ? "" : uci.slice(0, 1);
 
             if(tentarLance(posicaoToUci(casaSelecionada.row, casaSelecionada.col) + posicaoToUci(row, col))) {
+                tocarMovimento();
                 addMovimentoHistorico(row, col, { captura: captura });
             }
             limparSelecao();
@@ -171,8 +189,19 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
     return (
         <>
             <div className="barra-superior">
-                <div className={`indicador-vez ${partida.vezDasBrancas ? "indicador-vez-branca" : "indicador-vez-preta"}`}>Vez das {partida.vezDasBrancas ? "brancas" : "pretas"}</div>
-                 <div className="promocao">
+                <div className="barra-esq">
+                    <Link className="botao-pixel botao-icone" to="/"
+                        aria-label="Casa" title="Casa">
+                        <img src={casa} className="icone-botao" alt="" draggable={false} />
+                    </Link>
+                    <button className="botao-pixel"
+                        onClick={() => setConfigAberta(true)}
+                        aria-label="Configurações" title="Configurações">
+                        <img src={config} className="icone-botao" alt="" draggable={false} />
+                    </button>
+                    <div className={`indicador-vez ${partida.vezDasBrancas ? "indicador-vez-branca" : "indicador-vez-preta"}`}>Vez das {partida.vezDasBrancas ? "brancas" : "pretas"}</div>
+                </div>
+                <div className="promocao">
                     { promocao && (
                             <>
                                 {OPCOES_DE_PROMOCAO.map(([tipo, nome]) => (
@@ -185,24 +214,28 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
                     )}
                 </div>   
             </div>
-            <div id="tabuleiro">
-                {tabuleiro.flatMap((linha, row) =>
-                    Array.from(linha).map((tipo, col) => {
-                        return (
-                            <Casa
-                                key={`${row}-${col}`}
-                                row={row}
-                                col={col}
-                                peca={tipo === "." ? null : criarPeca(FEN_PARA_TIPO[tipo])}
-                                selecionada={casaEstaSelecionada(row,col)}
-                                onSelecionar={selecionarCasa}
-                                movimentoPossivel={eMovimentoPossivel(row, col)}
-                                podeSelecionar={podeSelecionar(row,col)}
-                            />
-                        );
-                    })
-                )}
+            <div className="tabuleiro">
+                <div id="tabuleiro">
+                    {tabuleiro.flatMap((linha, row) =>
+                        Array.from(linha).map((tipo, col) => {
+                            return (
+                                <Casa
+                                    key={`${row}-${col}`}
+                                    row={row}
+                                    col={col}
+                                    peca={tipo === "." ? null : criarPeca(FEN_PARA_TIPO[tipo])}
+                                    selecionada={casaEstaSelecionada(row,col)}
+                                    onSelecionar={selecionarCasa}
+                                    movimentoPossivel={eMovimentoPossivel(row, col)}
+                                    podeSelecionar={podeSelecionar(row,col)}
+                                />
+                            );
+                        })
+                    )}
+                </div>
             </div>
+
+            <ModalConfiguracoes aberto={configAberta} aoFechar={() => setConfigAberta(false)} />
         </>
     );
 };
