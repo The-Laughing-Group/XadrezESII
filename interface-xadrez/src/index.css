@@ -513,8 +513,18 @@ body {
     box-shadow: var(--moldura);
 }
 
-#historico-movimentos::-webkit-scrollbar { width: 5px; }
-#historico-movimentos::-webkit-scrollbar-thumb { background: rgba(51, 51, 51, 0.06); }
+#historico-movimentos::-webkit-scrollbar {
+    width: 5px;
+}
+
+#historico-movimentos::-webkit-scrollbar-thumb {
+    background: rgba(51, 51, 51, 0.25);
+    border-radius: 999px;
+}
+
+#historico-movimentos::-webkit-scrollbar-thumb:hover { 
+    background: rgba(51, 51, 51, 0.4);
+}
 
 .coluna-movimentos {
     min-width: 0;
@@ -529,7 +539,7 @@ body {
     padding-top: 8px;
     padding-bottom: 8px;
 
-    border-top: 12px solid transparent;
+    border-top: 12px solid var(--claro);
     border-bottom: 2px solid var(--escuro);
     background-clip: padding-box;
 
