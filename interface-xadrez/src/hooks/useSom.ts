@@ -5,7 +5,7 @@ import promocao from "../assets/sons/promocao.mp3";
 export const useSom = (tipo: String) => {
     const { config } = useConfiguracoes();
 
-    var audio: HTMLAudioElement;
+    let audio: HTMLAudioElement;
 
     return () => {
         if (!config.somLigado) return;
