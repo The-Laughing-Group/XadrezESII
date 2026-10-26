@@ -180,16 +180,18 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
     return (
         <>
             <div className="barra-superior">
-                <Link className="botao-pixel botao-icone" to="/"
-                    aria-label="Voltar" title="Voltar">
-                    <img src={voltar} className="icone-botao" alt="" draggable={false} />
-                </Link>
-                <Link className="botao-pixel botao-icone" to="/configuracoes"
-                    aria-label="Configurações" title="Configurações">
-                    <img src={config} className="icone-botao" alt="" draggable={false} />
-                </Link>
-                <div className={`indicador-vez ${partida.vezDasBrancas ? "indicador-vez-branca" : "indicador-vez-preta"}`}>Vez das {partida.vezDasBrancas ? "brancas" : "pretas"}</div>
-                 <div className="promocao">
+                <div className="barra-esq">
+                    <Link className="botao-pixel botao-icone" to="/"
+                        aria-label="Voltar" title="Voltar">
+                        <img src={voltar} className="icone-botao" alt="" draggable={false} />
+                    </Link>
+                    <Link className="botao-pixel botao-icone" to="/configuracoes"
+                        aria-label="Configurações" title="Configurações">
+                        <img src={config} className="icone-botao" alt="" draggable={false} />
+                    </Link>
+                    <div className={`indicador-vez ${partida.vezDasBrancas ? "indicador-vez-branca" : "indicador-vez-preta"}`}>Vez das {partida.vezDasBrancas ? "brancas" : "pretas"}</div>
+                </div>
+                <div className="promocao">
                     { promocao && (
                             <>
                                 {OPCOES_DE_PROMOCAO.map(([tipo, nome]) => (

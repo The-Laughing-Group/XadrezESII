@@ -1,5 +1,8 @@
 :root {
     --casa-largura: min(7.5vw, 16vh, 100px);   
+    --altura-barra: clamp(34px, 6vw, 44px);   /* altura de TUDO na barra superior */
+    --espaco-barra: 16px;                      /* espaço regular entre os itens */
+    --historico-largura: 28vw;
     --casa-altura: calc(var(--casa-largura) * 0.6);  /* altura do PNG / largura do PNG */
     --claro: #FAF5F0;
     --escuro: #333333;
@@ -159,27 +162,59 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-around;
+    justify-content: flex-start;
     height: 90vh;
-    width: 65vw;
+    /* tela - histórico - 20px (margem do jogo) - 20px (margem do histórico) - 24px (folga) */
+    width: calc(100vw - var(--historico-largura) - 64px);   /* era 65vw */
 }
 
 .barra-superior {
     display: flex;
-    justify-content: flex-start;
+    justify-content: space-between;
     width: 65vw;
     align-items: center;
     flex-wrap: wrap;             /* em telas estreitas, o grupo da direita desce */
     gap: 16px;
-    position: absolute;
+    position: relative;               /* era absolute */
+    z-index: 1;                       /* fica sempre acima do tabuleiro */
     top: 0;
     left: 0;
+}
+
+/* botões da barra (voltar, config, promoção, cancelar): quadrados */
+.barra-superior .botao-pixel {
+    box-sizing: border-box;
+    width: var(--altura-barra);
+    height: var(--altura-barra);
+    padding: 0;
+    margin: 0;
+}
+
+.barra-superior .botao-pixel img {
+    width: auto;
+    height: 60%;
+    image-rendering: pixelated;
+}
+
+.barra-esq{
+    display: flex;
+    justify-content: flex-start;
+    gap: var(--espaco-barra);
+}
+
+.promocao {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: var(--claro);
 }
 
 .indicador-vez {
     display: inline-flex;
     align-items: center;
+    box-sizing: border-box;
     gap: 10px;
+    height: var(--altura-barra);
     padding: 6px 12px;
     font-size: 1.1rem;
     background-color: var(--claro);
@@ -202,14 +237,6 @@ body {
     box-shadow: 0 0 0 var(--pixel-ui) var(--escuro);
 }
 
-.promocao {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    color: var(--claro);
-    margin-left: auto;
-}
-
 .botao-pixel {
     color: var(--escuro);
     background-color: var(--claro);
@@ -220,6 +247,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    height: var(--altura-barra);
 }
 
 .botao-pixel:hover {
@@ -331,7 +359,8 @@ body {
     gap: 16px;
     align-content: start;
 
-    width: 28vw;
+    box-sizing: border-box;                 
+    width: var(--historico-largura);        
     max-height: 92vh;
 
     overflow-y: auto;
@@ -396,7 +425,7 @@ body {
     background-color: rgba(51, 51, 51, 0.06);
 }
 
-@media (max-width: 900px) {
+@media (max-width: 930px) {
     :root {
         --casa-largura: min(10.5vw, 16vh, 100px);   /* sem histórico ao lado, o tabuleiro pode ocupar mais */
     }
@@ -416,8 +445,6 @@ body {
     .painel {
         width: 100%;
         height: auto;
-        padding-top: 60px;           /* espaço para a barra superior, que é absoluta */
-        justify-content: flex-start;
     }
 
     .barra-superior {
