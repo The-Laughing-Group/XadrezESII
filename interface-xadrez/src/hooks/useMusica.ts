@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useConfiguracoes } from "./useConfiguracoes";     
-import musica from "../assets/sons/musica.mp3";
+import musica from "../assets/sons/musica.m4a";
 
 export const useMusica = () => {
     const { config } = useConfiguracoes();
