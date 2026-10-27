@@ -8,7 +8,7 @@
 #include "bitboard/bitboard.hpp"
 #include "lances.hpp"
 
-// Funções implementadas pelo Henrique
+// Funções implementadas diretamente pelo modulo infra-estrutura
 extern Bitboard ataques_torre(Quadrado sq, Bitboard ocupacao);
 extern Bitboard ataques_bispo(Quadrado sq, Bitboard ocupacao);
 extern Bitboard ataques_dama(Quadrado sq, Bitboard ocupacao);
@@ -85,7 +85,40 @@ bool em_xeque(const Tabuleiro& b, Cor cor) {
 }
 
 // ============================================================================
-// Helpers para popular a ListaLances da Equipe
+// Fim de partida
+// ============================================================================
+// gerar_lances é PSEUDO-legal (inclui lances que deixam o próprio rei em xeque),
+// então "lista vazia" não serve para detectar mate. Só fazer_lance sabe se o lance é
+// legal. Por isso estas funções recebem o Tabuleiro SEM const: fazem e desfazem lances
+// de verdade, mas sempre devolvem o tabuleiro exatamente como estava.
+
+// O lado a jogar tem pelo menos um lance legal?
+bool tem_lance_legal(Tabuleiro& b) {
+    ListaLances lista;
+    gerar_lances(b, lista);
+    for (int i = 0; i < lista.quantidade; ++i) {
+        // true  = o lance era legal e FOI feito -> desfazemos para restaurar o tabuleiro
+        // false = era ilegal e fazer_lance já desfez sozinho (não chamar desfazer_lance)
+        if (fazer_lance(b, lista.lances[i])) {
+            desfazer_lance(b, lista.lances[i]);
+            return true;
+        }
+    }
+    return false;
+}
+
+// Xeque-mate: o lado a jogar está em xeque E não tem nenhum lance legal.
+bool em_xeque_mate(Tabuleiro& b) {
+    return em_xeque(b, b.estado.lado_a_jogar) && !tem_lance_legal(b);
+}
+
+// Afogamento: o lado a jogar NÃO está em xeque, mas também não tem nenhum lance legal (empate).
+bool em_afogamento(Tabuleiro& b) {
+    return !em_xeque(b, b.estado.lado_a_jogar) && !tem_lance_legal(b);
+}
+
+// ============================================================================
+// Helpers para popular a ListaLances
 // ============================================================================
 
 static void extrair_movimentos(ListaLances& lista, Quadrado origem, Bitboard destinos, Bitboard inimigas) {

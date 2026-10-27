@@ -35,6 +35,19 @@ public:
     // remove peça capturada, promove, etc.) e devolve true. Senão, não muda nada e devolve false.
     bool tentarLance(const std::string& uci);
 
+    // ---- Fim de partida (sempre sobre o lado que tem a vez) ----
+    // Nenhuma altera a posição do Jogo.
+
+    // O rei de quem tem a vez está em xeque? (útil para destacar o rei na tela)
+    bool emXeque() const;
+
+    // Xeque-mate: em xeque e sem nenhum lance legal. Quem VENCEU é o lado que NÃO tem a vez:
+    // se emXequeMate() e vezDasBrancas() == true, as pretas venceram (e vice-versa).
+    bool emXequeMate() const;
+
+    // Afogamento: sem xeque, mas sem nenhum lance legal. A partida termina empatada.
+    bool emAfogamento() const;
+
 private:
     Posicao pos_;
 };
