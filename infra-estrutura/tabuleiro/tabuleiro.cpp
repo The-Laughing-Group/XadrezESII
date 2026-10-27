@@ -99,6 +99,7 @@ bool verificar_consistencia(const Tabuleiro& b) {
             if (!BitboardUtils::testar_bit(b.pecas[idx(p.cor)][idx(p.tpeca)], static_cast<Quadrado>(i))) return false;
         }
     }
+    return true;
 }
 
 void imprimir(const Tabuleiro& b) {
@@ -120,6 +121,6 @@ void imprimir(const Tabuleiro& b) {
     std::cout << "\n";
 }
 
-bool carregar_fen(Tabuleiro& b, const std::string& fen) {
-    //regras
-}
+// bool carregar_fen(Tabuleiro& b, const std::string& fen) {
+//     //regras
+// }

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "../../infra-estrutura/movimentos.hpp"
 #include "../../infra-estrutura/bitboard/bitboard.hpp"
 #include "../../infra-estrutura/tabuleiro/tabuleiro.hpp"
@@ -117,8 +118,56 @@ bool em_afogamento(Tabuleiro& b) {
     return !em_xeque(b, b.estado.lado_a_jogar) && !tem_lance_legal(b);
 }
 
+// ----------------------------------------------------------------------------
+// Empates "passivos": dependem só da posição e do histórico, não de lances legais
+// ----------------------------------------------------------------------------
+
+// Regra dos 50 lances = 100 meios-lances sem captura nem lance de peão.
+bool empate_50(const Tabuleiro& b) {
+    return b.estado.contador_50 >= LIMITE_REGRA_50;
+}
+
+// Quantas vezes ANTES a posição atual já apareceu (0 = é a primeira vez).
+// historico[i] guarda a posição que existia ANTES do i-ésimo lance, e a posição atual
+// está em b.estado. Só posições com o mesmo lado a jogar podem ser iguais, por isso o
+// passo é 2. Lance de peão ou captura é irreversível, então não adianta olhar antes de
+// (conta_lance - contador_50). A chave Zobrist já inclui peças, vez, roque e en passant.
+int contar_repeticoes(const Tabuleiro& b) {
+    int n = 0;
+    const int limite = std::max(0, b.conta_lance - b.estado.contador_50);
+    for (int i = b.conta_lance - 2; i >= limite; i -= 2)
+        if (b.historico[i].chave_zobrist == b.estado.chave_zobrist) ++n;
+    return n;
+}
+
+bool repetida(const Tabuleiro& b) {
+    return contar_repeticoes(b) >= 1;
+}
+
+// Material insuficiente: nenhum lado consegue dar mate, nem com ajuda do adversário.
+//   rei x rei | rei+cavalo x rei | rei+bispo x rei |
+//   só bispos e todos na mesma cor de casa (ex.: rei+bispo x rei+bispo "do mesmo lado").
+// NÃO entram: dois cavalos (o mate é possível, só não é forçado) nem cavalo x cavalo.
+bool material_insuficiente(const Tabuleiro& b) {
+    constexpr Bitboard CASAS_ESCURAS = 0xAA55AA55AA55AA55ULL;   // a1 é escura
+
+    for (int c = 0; c < NUM_CORES; ++c) {
+        if (b.pecas[c][idx(TipoPeca::PEAO)] || b.pecas[c][idx(TipoPeca::TORRE)] ||
+            b.pecas[c][idx(TipoPeca::DAMA)])
+            return false;                       // peão, torre ou dama: sempre dá para mate
+    }
+
+    const Bitboard cavalos = b.pecas[idx(Cor::BRANCO)][idx(TipoPeca::CAVALO)] | b.pecas[idx(Cor::PRETO)][idx(TipoPeca::CAVALO)];
+    const Bitboard bispos  = b.pecas[idx(Cor::BRANCO)][idx(TipoPeca::BISPO)]  | b.pecas[idx(Cor::PRETO)][idx(TipoPeca::BISPO)];
+
+    const int menores = BitboardUtils::contar_bits(cavalos) + BitboardUtils::contar_bits(bispos);
+    if (menores <= 1) return true;              // só reis, ou um único cavalo/bispo no tabuleiro
+    if (cavalos) return false;                  // 2+ peças menores incluindo cavalo: há mate possível
+    return (bispos & CASAS_ESCURAS) == 0 || (bispos & ~CASAS_ESCURAS) == 0;   // bispos todos na mesma cor
+}
+
 // ============================================================================
-// Helpers para popular a ListaLances
+// Helpers para popular a ListaLances da Equipe
 // ============================================================================
 
 static void extrair_movimentos(ListaLances& lista, Quadrado origem, Bitboard destinos, Bitboard inimigas) {
