@@ -132,4 +132,22 @@ bool Jogo::tentarLance(const std::string& uci_in) {
     return false;
 }
 
+// ---------- fim de partida ----------
+// As funções da infra-estrutura recebem Tabuleiro& (sem const) porque testam lances de
+// verdade. Como estes métodos são const, trabalhamos numa cópia de pos_.
+
+bool Jogo::emXeque() const {
+    return em_xeque(pos_.b, pos_.b.estado.lado_a_jogar);   // só leitura, não precisa de cópia
+}
+
+bool Jogo::emXequeMate() const {
+    Posicao copia = pos_;
+    return em_xeque_mate(copia.b);
+}
+
+bool Jogo::emAfogamento() const {
+    Posicao copia = pos_;
+    return em_afogamento(copia.b);
+}
+
 } // namespace xadrez

@@ -42,6 +42,13 @@ bool casa_atacada(const Tabuleiro& b, Quadrado casa, Cor atacante);  //PJ e LUCA
 // O rei da 'cor' está em xeque?
 bool em_xeque(const Tabuleiro& b, Cor cor);  //PJ e LUCAS
 
+// Fim de partida. Recebem o Tabuleiro SEM const porque testam lances com fazer_lance /
+// desfazer_lance, mas o tabuleiro sempre volta exatamente como estava.
+// Valem para o lado a jogar (b.estado.lado_a_jogar).
+bool tem_lance_legal(Tabuleiro& b);   // existe ao menos um lance legal?
+bool em_xeque_mate(Tabuleiro& b);     // em xeque e sem lance legal
+bool em_afogamento(Tabuleiro& b);     // sem xeque e sem lance legal (empate)
+
 // Ordenação de lances (move ordering). Quanto melhor a ordem, mais o alpha-beta corta.
 // Ordem usual:
 //   1) lance da tabela de transposição (lance_tt), se existir;
