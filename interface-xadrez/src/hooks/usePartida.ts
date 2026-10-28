@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { JogoWasm } from '../wasm/chess_engine.js'
+import type { InfoLance, JogoWasm, SituacaoPartida } from '../wasm/chess_engine.js'
 import { carregarModulo } from './useJogo'
 
 const FEN_INICIAL = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
@@ -11,20 +11,43 @@ interface EstadoDaPartida {
     fen: string              // posição completa em texto
     tabuleiro: string[]      // 8 textos de 8 caracteres, '.' = casa vazia
     vezDasBrancas: boolean
+    situacao: SituacaoPartida // como está a partida: em andamento, mate, afogamento, empates...
+    ultimoLance: InfoLance    // o que o último lance fez (roque, en passant, captura...); uci === '' se não houve
 }
 
 export interface Partida extends EstadoDaPartida {
     pronta: boolean                              // false enquanto o WebAssembly carrega
-    lancesDe: (casa: string) => string[]         // ex.: lancesDe("e2") -> ["e2e3", "e2e4"]
-    tentarLance: (uci: string) => boolean        // true se o motor aceitou e atualizou a posição
+    lancesDe: (casa: string) => string[]         // ex.: lancesDe("e2") -> ["e2e3", "e2e4"]; [] se a partida terminou
+    tentarLance: (uci: string) => boolean        // true se o motor aceitou e atualizou a posição; false se a partida terminou
     carregarFen: (fen: string) => boolean        // true se o FEN era válido e foi carregado
     reiniciar: () => void                        // volta para a posição inicial
 }
 
-const ESTADO_VAZIO: EstadoDaPartida = { fen: '', tabuleiro: [], vezDasBrancas: true }
+// Valores de partida: usados enquanto o WebAssembly ainda não carregou.
+const SITUACAO_INICIAL: SituacaoPartida = { estado: 'em_andamento', vencedor: '', emXeque: false, terminou: false }
+const ULTIMO_LANCE_VAZIO: InfoLance = {
+    uci: '', tipo: '', captura: false, pecaCapturada: '',
+    casaCapturada: '', promocao: '', torreOrigem: '', torreDestino: '',
+}
 
+const ESTADO_VAZIO: EstadoDaPartida = {
+    fen: '',
+    tabuleiro: [],
+    vezDasBrancas: true,
+    situacao: SITUACAO_INICIAL,
+    ultimoLance: ULTIMO_LANCE_VAZIO,
+}
+
+// situacao() e ultimoLance() devolvem objetos JavaScript comuns (o embind COPIA os campos),
+// então não há nada para dar .delete() aqui, ao contrário do próprio Jogo.
 function lerEstado(jogo: JogoWasm): EstadoDaPartida {
-    return { fen: jogo.fen(), tabuleiro: jogo.tabuleiro(), vezDasBrancas: jogo.vezDasBrancas() }
+    return {
+        fen: jogo.fen(),
+        tabuleiro: jogo.tabuleiro(),
+        vezDasBrancas: jogo.vezDasBrancas(),
+        situacao: jogo.situacao(),
+        ultimoLance: jogo.ultimoLance(),
+    }
 }
 
 // A posição "de verdade" vive no objeto C++. Como esse objeto muda POR DENTRO (a referência
@@ -56,19 +79,24 @@ export function usePartida(): Partida {
         }
     }, [])
 
+    // O motor só recusa lances ILEGAIS. Empates como repetição, regra dos 50 e material
+    // insuficiente continuam permitindo lances, então quem "tranca" a partida é o frontend.
+    // Fazemos isso aqui, no hook, para valer para qualquer componente que use a partida.
+    const terminou = estado.situacao.terminou
+
     const lancesDe = useCallback(
-        (casa: string) => (jogo ? jogo.lancesDe(casa) : []),
-        [jogo],
+        (casa: string) => (jogo && !terminou ? jogo.lancesDe(casa) : []),
+        [jogo, terminou],
     )
 
     const tentarLance = useCallback(
         (uci: string) => {
-            if (!jogo) return false
+            if (!jogo || terminou) return false
             const aceito = jogo.tentarLance(uci)       // o MOTOR decide se o lance vale
             if (aceito) setEstado(lerEstado(jogo))     // nova cópia -> React redesenha
             return aceito
         },
-        [jogo],
+        [jogo, terminou],
     )
 
     const carregarFen = useCallback(
