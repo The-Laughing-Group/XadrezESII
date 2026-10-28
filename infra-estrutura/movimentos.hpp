@@ -48,6 +48,10 @@ bool em_xeque(const Tabuleiro& b, Cor cor);  //PJ e LUCAS
 bool tem_lance_legal(Tabuleiro& b);   // existe ao menos um lance legal?
 bool em_xeque_mate(Tabuleiro& b);     // em xeque e sem lance legal
 bool em_afogamento(Tabuleiro& b);     // sem xeque e sem lance legal (empate)
+// Outros finais de partida. Só leem o tabuleiro (por isso aceitam const).
+// (empate_50 e repetida estão declaradas em lances.hpp.)
+int  contar_repeticoes(const Tabuleiro& b);     // quantas VEZES ANTES a posição atual já apareceu
+bool material_insuficiente(const Tabuleiro& b); // nenhum dos dois lados consegue dar mate
 
 // Ordenação de lances (move ordering). Quanto melhor a ordem, mais o alpha-beta corta.
 // Ordem usual:
