@@ -90,6 +90,8 @@ public:
     // construir o Jogo ou carregar um FEN. Um lance recusado não altera este valor.
     InfoLance ultimoLance() const;
 
+    std::string melhorLanceIA(int profundidade);
+
 private:
     Posicao pos_;
     InfoLance ultimo_;   // descrição do último lance aceito

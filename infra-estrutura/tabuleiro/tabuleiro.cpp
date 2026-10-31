@@ -2,6 +2,8 @@
 #include "../../infra-estrutura/bitboard/bitboard.hpp"
 #include <iostream>
 
+bool jogo_acabou(Tabuleiro& b);
+
 void limpar(Tabuleiro& b) {
     b = Tabuleiro{};
 }

@@ -1,21 +1,38 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import Tabuleiro from "../components/Tabuleiro"
 import { usePartida } from "../hooks/usePartida"
-// import { useSearchParams } from "react-router-dom";
 
 const Game = () => {
     const partida = usePartida();
+    const [searchParams] = useSearchParams();
+    const modoIA = searchParams.get("modo") === "ia";
 
     const [historicoMovimentos] = useState<(string)[]>([]);
 
-    // const [searchParams] = useSearchParams();
-  
-    // const modo = searchParams.get('modo');
+    useEffect(() => {
+        if (
+            !modoIA ||
+            !partida.pronta ||
+            partida.vezDasBrancas ||
+            partida.situacao.terminou ||
+            !partida.fen
+        ) return;
+
+        partida.jogarIA(2);
+    }, [
+        modoIA,
+        partida.pronta,
+        partida.vezDasBrancas,
+        partida.situacao.terminou,
+        partida.fen,
+        partida.jogarIA,
+    ]);
     
     return (
         <div id="game">
             <div className="painel">
-                <Tabuleiro partida={partida} historicoMovimentos={historicoMovimentos} />
+                <Tabuleiro partida={partida} historicoMovimentos={historicoMovimentos} contraIA={modoIA} />
             </div>
             <div id="historico-movimentos">
                 <div className="coluna-movimentos">

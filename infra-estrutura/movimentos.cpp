@@ -55,3 +55,19 @@ Bitboard ataques_bispo(Quadrado sq, Bitboard ocupacao) {
 Bitboard ataques_dama(Quadrado sq, Bitboard ocupacao) {
     return ataques_torre(sq, ocupacao) | ataques_bispo(sq, ocupacao);
 }
+
+FimDeJogo verificarFim(Tabuleiro& tabuleiro) {
+    if (!tem_lance_legal(tabuleiro)) {
+        return em_xeque(tabuleiro, tabuleiro.estado.lado_a_jogar)
+            ? FimDeJogo::mate
+            : FimDeJogo::empate;
+    }
+
+    if (material_insuficiente(tabuleiro) ||
+        empate_50(tabuleiro) ||
+        contar_repeticoes(tabuleiro) >= 2) {
+        return FimDeJogo::empate;
+    }
+
+    return FimDeJogo::nenhum;
+}

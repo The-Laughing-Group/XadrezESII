@@ -4,3 +4,4 @@
 #include "infra-estrutura\movimentos.hpp"
 
 int minimax_alfa_beta(Tabuleiro& tabuleiro, int profundidade, int alfa, int beta, bool eh_maximizador);
+Lance obter_melhor_lance(Tabuleiro& tabuleiro, int profundidade);

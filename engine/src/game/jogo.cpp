@@ -8,6 +8,8 @@
 #include "xadrez/movimentos.hpp"
 #include "../../../infra-estrutura/movimentos.hpp"   // ListaLances, gerar_lances
 #include "lances.hpp"
+#include "search.hpp"  // declaração de obter_melhor_lance
+#include <limits>
 
 namespace xadrez {
 
@@ -225,6 +227,19 @@ SituacaoPartida Jogo::situacao() const {
 
 InfoLance Jogo::ultimoLance() const {
     return ultimo_;
+}
+
+std::string Jogo::melhorLanceIA(int profundidade) {
+    // A IA joga pelas pretas.
+    if (pos_.b.estado.lado_a_jogar != Cor::PRETO) return "";
+    // Pode evitar essa checagem duplicada e deixar a busca decidir se há lance
+    // if (profundidade <= 0 || situacao().terminou) return "";
+    if (profundidade <= 0) return "";
+
+    const Lance melhor = obter_melhor_lance(pos_.b, profundidade);
+    if (melhor == SEM_LANCE) return "";
+
+    return lanceParaUci(melhor);
 }
 
 } // namespace xadrez

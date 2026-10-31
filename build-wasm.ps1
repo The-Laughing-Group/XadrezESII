@@ -35,8 +35,10 @@ $fontes += Get-ChildItem (Join-Path $raiz "engine\src") -Recurse -Filter *.cpp |
 $fontes += Get-ChildItem (Join-Path $raiz "infra-estrutura") -Recurse -Filter *.cpp |
            Where-Object { $_.Name -ne "teste_headers.cpp" } | ForEach-Object { $_.FullName }
 $fontes += Join-Path $raiz "engine\bindings\bindings.cpp"
+$fontes += Get-ChildItem (Join-Path $raiz "ia") -Recurse -Filter *.cpp | ForEach-Object { $_.FullName }
 
-$incluir = @("-I", (Join-Path $raiz "engine\include"), "-I", (Join-Path $raiz "infra-estrutura"))
+$incluir = @("-I", (Join-Path $raiz "engine\include"),"-I", (Join-Path $raiz "infra-estrutura"),"-I", $raiz,"-I", (Join-Path $raiz "ia\busca-minimax")
+)
 
 # Objetos ficam em build-wasm\obj (a pasta build-wasm\ já está no .gitignore).
 $pastaObj = Join-Path $raiz "build-wasm\obj"

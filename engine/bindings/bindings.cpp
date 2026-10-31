@@ -38,6 +38,7 @@ EMSCRIPTEN_BINDINGS(xadrez) {
 
     class_<Jogo>("Jogo")
         .constructor<>()
+        .function("melhorLanceIA", &Jogo::melhorLanceIA)
         .function("carregarFen", &Jogo::carregarFen)
         .function("fen", &Jogo::fen)
         .function("vezDasBrancas", &Jogo::vezDasBrancas)

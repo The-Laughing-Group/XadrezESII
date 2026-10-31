@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { InfoLance, JogoWasm, SituacaoPartida } from '../wasm/chess_engine.js'
 import { carregarModulo } from './useJogo'
 
@@ -19,6 +19,7 @@ export interface Partida extends EstadoDaPartida {
     pronta: boolean                              // false enquanto o WebAssembly carrega
     lancesDe: (casa: string) => string[]         // ex.: lancesDe("e2") -> ["e2e3", "e2e4"]; [] se a partida terminou
     tentarLance: (uci: string) => boolean        // true se o motor aceitou e atualizou a posição; false se a partida terminou
+    jogarIA: (profundidade: number) => string | null // calcula e aplica a resposta das pretas; null se não jogou
     carregarFen: (fen: string) => boolean        // true se o FEN era válido e foi carregado
     reiniciar: () => void                        // volta para a posição inicial
 }
@@ -59,6 +60,7 @@ function lerEstado(jogo: JogoWasm): EstadoDaPartida {
 export function usePartida(): Partida {
     const [jogo, setJogo] = useState<JogoWasm | null>(null)
     const [estado, setEstado] = useState<EstadoDaPartida>(ESTADO_VAZIO)
+    const ultimaPosicaoCalculadaPelaIA = useRef<string | null>(null)
 
     useEffect(() => {
         let ativo = true
@@ -99,11 +101,37 @@ export function usePartida(): Partida {
         [jogo, terminou],
     )
 
+    const jogarIA = useCallback(
+        (profundidade: number) => {
+            if (
+                !jogo ||
+                terminou ||
+                jogo.vezDasBrancas() ||
+                !Number.isInteger(profundidade) ||
+                profundidade < 1
+            ) return null
+
+            const fenAtual = jogo.fen()
+            if (ultimaPosicaoCalculadaPelaIA.current === fenAtual) return null
+            ultimaPosicaoCalculadaPelaIA.current = fenAtual
+
+            const uci = jogo.melhorLanceIA(profundidade)
+            if (!uci || !jogo.tentarLance(uci)) return null
+
+            setEstado(lerEstado(jogo))
+            return uci
+        },
+        [jogo, terminou],
+    )
+
     const carregarFen = useCallback(
         (fen: string) => {
             if (!jogo) return false
             const carregado = jogo.carregarFen(fen)
-            if (carregado) setEstado(lerEstado(jogo))
+            if (carregado) {
+                ultimaPosicaoCalculadaPelaIA.current = null
+                setEstado(lerEstado(jogo))
+            }
             return carregado
         },
         [jogo],
@@ -113,5 +141,5 @@ export function usePartida(): Partida {
         carregarFen(FEN_INICIAL)
     }, [carregarFen])
 
-    return { pronta: jogo !== null, ...estado, lancesDe, tentarLance, carregarFen, reiniciar }
+    return { pronta: jogo !== null, ...estado, lancesDe, tentarLance, jogarIA, carregarFen, reiniciar }
 }
