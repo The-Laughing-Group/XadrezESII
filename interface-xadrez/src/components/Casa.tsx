@@ -1,5 +1,16 @@
 import type { CSSProperties } from "react";
-import type { CasaProps } from "../interfaces/CasaProps";
+
+import type { Peca } from "../interfaces/Peca";
+
+export interface CasaProps {
+    row: number;
+    col: number;
+    peca: Peca | null;
+    selecionada: boolean;
+    onSelecionar: (row: number, col: number) => void;
+    movimentoPossivel: boolean;
+    podeSelecionar: boolean | undefined;
+}
 
 const Casa = ({ row, 
                 col, 

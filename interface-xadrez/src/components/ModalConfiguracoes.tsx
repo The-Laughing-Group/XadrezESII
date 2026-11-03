@@ -1,10 +1,12 @@
-// ModalConfiguracoes.tsx
 import { useEffect } from "react";
 import PainelConfiguracoes from "./PainelConfiguracoes";
 
-type Props = { aberto: boolean; aoFechar: () => void };
+interface ModalConfiguracoesProps { 
+    aberto: boolean;
+    aoFechar: () => void;
+};
 
-const ModalConfiguracoes = ({ aberto, aoFechar }: Props) => {
+const ModalConfiguracoes = ({ aberto, aoFechar }: ModalConfiguracoesProps) => {
     useEffect(() => {
         if (!aberto) return;
         const aoTeclar = (e: KeyboardEvent) => e.key === "Escape" && aoFechar();

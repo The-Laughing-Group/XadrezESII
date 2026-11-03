@@ -1,15 +1,41 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
-import Tabuleiro from "../components/Tabuleiro"
-
-import { usePartida } from "../hooks/usePartida"
+import { usePartida, type Partida } from "../hooks/usePartida";
+import { useSom } from "../hooks/useSom";
 import { useMusica } from "../hooks/useMusica";
+
+import { uciToPosicao, type Posicao } from "../utils/notacao";
+
+import Tabuleiro from "../components/Tabuleiro";
+import HistoricoMovimentos from "../components/HistoricoMovimentos";
+import BarraSuperior from "../components/BarraSuperior";
+import ModalConfiguracoes from "../components/ModalConfiguracoes";
+import ModalFimJogo from "../components/ModalFimJogo";
+
+const textoDaBarra = ({ situacao, vezDasBrancas }: Pick<Partida, "situacao" | "vezDasBrancas">): string => {
+    switch (situacao.estado) {
+        case "xeque_mate":            return `Xeque-mate!\n Vencem as ${situacao.vencedor}`;
+        case "afogamento":            return "Empate: afogamento";
+        case "material_insuficiente": return "Empate: material insuficiente";
+        case "regra_dos_50":          return "Empate: regra dos 50 lances";
+        case "repeticao":             return "Empate: repetição de posição";
+        default: {
+            const vez = `Vez das ${vezDasBrancas ? "brancas" : "pretas"}`;
+            return situacao.emXeque ? `Xeque! ${vez}` : vez;
+        }
+    }
+};
 
 const Game = () => {
     useMusica();
     
     const partida = usePartida();
+    const { pronta, tabuleiro, situacao, vezDasBrancas, reiniciar } = partida;
+
+    const tocarXeque = useSom("xeque");
+    const tocarFimJogo = useSom("fimjogo");
+
     const [searchParams] = useSearchParams();
     const modoIA = searchParams.get("modo") === "ia";
     
@@ -21,20 +47,72 @@ const Game = () => {
             case "dificil": { profundidade = 5; break; }
         }
     }
+    const [configAberta, setConfigAberta] = useState(false);
+    const [fimJogoAberto, setFimJogoAberto] = useState(false);
 
-    const [historicoMovimentos] = useState<string[]>([]);
+    const [historicoMovimentos, setHistoricoMovimentos] = useState<(string)[]>([]);
 
     useEffect(() => {
-      if (
-        !modoIA ||
-        !partida.pronta ||
-        partida.vezDasBrancas ||
-        partida.situacao.terminou ||
-        !partida.fen
-      )
-        return;
+        if(situacao.emXeque && !situacao.terminou) tocarXeque();
+    }, [situacao.emXeque]);
 
-      partida.jogarIA(profundidade);
+    useEffect(() => {
+        const { uci, tipo, captura, promocao } = partida.ultimoLance;
+        if (!uci) return;
+
+        let lance: string;
+
+        if (tipo === "roque_rei") lance = "0-0";
+        else if (tipo === "roque_dama") lance = "0-0-0";
+        else {
+            const destino = uci.slice(2, 4);
+            const { row, col } = uciToPosicao(uci);
+            const peca = tabuleiro[row][col];
+
+            const ePeao = promocao ? true : peca.toUpperCase() === "P";
+            const promo = promocao ? promocao.toUpperCase() : "";
+
+            lance = ePeao
+                ? `${captura ? uci[0] + "x" : ""}${destino}${promo}`
+                : `${peca.toUpperCase()}${captura ? "x" : ""}${destino}`;
+        }
+        setHistoricoMovimentos((prev) => [...prev, lance]);
+    }, [partida.ultimoLance]);
+    
+    useEffect(() => {
+        if(situacao.terminou) {
+            setFimJogoAberto(true);
+            tocarFimJogo();
+        }
+    }, [situacao.terminou]);
+
+    const [casaSelecionada, setCasaSelecionada] = useState<Posicao| null>(null);
+
+    const [movimentosPossiveis, setMovimentosPossiveis] = useState<Posicao[]>([]);
+
+    const [promocao, setPromocao] = useState<{origem: Posicao; destino: Posicao} | null>(null);
+
+    const limparSelecao = () => {
+        setCasaSelecionada(null); 
+        setMovimentosPossiveis([]);
+        setPromocao(null);
+    };
+
+    const reiniciarJogo = () => {
+        reiniciar();
+        setHistoricoMovimentos([]);
+        setFimJogoAberto(false);
+    };
+
+    useEffect(() => {
+        if(!modoIA ||
+           !partida.pronta ||
+           partida.vezDasBrancas ||
+           partida.situacao.terminou ||
+           !partida.fen) {
+            return;
+        }
+        partida.jogarIA(profundidade);
     }, [
       modoIA,
       partida.pronta,
@@ -44,43 +122,43 @@ const Game = () => {
       partida.jogarIA,
     ]);
 
+    if(!pronta) return null;
+    
     return (
-      <div id="game">
-        <div className="painel">
-          <Tabuleiro
-            partida={partida}
-            historicoMovimentos={historicoMovimentos}
-            contraIA={modoIA}
-          />
-        </div>
-        <div id="historico-movimentos">
-          <div className="coluna-movimentos">
-            <h3>Rodadas</h3>
-            {historicoMovimentos
-              .filter((_, index) => index % 2 === 0)
-              .map((_, index) => (
-                <p key={index + 1}>{index + 1}.</p>
-              ))}
-          </div>
-          <div className="coluna-movimentos">
-            <h3>Brancas</h3>
+        <div id="game">
+            <div className="painel">
+                <BarraSuperior
+                    setConfigAberta={setConfigAberta}
+                    promocao={promocao}
+                    limparSelecao={limparSelecao}
+                    partida={partida}
+                    textoIndicador={textoDaBarra({ situacao, vezDasBrancas })}
+                />
 
-            {historicoMovimentos
-              .filter((_, index) => index % 2 === 0)
-              .map((movimento, index) => (
-                <p key={index}>{movimento}</p>
-              ))}
-          </div>
-          <div className="coluna-movimentos">
-            <h3>Pretas</h3>
-            {historicoMovimentos
-              .filter((_, index) => index % 2 !== 0)
-              .map((movimento, index) => (
-                <p key={index + 1}>{movimento}</p>
-              ))}
-          </div>
+                <Tabuleiro 
+                    partida={partida}
+                    promocao={promocao}
+                    setPromocao={setPromocao}
+                    casaSelecionada={casaSelecionada}
+                    setCasaSelecionada={setCasaSelecionada}
+                    movimentosPossiveis={movimentosPossiveis}
+                    setMovimentosPossiveis={setMovimentosPossiveis}
+                    limparSelecao={limparSelecao}
+                    contraIA={modoIA}
+                />
+            </div>
+
+            <HistoricoMovimentos historicoMovimentos={historicoMovimentos} />
+
+            <ModalConfiguracoes aberto={configAberta} aoFechar={() => setConfigAberta(false)} />
+            <ModalFimJogo 
+                aberto={fimJogoAberto} 
+                aoFechar={() => setFimJogoAberto(false)}
+                reiniciarJogo={reiniciarJogo}
+                textoIndicador={textoDaBarra({ situacao, vezDasBrancas })}
+            />
         </div>
-      </div>
     );
 };
+
 export default Game;
