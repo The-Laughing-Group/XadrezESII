@@ -65,6 +65,15 @@ void pontuar_lances(const Tabuleiro& b, ListaLances& lista, Lance lance_tt);
 // entre os que restam (indice_atual .. quantidade-1).
 void ordenar_proximo_lance(ListaLances& lista, int indice_atual);
 
+enum class FimDeJogo {
+    nenhum,
+    mate,
+    empate
+};
+
+// Analisa o tabuleiro indicando se chegou em um xeque-mate ou em um empate. 
+FimDeJogo verificarFim(Tabuleiro& tabuleiro);
+
 // Conta os nós folha da árvore de lances legais até a profundidade dada.
 // É a ferramenta padrão para validar a geração de lances contra números conhecidos.
 uint64_t perft(Tabuleiro& b, int profundidade);
