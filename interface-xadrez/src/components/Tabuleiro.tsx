@@ -67,7 +67,7 @@ const OPCOES_DE_PROMOCAO = [
     ["n", "♞"],
 ] as const;
 
-const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, historicoMovimentos: (string)[] }) => {
+const Tabuleiro = ({ partida, historicoMovimentos, contraIA }: { partida: Partida, historicoMovimentos: (string)[], contraIA: boolean }) => {
 
     const {pronta, tabuleiro, vezDasBrancas, lancesDe, tentarLance } = partida;
 
@@ -95,6 +95,7 @@ const Tabuleiro = ({ partida, historicoMovimentos }: { partida: Partida, histori
     };
 
     const podeSelecionar = (row: number, col: number) => {
+        if (contraIA && !vezDasBrancas) return false;
         const peca = tabuleiro[row]?.[col];
         if(peca === ".") return false;
         const branca = peca === peca?.toUpperCase();

@@ -20,11 +20,20 @@ set(INFRA_SRC
     ${INFRA_DIR}/otimizacao/zobrist.cpp
 )
 
-add_library(chess_core STATIC ${CORE_SRC} ${INFRA_SRC})
+set(IA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../ia)
+file(GLOB_RECURSE IA_SRC CONFIGURE_DEPENDS
+    ${IA_DIR}/busca-minimax/*.cpp
+    ${IA_DIR}/funcao-de-custo/*.cpp
+)
+
+add_library(chess_core STATIC ${CORE_SRC} ${INFRA_SRC} ${IA_SRC})
 # target_include_directories(chess_core PUBLIC include)
 target_include_directories(chess_core PUBLIC
     include
     ${CMAKE_CURRENT_SOURCE_DIR}/../infra-estrutura
+    ${CMAKE_CURRENT_SOURCE_DIR}/..
+    ${IA_DIR}/busca-minimax
+    ${IA_DIR}/funcao-de-custo
 )
 if(MSVC)
   target_compile_options(chess_core PRIVATE /W4)

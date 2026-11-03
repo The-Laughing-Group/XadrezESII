@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "../../infra-estrutura/movimentos.hpp"
 #include "../../infra-estrutura/bitboard/bitboard.hpp"
 #include "../../infra-estrutura/tabuleiro/tabuleiro.hpp"
@@ -8,7 +9,7 @@
 #include "bitboard/bitboard.hpp"
 #include "lances.hpp"
 
-// Funções implementadas pelo Henrique
+// Funções implementadas diretamente pelo modulo infra-estrutura
 extern Bitboard ataques_torre(Quadrado sq, Bitboard ocupacao);
 extern Bitboard ataques_bispo(Quadrado sq, Bitboard ocupacao);
 extern Bitboard ataques_dama(Quadrado sq, Bitboard ocupacao);
@@ -82,6 +83,87 @@ bool casa_atacada(const Tabuleiro& b, Quadrado casa, Cor atacante) {
 
 bool em_xeque(const Tabuleiro& b, Cor cor) {
     return casa_atacada(b, casa_do_rei(b, cor), oposta(cor));
+}
+
+// ============================================================================
+// Fim de partida
+// ============================================================================
+// gerar_lances é PSEUDO-legal (inclui lances que deixam o próprio rei em xeque),
+// então "lista vazia" não serve para detectar mate. Só fazer_lance sabe se o lance é
+// legal. Por isso estas funções recebem o Tabuleiro SEM const: fazem e desfazem lances
+// de verdade, mas sempre devolvem o tabuleiro exatamente como estava.
+
+// O lado a jogar tem pelo menos um lance legal?
+bool tem_lance_legal(Tabuleiro& b) {
+    ListaLances lista;
+    gerar_lances(b, lista);
+    for (int i = 0; i < lista.quantidade; ++i) {
+        // true  = o lance era legal e FOI feito -> desfazemos para restaurar o tabuleiro
+        // false = era ilegal e fazer_lance já desfez sozinho (não chamar desfazer_lance)
+        if (fazer_lance(b, lista.lances[i])) {
+            desfazer_lance(b, lista.lances[i]);
+            return true;
+        }
+    }
+    return false;
+}
+
+// Xeque-mate: o lado a jogar está em xeque E não tem nenhum lance legal.
+bool em_xeque_mate(Tabuleiro& b) {
+    return em_xeque(b, b.estado.lado_a_jogar) && !tem_lance_legal(b);
+}
+
+// Afogamento: o lado a jogar NÃO está em xeque, mas também não tem nenhum lance legal (empate).
+bool em_afogamento(Tabuleiro& b) {
+    return !em_xeque(b, b.estado.lado_a_jogar) && !tem_lance_legal(b);
+}
+
+// ----------------------------------------------------------------------------
+// Empates "passivos": dependem só da posição e do histórico, não de lances legais
+// ----------------------------------------------------------------------------
+
+// Regra dos 50 lances = 100 meios-lances sem captura nem lance de peão.
+bool empate_50(const Tabuleiro& b) {
+    return b.estado.contador_50 >= LIMITE_REGRA_50;
+}
+
+// Quantas vezes ANTES a posição atual já apareceu (0 = é a primeira vez).
+// historico[i] guarda a posição que existia ANTES do i-ésimo lance, e a posição atual
+// está em b.estado. Só posições com o mesmo lado a jogar podem ser iguais, por isso o
+// passo é 2. Lance de peão ou captura é irreversível, então não adianta olhar antes de
+// (conta_lance - contador_50). A chave Zobrist já inclui peças, vez, roque e en passant.
+int contar_repeticoes(const Tabuleiro& b) {
+    int n = 0;
+    const int limite = std::max(0, b.conta_lance - b.estado.contador_50);
+    for (int i = b.conta_lance - 2; i >= limite; i -= 2)
+        if (b.historico[i].chave_zobrist == b.estado.chave_zobrist) ++n;
+    return n;
+}
+
+bool repetida(const Tabuleiro& b) {
+    return contar_repeticoes(b) >= 1;
+}
+
+// Material insuficiente: nenhum lado consegue dar mate, nem com ajuda do adversário.
+//   rei x rei | rei+cavalo x rei | rei+bispo x rei |
+//   só bispos e todos na mesma cor de casa (ex.: rei+bispo x rei+bispo "do mesmo lado").
+// NÃO entram: dois cavalos (o mate é possível, só não é forçado) nem cavalo x cavalo.
+bool material_insuficiente(const Tabuleiro& b) {
+    constexpr Bitboard CASAS_ESCURAS = 0xAA55AA55AA55AA55ULL;   // a1 é escura
+
+    for (int c = 0; c < NUM_CORES; ++c) {
+        if (b.pecas[c][idx(TipoPeca::PEAO)] || b.pecas[c][idx(TipoPeca::TORRE)] ||
+            b.pecas[c][idx(TipoPeca::DAMA)])
+            return false;                       // peão, torre ou dama: sempre dá para mate
+    }
+
+    const Bitboard cavalos = b.pecas[idx(Cor::BRANCO)][idx(TipoPeca::CAVALO)] | b.pecas[idx(Cor::PRETO)][idx(TipoPeca::CAVALO)];
+    const Bitboard bispos  = b.pecas[idx(Cor::BRANCO)][idx(TipoPeca::BISPO)]  | b.pecas[idx(Cor::PRETO)][idx(TipoPeca::BISPO)];
+
+    const int menores = BitboardUtils::contar_bits(cavalos) + BitboardUtils::contar_bits(bispos);
+    if (menores <= 1) return true;              // só reis, ou um único cavalo/bispo no tabuleiro
+    if (cavalos) return false;                  // 2+ peças menores incluindo cavalo: há mate possível
+    return (bispos & CASAS_ESCURAS) == 0 || (bispos & ~CASAS_ESCURAS) == 0;   // bispos todos na mesma cor
 }
 
 // ============================================================================
