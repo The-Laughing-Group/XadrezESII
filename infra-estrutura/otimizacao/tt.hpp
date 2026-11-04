@@ -1,7 +1,9 @@
 #pragma once
 #include <cstddef>
-#include "utils/constantes.hpp"
-#include "lances.hpp" //Pode estar desatualizado, procurar lances.hpp
+#include <cstdint>
+#include <vector>
+#include "../utils/constantes.hpp"
+#include "../lances.hpp" //Pode estar desatualizado, procurar lances.hpp
 
 // Tipos de limite guardados na TT (resultado do alpha-beta).
 enum class TTFlag : uint8_t {
@@ -21,6 +23,10 @@ struct TTEntry {
 };
 
 static_assert(sizeof(TTEntry) == 16, "TTEntry deve ter 16 bytes");
+
+extern std::vector<TTEntry> tabela_tt;
+extern size_t tt_mascara;
+extern uint8_t idade_atual;
 
 // Aloca a tabela com cerca de 'megabytes' MB (o número de entradas vira potência de 2).
 void iniciar_tt(std::size_t megabytes);
