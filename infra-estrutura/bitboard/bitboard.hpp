@@ -53,6 +53,13 @@ namespace BitboardUtils {
         return static_cast<Quadrado>(std::countr_zero(bb));
     }
 
+    // Índice do bit ligado mais significativo (MSB).
+    // Se bb == 0, devolve 64 (quadrado_vazio).
+    inline Quadrado indice_msb(Bitboard bb) {
+        if (bb == 0) return static_cast<Quadrado>(64);
+        return static_cast<Quadrado>(63 - std::countl_zero(bb));
+    }
+
     // Devolve o índice do bit menos significativo E o remove de bb.
     // É o jeito padrão de percorrer todos os bits ligados de um bitboard:
     //     while (bb) { Quadrado sq = remover_lsb(bb); ... }
@@ -61,4 +68,12 @@ namespace BitboardUtils {
         bb &= (bb - 1);   // desliga o LSB (truque de Brian Kernighan)
         return sq;
     }
+
+    // Bits com índice MAIOR que sq (sem incluir sq).
+    // (~0ULL << sq) << 1 em vez de << (sq + 1): evita deslocar por 64 quando sq == 63.
+    inline Bitboard bits_acima(Bitboard bb, Quadrado sq)  { return bb & ((~0ULL << sq) << 1); }
+
+    // Bits com índice MENOR que sq (sem incluir sq).
+    inline Bitboard bits_abaixo(Bitboard bb, Quadrado sq) { return bb & ((1ULL << sq) - 1); }
+
 }

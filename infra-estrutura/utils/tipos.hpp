@@ -85,7 +85,7 @@ constexpr Bitboard get_mascara_linha(Linha l)   { return MASCARA_LINHAS[l]; }
 constexpr int diagonal_index(int sq) {
     int rank = sq / 8;
     int file = sq % 8;
-    return (rank - file) + 7;
+    return 7 - (rank - file);
 }
 // Retorna o índice da antidiagonal (0 a 14) contendo a casa sq (0 a 63)
 constexpr int antidiagonal_index(int sq) {
@@ -95,8 +95,8 @@ constexpr int antidiagonal_index(int sq) {
 }
 
 // Máscara direta contendo a diagonal e antidiagonal de uma determinada casa
-constexpr uint64_t mascara_diagonal_casa(int sq) { return DIAGONAIS[diagonal_index(sq)]; }
-constexpr uint64_t mascara_antidiagonal_casa(int sq) { return ANTIDIAGONAIS[antidiagonal_index(sq)]; }
+constexpr uint64_t get_mascara_diagonal_casa(int sq) { return DIAGONAIS[diagonal_index(sq)]; }
+constexpr uint64_t get_mascara_antidiagonal_casa(int sq) { return ANTIDIAGONAIS[antidiagonal_index(sq)]; }
 
 // ---------------------------------------------------------------------------
 // Estado da partida

@@ -110,7 +110,7 @@ bool fazer_lance(Tabuleiro& b, Lance m);
 // Só chamar após um fazer_lance que retornou true, com o mesmo lance.
 void desfazer_lance(Tabuleiro& b, Lance m);
 
-static uint8_t novos_direitos(uint8_t r, Quadrado origem, Quadrado destino);
+// static uint8_t novos_direitos(uint8_t r, Quadrado origem, Quadrado destino);
 
 
 
@@ -122,6 +122,6 @@ static uint8_t novos_direitos(uint8_t r, Quadrado origem, Quadrado destino);
 bool repetida(const Tabuleiro& b);
 
 // contador_50 >= LIMITE_REGRA_50 (100 meios-lances)
-bool empate_50(const Tabuleiro& b); 
+bool empate_50(const Tabuleiro& b);
 
 bool em_xeque(const Tabuleiro& b, Cor cor);

@@ -7,4 +7,5 @@ export interface CasaProps {
     selecionada: boolean;
     onSelecionar: (row: number, col: number) => void;
     movimentoPossivel: boolean;
+    podeSelecionar: boolean | undefined;
 }
