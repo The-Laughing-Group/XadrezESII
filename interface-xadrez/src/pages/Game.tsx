@@ -12,6 +12,15 @@ const Game = () => {
     const partida = usePartida();
     const [searchParams] = useSearchParams();
     const modoIA = searchParams.get("modo") === "ia";
+    
+    let profundidade : number;
+    if(modoIA) {
+        switch(searchParams.get("dificuldade")) {
+            case "facil": { profundidade = 2; break; }
+            case "medio": { profundidade = 3; break; }
+            case "dificil": { profundidade = 5; break; }
+        }
+    }
 
     const [historicoMovimentos] = useState<string[]>([]);
 
@@ -25,7 +34,7 @@ const Game = () => {
       )
         return;
 
-      partida.jogarIA(5);
+      partida.jogarIA(profundidade);
     }, [
       modoIA,
       partida.pronta,
