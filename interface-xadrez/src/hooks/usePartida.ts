@@ -19,7 +19,7 @@ export interface Partida extends EstadoDaPartida {
     pronta: boolean                              // false enquanto o WebAssembly carrega
     lancesDe: (casa: string) => string[]         // ex.: lancesDe("e2") -> ["e2e3", "e2e4"]; [] se a partida terminou
     tentarLance: (uci: string) => boolean        // true se o motor aceitou e atualizou a posição; false se a partida terminou
-    jogarIA: (profundidade: number) => string | null // calcula e aplica a resposta das pretas; null se não jogou
+    jogarIA: (profundidade: number) => Promise<string | null> // calcula e aplica a resposta das pretas; null se não jogou
     carregarFen: (fen: string) => boolean        // true se o FEN era válido e foi carregado
     reiniciar: () => void                        // volta para a posição inicial
 }
@@ -101,10 +101,35 @@ export function usePartida(): Partida {
         [jogo, terminou],
     )
 
+    const workerRef = useRef<Worker | null>(null)
+    const pendentes = useRef(new Map<number, (uci: string | null) => void>())
+    const proximoId = useRef(0)
+
+    useEffect(() => {
+        const worker = new Worker(
+            new URL('../workers/ia.worker.ts', import.meta.url),
+            { type: 'module' },
+        )
+        worker.onmessage = (e: MessageEvent<{ id: number; uci: string | null }>) => {
+            const resolver = pendentes.current.get(e.data.id)
+            pendentes.current.delete(e.data.id)
+            resolver?.(e.data.uci)
+        }
+        workerRef.current = worker
+
+        return () => {
+            worker.terminate()
+            workerRef.current = null
+            pendentes.current.clear()
+        }
+    }, [])
+
     const jogarIA = useCallback(
-        (profundidade: number) => {
+        async (profundidade: number): Promise<string | null> => {
+            const worker = workerRef.current
             if (
                 !jogo ||
+                !worker ||
                 terminou ||
                 jogo.vezDasBrancas() ||
                 !Number.isInteger(profundidade) ||
@@ -115,8 +140,15 @@ export function usePartida(): Partida {
             if (ultimaPosicaoCalculadaPelaIA.current === fenAtual) return null
             ultimaPosicaoCalculadaPelaIA.current = fenAtual
 
-            const uci = jogo.melhorLanceIA(profundidade)
-            if (!uci || !jogo.tentarLance(uci)) return null
+            const id = proximoId.current++
+            const uci = await new Promise<string | null>(resolve => {
+                pendentes.current.set(id, resolve)
+                worker.postMessage({ id, fen: fenAtual, profundidade })
+            })
+
+            // se a posição mudou enquanto a IA pensava (ex.: reiniciou), descarta
+            if (!uci || jogo.fen() !== fenAtual) return null
+            if (!jogo.tentarLance(uci)) return null
 
             setEstado(lerEstado(jogo))
             return uci

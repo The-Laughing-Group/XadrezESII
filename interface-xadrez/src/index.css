@@ -148,6 +148,11 @@ body {
     box-shadow: var(--moldura-branca);
 }
 
+.modal-caixa  div {
+    display: flex;
+    gap: 15px;
+}
+
 .modal-caixa h1 {
     margin: 0;
     text-transform: uppercase;
@@ -176,6 +181,31 @@ body {
     display: flex;
     flex-direction: column;
     gap: 24px;
+}
+
+.modal-fim {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.modal-fim div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    width: 100%;
+}
+
+.modal-fim .botao-pixel, .modal-caixa .botao-pixel {
+    height: auto;
+    padding: 2px 10px;
+    gap: 15px;
+    justify-content: start;
+    text-decoration: none;
+    font-family: "Pixelify Sans", sans-serif;
+    box-shadow: var(--moldura-branca);
 }
 
 #configuracoes .sections-config {
