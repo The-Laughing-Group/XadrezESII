@@ -209,6 +209,15 @@ body {
     gap: 16px;
 }
 
+.linha-config {
+    cursor: pointer;
+}
+
+.linha-config.desabilitado {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 .interruptor {
     appearance: none;
     flex-shrink: 0;
@@ -223,6 +232,10 @@ body {
 .interruptor:checked {
     background-color: var(--escuro);
     box-shadow: var(--moldura), inset 0 0 0 5px var(--claro);
+}
+
+.interruptor:disabled {
+    cursor: not-allowed;
 }
 
 .linha-config input[type="range"] {
@@ -258,12 +271,24 @@ body {
 
 #modos {
     display: flex;
-    gap: 60px;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     min-width: 100vw;
     overflow: hidden;
+}
+
+.conteudo-modos {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.opcoes-modo {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
 }
 
 .botao-pixel-modo {
@@ -272,7 +297,7 @@ body {
     justify-content: center;
     align-items: center;
 
-    padding: 8% 5%;
+    padding: clamp(16px, 3vw, 40px) clamp(20px, 3vw, 48px);
     
     font-size: 30px;
     text-decoration: none;
@@ -289,6 +314,60 @@ body {
 
 .botao-pixel-modo img {
     image-rendering: pixelated;
+}
+
+button.botao-pixel-modo {
+    position: relative;
+    border: 0;
+    font-family: inherit;
+    filter: brightness(0.7);
+}
+
+button.botao-pixel-modo p {
+    margin: 0;
+}
+
+button.botao-pixel-modo.selecionado {
+    filter: none;
+}
+
+.botao-pixel-modo .marca {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 18px;
+    height: 18px;
+    background-color: var(--claro);
+    box-shadow: var(--moldura);
+}
+
+.botao-pixel-modo.selecionado .marca {
+    background-color: var(--escuro);
+    box-shadow: var(--moldura), inset 0 0 0 4px var(--claro);
+}
+
+.grupo-dificuldade {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: auto;
+    filter: brightness(0.7);
+}
+
+.grupo-dificuldade.selecionado {
+    filter: none;
+}
+
+.grupo-dificuldade div {
+    display: flex;
+    flex-direction: row;
+    gap: 50px;
+}
+
+#modos button.botao-pixel {
+    font-family: "Pixelify Sans", sans-serif;
+    box-shadow: var(--moldura-branca);
 }
 
 #game {
@@ -591,12 +670,48 @@ body {
     }
 
     #modos {
+        box-sizing: border-box;
+        padding: 80px 20px 20px;
+    }
+
+    .conteudo-modos {
+        width: min(100%, 420px);
+        gap: 24px;
+    }
+
+    .opcoes-modo {
         flex-direction: column;
+        gap: 24px;
     }
 
     .botao-pixel-modo {
-        padding: 3%;
+        padding: 16px 24px;
         font-size: 22px;
+    }
+
+    .botao-pixel-modo img {
+        width: clamp(80px, 30vw, 140px);
+        height: auto;
+    }
+
+    .grupo-dificuldade {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+
+    .grupo-dificuldade div {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .conteudo-modos > .botao-pixel {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .modal-fim div {
+        grid-template-columns: 1fr;
     }
 
     .painel {
