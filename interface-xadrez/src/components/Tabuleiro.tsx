@@ -44,10 +44,10 @@ const FEN_PARA_TIPO: Record<string, TipoPeca> = {
 
 interface TabuleiroProps {
     partida: Partida;
-    promocao: any;
-    setPromocao: (p: any) => void;
-    casaSelecionada: any;
-    setCasaSelecionada: (c: any) => void;
+    promocao: {origem: Posicao; destino: Posicao} | null;
+    setPromocao: (p: {origem: Posicao; destino: Posicao} | null) => void;
+    casaSelecionada: Posicao | null;
+    setCasaSelecionada: (c: Posicao | null) => void;
     movimentosPossiveis: Posicao[];
     setMovimentosPossiveis: (m: Posicao[]) => void;
     limparSelecao: () => void;

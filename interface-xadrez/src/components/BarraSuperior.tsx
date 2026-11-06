@@ -1,8 +1,9 @@
 import { useSom } from "../hooks/useSom";
 
-import { posicaoToUci } from "../utils/notacao";
+import { posicaoToUci, type Posicao } from "../utils/notacao";
 
 import config from "../assets/icones/config.png";
+import type { Partida } from "../hooks/usePartida";
 
 const OPCOES_DE_PROMOCAO = [
     ["q", "♛"],
@@ -13,9 +14,9 @@ const OPCOES_DE_PROMOCAO = [
 
 interface BarraSuperiorProps {
     setConfigAberta: (aberto: boolean) => void;
-    promocao: any;
+    promocao: {origem: Posicao; destino: Posicao} | null;
     limparSelecao: () => void;
-    partida: any;
+    partida: Partida;
     textoIndicador: string;
 }
 

@@ -50,7 +50,8 @@ const Game = () => {
         }
     }
     const [configAberta, setConfigAberta] = useState(false);
-    const [fimJogoAberto, setFimJogoAberto] = useState(false);
+    const [fimJogoDispensado, setFimJogoDispensado] = useState(false);
+    const fimJogoAberto = situacao.terminou && !fimJogoDispensado;  
 
     const [historicoMovimentos, setHistoricoMovimentos] = useState<(string)[]>([]);
 
@@ -93,7 +94,6 @@ const Game = () => {
     
     useEffect(() => {
         if(situacao.terminou) {
-            setFimJogoAberto(true);
             tocarFimJogo();
         }
     }, [situacao.terminou]);
@@ -113,7 +113,7 @@ const Game = () => {
     const reiniciarJogo = () => {
         reiniciar();
         setHistoricoMovimentos([]);
-        setFimJogoAberto(false);
+        setFimJogoDispensado(false);
     };
 
     useEffect(() => {
@@ -174,7 +174,7 @@ const Game = () => {
             />
             <ModalFimJogo 
                 aberto={fimJogoAberto} 
-                aoFechar={() => setFimJogoAberto(false)}
+                aoFechar={() => setFimJogoDispensado(true)}
                 reiniciarJogo={reiniciarJogo}
                 textoIndicador={textoDaBarra({ situacao, vezDasBrancas })}
             />
