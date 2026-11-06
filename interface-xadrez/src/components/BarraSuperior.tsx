@@ -1,11 +1,8 @@
-import { Link } from "react-router-dom";
-
 import { useSom } from "../hooks/useSom";
 
 import { posicaoToUci } from "../utils/notacao";
 
 import config from "../assets/icones/config.png";
-import casa from "../assets/icones/casa.png";
 
 const OPCOES_DE_PROMOCAO = [
     ["q", "♛"],
@@ -48,16 +45,11 @@ const BarraSuperior = ({ setConfigAberta,
     return (
         <div className="barra-superior">
             <div className="barra-esq">
-                <Link className="botao-pixel botao-icone" to="/"
-                    aria-label="Casa" title="Casa">
-                    <img src={casa} className="icone-botao" alt="" draggable={false} />
-                </Link>
                 <button className="botao-pixel"
                     onClick={() => setConfigAberta(true)}
                     aria-label="Configurações" title="Configurações">
                     <img src={config} className="icone-botao" alt="" draggable={false} />
                 </button>
-                {/* <div className={`indicador-vez ${vezDasBrancas ? "indicador-vez-branca" : "indicador-vez-preta"}`}>{textoDaBarra({situacao, vezDasBrancas})}</div> */}
                 <div className={`indicador-vez ${vezDasBrancas ? "indicador-vez-branca" : "indicador-vez-preta"}`}>{textoIndicador}</div>
             </div>
             <div className="promocao">

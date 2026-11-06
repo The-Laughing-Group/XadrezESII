@@ -156,7 +156,11 @@ const Game = () => {
 
             <HistoricoMovimentos historicoMovimentos={historicoMovimentos} />
 
-            <ModalConfiguracoes aberto={configAberta} aoFechar={() => setConfigAberta(false)} />
+            <ModalConfiguracoes 
+                aberto={configAberta} 
+                reiniciarJogo={reiniciarJogo}
+                aoFechar={() => setConfigAberta(false)} 
+            />
             <ModalFimJogo 
                 aberto={fimJogoAberto} 
                 aoFechar={() => setFimJogoAberto(false)}
