@@ -3,7 +3,7 @@
     --espaco-barra: 16px;                      
     --historico-largura: 28vw;
     --casa-largura: calc(min(7.5vw, 16vh, 100px) * var(--escala, 1));
-    --casa-altura: calc(var(--casa-largura) * 0.6);  /* altura do PNG / largura do PNG */
+    --casa-altura: calc(var(--casa-largura) * 0.6);  
     --claro: #FAF5F0;
     --escuro: #333333;
     --pixel-ui: 3px;  
@@ -49,8 +49,8 @@ body {
 }
 
 @keyframes subir {
-    from { transform: translateY(100vh); }    /* começa abaixo da tela */
-    to   { transform: translateY(-20vh); }    /* termina acima da tela */
+    from { transform: translateY(100vh); }   
+    to   { transform: translateY(-20vh); }    
 }
 
 #inicial {
@@ -418,8 +418,21 @@ button.botao-pixel-modo.selecionado {
     align-items: center;
     justify-content: flex-start;
     height: 90vh;
-    /* tela - histórico - 20px (margem do jogo) - 20px (margem do histórico) - 24px (folga) */
     width: calc(100vw - var(--historico-largura) - 64px);  
+}
+
+.tabuleiro {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+
+    display: flex;
+    align-items: center;        
+    justify-content: center;    
+}
+
+#tabuleiro {
+    margin-top: calc(var(--casa-largura) * 0.4);   
 }
 
 .barra-superior {
@@ -523,17 +536,14 @@ button.botao-pixel-modo.selecionado {
 
 .casa {
     position: absolute;
-
-    /* +1px evita frestas */
+    
     width: calc(var(--casa-largura) + 1px);
     
     height: calc(var(--casa-altura) + 1px);  
 
-    /* posição isométrica a partir de --col e --lin obtidas em Casa.tsx */
     left: calc((var(--col) - var(--lin) + 7) * var(--casa-largura) / 2);
     top:  calc((var(--col) + var(--lin))     * var(--casa-largura) / 4);
 
-    /* quem está mais à frente cobre quem está atrás */
     z-index: calc(var(--col) + var(--lin));
 
     background-size: 100% 100%;
@@ -572,7 +582,7 @@ button.botao-pixel-modo.selecionado {
     cursor: pointer;}
 
 .peca {
-    --altura-rel: 0.5;   /* altura da peça, em frações da largura da casa */
+    --altura-rel: 0.5;  
 
     position: absolute;
     left: 50%;
@@ -751,8 +761,12 @@ button.botao-pixel-modo.selecionado {
 
     .barra-superior {
         width: 100%;
-        flex-wrap: wrap;             /* os botões de promoção quebram de linha */
+        flex-wrap: wrap;             
         gap: 8px;
+    }
+
+    .indicador-vez {
+        font-size: 16px;
     }
 
     .promocao {
@@ -762,7 +776,7 @@ button.botao-pixel-modo.selecionado {
     }
 
     #historico-movimentos {
-        position: static;            /* sai do canto da tela e passa a ficar embaixo do tabuleiro */
+        position: static;            
         width: auto;
         max-height: 40vh;
         margin-top: 24px;
