@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 
 import { usePartida, type Partida } from "../hooks/usePartida";
 import { useSom } from "../hooks/useSom";
 import { useMusica } from "../hooks/useMusica";
 
-import { uciToPosicao, type Posicao } from "../utils/notacao";
+import { desambiguacao, uciToPosicao, type Posicao } from "../utils/notacao";
 
 import Tabuleiro from "../components/Tabuleiro";
 import HistoricoMovimentos from "../components/HistoricoMovimentos";
@@ -52,6 +52,8 @@ const Game = () => {
 
     const [historicoMovimentos, setHistoricoMovimentos] = useState<(string)[]>([]);
 
+    const tabuleiroAntes = useRef(tabuleiro);
+
     useEffect(() => {
         if(situacao.emXeque && !situacao.terminou) tocarXeque();
     }, [situacao.emXeque]);
@@ -74,10 +76,14 @@ const Game = () => {
 
             lance = ePeao
                 ? `${captura ? uci[0] + "x" : ""}${destino}${promo}`
-                : `${peca.toUpperCase()}${captura ? "x" : ""}${destino}`;
+                : `${peca.toUpperCase()}${desambiguacao(tabuleiroAntes.current, uci)}${captura ? "x" : ""}${destino}`;
         }
         setHistoricoMovimentos((prev) => [...prev, lance]);
     }, [partida.ultimoLance]);
+
+    useEffect(() => {
+        tabuleiroAntes.current = tabuleiro;
+    }, [tabuleiro]);
     
     useEffect(() => {
         if(situacao.terminou) {
