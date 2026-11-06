@@ -33,6 +33,7 @@ const Game = () => {
     const partida = usePartida();
     const { pronta, tabuleiro, situacao, vezDasBrancas, reiniciar } = partida;
 
+    const tocarMovimento = useSom("movimento"); 
     const tocarXeque = useSom("xeque");
     const tocarFimJogo = useSom("fimjogo");
 
@@ -45,6 +46,7 @@ const Game = () => {
             case "facil": { profundidade = 2; break; }
             case "medio": { profundidade = 3; break; }
             case "dificil": { profundidade = 5; break; }
+            default: { profundidade = 3; }
         }
     }
     const [configAberta, setConfigAberta] = useState(false);
@@ -61,6 +63,10 @@ const Game = () => {
     useEffect(() => {
         const { uci, tipo, captura, promocao } = partida.ultimoLance;
         if (!uci) return;
+
+        if (!situacao.emXeque && !situacao.terminou) {
+            tocarMovimento();
+        }
 
         let lance: string;
 
@@ -118,14 +124,19 @@ const Game = () => {
            !partida.fen) {
             return;
         }
-        partida.jogarIA(profundidade);
+
+        const temporizador = setTimeout(() => {
+            partida.jogarIA(profundidade);
+        }, 600);
+
+        return () => clearTimeout(temporizador);
     }, [
-      modoIA,
-      partida.pronta,
-      partida.vezDasBrancas,
-      partida.situacao.terminou,
-      partida.fen,
-      partida.jogarIA,
+        modoIA,
+        partida.pronta,
+        partida.vezDasBrancas,
+        partida.situacao.terminou,
+        partida.fen,
+        partida.jogarIA,
     ]);
 
     if(!pronta) return null;

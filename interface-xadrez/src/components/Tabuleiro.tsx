@@ -1,5 +1,3 @@
-import { useSom } from "../hooks/useSom";
-
 import type { Peca, TipoPeca } from "../interfaces/Peca";
 import type { Partida } from "../hooks/usePartida";
 
@@ -75,11 +73,7 @@ const Tabuleiro = ({ partida,
         return tabuleiro[row][col] === rei;
     };
 
-    // fen do henrique
-    // partida.carregarFen(fen do henrique)
-    // partida.tabuleiro    
-
-    const tocarMovimento = useSom("movimento"); 
+    
 
     const casaEstaSelecionada = (row: number, col: number): boolean => {
         return casaSelecionada?.row === row && casaSelecionada?.col === col;
@@ -117,9 +111,7 @@ const Tabuleiro = ({ partida,
                 return;
             }
 
-            if(tentarLance(posicaoToUci(casaSelecionada.row, casaSelecionada.col) + posicaoToUci(row, col))) {
-                tocarMovimento();
-            }
+            tentarLance(posicaoToUci(casaSelecionada.row, casaSelecionada.col) + posicaoToUci(row, col));
             limparSelecao();
             return;
         }
