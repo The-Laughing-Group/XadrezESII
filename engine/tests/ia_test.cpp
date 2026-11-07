@@ -171,3 +171,45 @@ TEST(IA_Captura, Peao_TorreVsBispo) {
     Jogo j = carrega("k7/pp6/8/6p1/5R1B/8/6PP/7K b - - 0 1");
     EXPECT_EQ(lanceDaIA(j), "g5f4");
 }
+
+// ===========================================================================
+//  Mate em 3
+// ===========================================================================
+
+TEST(IA_Mate3, CavaloETorre) {
+    Jogo j = carrega("8/2k5/1pp2p1P/p3n3/8/r7/3Q1PPK/8 b - - 0");
+    ASSERT_FALSE(j.vezDasBrancas());
+
+    EXPECT_EQ(lanceDaIA(j), "e5g4");
+    ASSERT_TRUE(j.tentarLance("e5g4"));
+
+    ASSERT_TRUE(j.tentarLance("h2g1"));   // resposta fixa das brancas
+
+    EXPECT_EQ(lanceDaIA(j), "a3a1");
+    ASSERT_TRUE(j.tentarLance("a3a1"));
+
+    ASSERT_TRUE(j.tentarLance("d2e1"));   // resposta fixa das brancas
+
+    EXPECT_EQ(lanceDaIA(j), "a1e1");
+    ASSERT_TRUE(j.tentarLance("a1e1"));
+    EXPECT_TRUE(j.emXequeMate());
+}
+
+TEST(IA_Mate3, Rainha) {
+    Jogo j = carrega("1Q6/2r2kpp/1pPq4/3pp3/3Pb3/6Pp/5P2/2R2RK1 b - - 0 1");
+    ASSERT_FALSE(j.vezDasBrancas());
+
+    EXPECT_EQ(lanceDaIA(j), "h3h2");
+    ASSERT_TRUE(j.tentarLance("h3h2"));
+
+    ASSERT_TRUE(j.tentarLance("g1h2"));   // resposta fixa das brancas
+
+    EXPECT_EQ(lanceDaIA(j), "d6h6");
+    ASSERT_TRUE(j.tentarLance("d6h6"));
+
+    ASSERT_TRUE(j.tentarLance("h2g1"));   // resposta fixa das brancas
+
+    EXPECT_EQ(lanceDaIA(j), "h6h1");
+    ASSERT_TRUE(j.tentarLance("h6h1"));
+    EXPECT_TRUE(j.emXequeMate());
+}
