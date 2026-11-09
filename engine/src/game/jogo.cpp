@@ -10,6 +10,7 @@
 #include "lances.hpp"
 #include "search.hpp"  // declaração de obter_melhor_lance
 #include <limits>
+#include "../../../infra-estrutura/otimizacao/tt.hpp"
 
 namespace xadrez {
 

@@ -11,7 +11,7 @@ extern uint64_t ZOBRIST[ZOB_TOTAL];
 
 // Índice no array ZOBRIST da peça (cor, tipo) na casa q.
 constexpr int zob_peca(Cor c, TipoPeca t, Quadrado q) {
-    return ZOB_PECAS + (idx(c) * NUM_TIPOS + idx(t)) * NUM_CASAS + q;
+    return (idx(c) * NUM_TIPOS + idx(t)) * NUM_CASAS + q;
 }
 
 // Uso (XOR é reversível: aplicar duas vezes desfaz):
@@ -21,6 +21,7 @@ constexpr int zob_peca(Cor c, TipoPeca t, Quadrado q) {
 //   en passant (só se houver):   chave ^= ZOBRIST[ZOB_EP + coluna_de(en_passant)];
 //                                (aplicar só se en_passant != quadrado_vazio)
 //   trocar a vez de jogar:       chave ^= ZOBRIST[ZOB_LADO];  (a cada lance)
+
 
 // Sorteia os números aleatórios (semente fixa, resultados reproduzíveis).
 // Deve rodar ANTES de posicao_inicial() / carregar_fen(); iniciar_motor() cuida disso.
