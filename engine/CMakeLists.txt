@@ -18,6 +18,7 @@ set(INFRA_SRC
     ${INFRA_DIR}/tabuleiro/tabuleiro.cpp
     ${INFRA_DIR}/bitboard/bitboard.cpp
     ${INFRA_DIR}/otimizacao/zobrist.cpp
+    ${INFRA_DIR}/otimizacao/tt.cpp
 )
 
 set(IA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../ia)
