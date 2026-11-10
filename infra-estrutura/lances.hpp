@@ -24,7 +24,6 @@
 using Lance = uint16_t;
 
 // "Nenhum lance": origem == destino == a1 e flag normal. Nunca é um lance real.
-// (Não confundir com "lance nulo" de poda, que é passar a vez.)
 constexpr Lance SEM_LANCE = 0;
 
 enum TipoLance : uint16_t {
