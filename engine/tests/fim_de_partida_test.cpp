@@ -105,7 +105,8 @@ TEST(FimDePartida, PosicaoInicialNaoTemFimDePartida) {
 }
 
 TEST(FimDePartida, PosicaoDeAberturaComumNaoTemFimDePartida) {
-    Jogo j = carrega("rnbqkbnr/ppp2ppp/8/3pp3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 3");
+    // 1.e4 e5 2.d4 d5: as duas cores jogaram 2 lances, então a posição é alcançável
+    Jogo j = carrega("rnbqkbnr/ppp2ppp/8/3pp3/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3");
     EXPECT_FALSE(j.emXeque());
     EXPECT_FALSE(j.emXequeMate());
     EXPECT_FALSE(j.emAfogamento());

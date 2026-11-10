@@ -281,12 +281,30 @@ TEST(Situacao, RepeticaoEmOrdemDeLancesDiferente) {
     EXPECT_EQ(j.situacao().estado, "repeticao");
 }
 
-TEST(Situacao, LanceDePeaoQuebraAContagemDeRepeticao) {
+// (Removido: "lance de peão quebra a contagem" não podia falhar, porque nenhuma posição anterior
+// a um lance de peão volta a aparecer. Os dois testes abaixo cobrem riscos reais.)
+
+// Decisão de projeto: a chave Zobrist inclui a casa de en passant sempre que ela está preenchida,
+// mesmo quando nenhum peão pode capturar. Por isso a posição logo após e2e4 (com "e3") NÃO é igual à
+// que reaparece depois dos cavalos (sem "e3"), e a repetição é reconhecida um ciclo mais tarde do que
+// na regra FIDE estrita. Este teste documenta o comportamento; se a decisão mudar, a 3ª vez passa a
+// valer já no 9º meio-lance.
+TEST(Situacao, EnPassantNaChaveAdiaUmCicloARepeticao) {
     Jogo j;
-    jogaTodos(j, {"g1f3", "g8f6", "f3g1", "f6g8"});        // inicial 2x
-    jogaTodos(j, {"e2e4", "e7e5"});                        // lance de peão: nada antes disso volta
-    jogaTodos(j, {"g1f3", "g8f6", "f3g1", "f6g8"});
-    EXPECT_EQ(j.situacao().estado, "em_andamento");        // essa posição só apareceu 2 vezes
+    jogaTodos(j, {"e2e4", "g8f6", "b1c3", "f6g8", "c3b1",
+                  "g8f6", "b1c3", "f6g8", "c3b1"});
+    EXPECT_EQ(j.situacao().estado, "em_andamento");   // 2ª vez da posição sem "e3" (a 1ª tinha "e3")
+    jogaTodos(j, {"g8f6", "b1c3", "f6g8", "c3b1"});
+    EXPECT_EQ(j.situacao().estado, "repeticao");      // 3ª vez da posição sem "e3"
+}
+
+TEST(Situacao, MesmaDisposicaoComOutraVezNaoEhRepeticao) {
+    // O rei branco faz um triângulo (3 lances) e o preto vai e volta (2): a disposição das peças
+    // reaparece 3 vezes, mas sempre com um lado diferente a jogar, então nenhuma posição passa de 2.
+    Jogo j = carrega("4k3/8/8/8/8/8/8/R3K3 w - - 0 1");
+    jogaTodos(j, {"e1d1", "e8d8", "d1d2", "d8e8", "d2e1", "e8d8",
+                  "e1d1", "d8e8", "d1d2", "e8d8", "d2e1", "d8e8"});
+    EXPECT_EQ(j.situacao().estado, "em_andamento");
 }
 
 TEST(Situacao, DireitoDeRoqueFazParteDaPosicao) {

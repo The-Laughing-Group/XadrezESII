@@ -1,0 +1,43 @@
+Rode a partir da pasta XadrezESII (PowerShell)
+
+
+----- Compila tudo (só recompila o que mudou) -----
+
+cmake --build engine/build --config Debug
+
+
+----- Roda o executável direto (mostra o log de cada teste) -----
+
+.\engine\build\Debug\chess_tests.exe
+
+.\engine\build\Debug\chess_tests.exe --gtest_list_tests
+
+.\engine\build\Debug\chess_tests.exe --gtest_filter="IA_Mate1.*"
+
+.\engine\build\Debug\chess_tests.exe --gtest_filter="IA_Captura.Cavalo_DamaVsTorre"
+
+.\engine\build\Debug\chess_tests.exe --gtest_filter="IA_*:-IA_Performance.*"
+
+
+
+----- Perft profundo (demora minutos) -----
+
+.\engine\build\Debug\chess_tests.exe --gtest_also_run_disabled_tests --gtest_filter="*PerftProfundo*"
+
+
+
+----- Pelo ctest (use ctest -N para ver os nomes que ele conhece) -----
+
+ctest --test-dir engine/build -C Debug -N
+
+ctest --test-dir engine/build -C Debug --output-on-failure -R "IA_Mate1"
+
+ctest --test-dir engine/build -C Debug --output-on-failure
+
+
+
+----- Se algum teste de IA falhar -----
+
+Abra debug_falhas.txt (fica na pasta de onde o .exe foi executado).
+
+ 

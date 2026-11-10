@@ -183,7 +183,8 @@ bool lerFen(Posicao& p, const std::string& fen) {
 // ============================================================================
 
 Posicao::Posicao() {
-    iniciar_zobrist();
+    static const bool zobPronta = (iniciar_zobrist(), true);
+    (void)zobPronta;
     static const bool raiosProntos = (init_raios(), true);   // roda uma única vez
     (void)raiosProntos;
     limpar(b);

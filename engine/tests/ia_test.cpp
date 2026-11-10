@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <string>
 #include "xadrez/jogo.hpp"
+#include "../../ia/busca-minimax/search.hpp"
 
 using namespace xadrez;
 
@@ -14,6 +15,7 @@ static Jogo carrega(const char* fen) {
 }
 
 static std::string lanceDaIA(Jogo& j) {
+    g_log_busca << "FEN: " << j.fen() << "\n";
     const std::string melhor = j.melhorLanceIA(PROFUNDIDADE);
     EXPECT_FALSE(melhor.empty()) << "IA nao devolveu lance em " << j.fen();
     return melhor;
@@ -113,9 +115,11 @@ TEST(IA_Captura, Bispo_TorreVsPeao) {
     EXPECT_EQ(lanceDaIA(j), "g5f4");
 }
 
+// ATENÇÃO (profundidade 5): capturar a dama com a dama (g5f4) é seguido de Txf4 e as pretas ficam uma
+// torre abaixo; Dg7 também fica, mas guarda a oitava fileira. É sensível à PROFUNDIDADE: com 4, g5f4 vence.
 TEST(IA_Captura, Dama_DamaVsTorre) {
     Jogo j = carrega("k7/pp6/8/6q1/5Q1R/8/6PP/7K b - - 0 1");
-    EXPECT_EQ(lanceDaIA(j), "g5f4");
+    EXPECT_EQ(lanceDaIA(j), "g5g7");
 }
 
 TEST(IA_Captura, Dama_TorreVsBispo) {
@@ -147,10 +151,12 @@ TEST(IA_Captura, Torre_TorreVsPeao) {
 // CAPTURAS EM L (cavalo) — peca preta em g6, alvos em f4 e h4
 // ===========================================================================
 
+// a7a6 é o lance CERTO: Cxf4? perde para Th8# (mate de corredor, o cavalo não interpõe). a7a6 abre
+// a casa a7 para o rei. a7a5 empata em valor; se a engine passar a escolhê-lo, aceite os dois.
 TEST(IA_Captura, Cavalo_DamaVsTorre) {
     // Cavalo preto g6. Pode capturar dama branca f4 ou torre branca h4.
     Jogo j = carrega("k7/pp6/6n1/8/5Q1R/8/6PP/7K b - - 0 1");
-    EXPECT_EQ(lanceDaIA(j), "g6f4");
+    EXPECT_EQ(lanceDaIA(j), "a7a6");
 }
 
 TEST(IA_Captura, Cavalo_TorreVsBispo) {
@@ -162,9 +168,10 @@ TEST(IA_Captura, Cavalo_TorreVsBispo) {
 // CAPTURAS DE PEAO (diagonal, para frente) — peao preto g5, alvos f4 e h4
 // ===========================================================================
 
+// a7a6 é o único lance certo: gxf4? perde para Th8# (mate de corredor).
 TEST(IA_Captura, Peao_DamaVsTorre) {
     Jogo j = carrega("k7/pp6/8/6p1/5Q1R/8/6PP/7K b - - 0 1");
-    EXPECT_EQ(lanceDaIA(j), "g5f4");
+    EXPECT_EQ(lanceDaIA(j), "a7a6");
 }
 
 TEST(IA_Captura, Peao_TorreVsBispo) {

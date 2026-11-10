@@ -4,6 +4,7 @@
 #include <initializer_list>
 #include "otimizacao/zobrist.hpp"
 #include "movimentos.hpp"
+#include <cassert>
 
 
 static uint8_t novos_direitos(uint8_t r, Quadrado origem, Quadrado destino) {
@@ -132,6 +133,9 @@ bool fazer_lance(Tabuleiro& b, Lance m) {
         desfazer_lance(b, m);
         return false;
     }
+    
+    assert(chave == calcular_chave(b));
+
     return true;
 }
 

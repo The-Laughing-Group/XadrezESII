@@ -18,6 +18,7 @@ set(INFRA_SRC
     ${INFRA_DIR}/tabuleiro/tabuleiro.cpp
     ${INFRA_DIR}/bitboard/bitboard.cpp
     ${INFRA_DIR}/otimizacao/zobrist.cpp
+    ${INFRA_DIR}/otimizacao/tt.cpp
 )
 
 set(IA_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../ia)
@@ -36,7 +37,7 @@ target_include_directories(chess_core PUBLIC
     ${IA_DIR}/funcao-de-custo
 )
 if(MSVC)
-  target_compile_options(chess_core PRIVATE /W4)
+  target_compile_options(chess_core PRIVATE /W4 /utf-8)
 else()
   target_compile_options(chess_core PRIVATE -Wall -Wextra)
 endif()
