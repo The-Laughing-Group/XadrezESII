@@ -2,6 +2,8 @@
 #include "../bitboard/bitboard.hpp"
 #include <random>
 
+uint64_t ZOBRIST[ZOB_TOTAL];
+
 void iniciar_zobrist() {
     std::mt19937_64 gerador(0x1234567ULL);   // semente fixa: mesma sequência em toda execução
     for (int i = 0; i < ZOB_TOTAL; i++)
