@@ -1,3 +1,4 @@
+#pragma once
 #include "infra-estrutura/tabuleiro/tabuleiro.hpp"
 #include "infra-estrutura/lances.hpp"
 #include "ia/funcao-de-custo/avaliacao.hpp"
