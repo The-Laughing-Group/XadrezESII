@@ -1,9 +1,9 @@
 :root {
-    --altura-barra: clamp(34px, 6vw, 44px);   /* altura de TUDO na barra superior */
-    --espaco-barra: 16px;                      /* espaço regular entre os itens */
+    --altura-barra: clamp(34px, 6vw, 44px);   
+    --espaco-barra: 16px;                      
     --historico-largura: 28vw;
     --casa-largura: calc(min(7.5vw, 16vh, 100px) * var(--escala, 1));
-    --casa-altura: calc(var(--casa-largura) * 0.6);  /* altura do PNG / largura do PNG */
+    --casa-altura: calc(var(--casa-largura) * 0.6);  
     --claro: #FAF5F0;
     --escuro: #333333;
     --pixel-ui: 3px;  
@@ -30,9 +30,9 @@ body {
 .fundo-pecas {
     position: absolute;
     inset: 0;
-    z-index: -1;                   /* atrás do logo e dos botões */
-    opacity: 0.25;                 /* 0 = invisível, 1 = totalmente visível */
-    pointer-events: none;          /* não atrapalha os cliques */
+    z-index: -1;                   
+    opacity: 0.25;                 
+    pointer-events: none;          
 }
 
 .peca-fundo {
@@ -49,8 +49,8 @@ body {
 }
 
 @keyframes subir {
-    from { transform: translateY(100vh); }    /* começa abaixo da tela */
-    to   { transform: translateY(-20vh); }    /* termina acima da tela */
+    from { transform: translateY(100vh); }   
+    to   { transform: translateY(-20vh); }    
 }
 
 #inicial {
@@ -148,6 +148,11 @@ body {
     box-shadow: var(--moldura-branca);
 }
 
+.modal-caixa  div {
+    display: flex;
+    gap: 15px;
+}
+
 .modal-caixa h1 {
     margin: 0;
     text-transform: uppercase;
@@ -176,6 +181,31 @@ body {
     display: flex;
     flex-direction: column;
     gap: 24px;
+}
+
+.modal-fim {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.modal-fim div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    width: 100%;
+}
+
+.modal-fim .botao-pixel, .modal-caixa .botao-pixel {
+    height: auto;
+    padding: 2px 10px;
+    gap: 15px;
+    justify-content: start;
+    text-decoration: none;
+    font-family: "Pixelify Sans", sans-serif;
+    box-shadow: var(--moldura-branca);
 }
 
 #configuracoes .sections-config {
@@ -209,6 +239,15 @@ body {
     gap: 16px;
 }
 
+.linha-config {
+    cursor: pointer;
+}
+
+.linha-config.desabilitado {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 .interruptor {
     appearance: none;
     flex-shrink: 0;
@@ -223,6 +262,10 @@ body {
 .interruptor:checked {
     background-color: var(--escuro);
     box-shadow: var(--moldura), inset 0 0 0 5px var(--claro);
+}
+
+.interruptor:disabled {
+    cursor: not-allowed;
 }
 
 .linha-config input[type="range"] {
@@ -258,12 +301,24 @@ body {
 
 #modos {
     display: flex;
-    gap: 60px;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
     min-width: 100vw;
     overflow: hidden;
+}
+
+.conteudo-modos {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.opcoes-modo {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
 }
 
 .botao-pixel-modo {
@@ -272,7 +327,7 @@ body {
     justify-content: center;
     align-items: center;
 
-    padding: 8% 5%;
+    padding: clamp(16px, 3vw, 40px) clamp(20px, 3vw, 48px);
     
     font-size: 30px;
     text-decoration: none;
@@ -289,6 +344,60 @@ body {
 
 .botao-pixel-modo img {
     image-rendering: pixelated;
+}
+
+button.botao-pixel-modo {
+    position: relative;
+    border: 0;
+    font-family: inherit;
+    filter: brightness(0.7);
+}
+
+button.botao-pixel-modo p {
+    margin: 0;
+}
+
+button.botao-pixel-modo.selecionado {
+    filter: none;
+}
+
+.botao-pixel-modo .marca {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 18px;
+    height: 18px;
+    background-color: var(--claro);
+    box-shadow: var(--moldura);
+}
+
+.botao-pixel-modo.selecionado .marca {
+    background-color: var(--escuro);
+    box-shadow: var(--moldura), inset 0 0 0 4px var(--claro);
+}
+
+.grupo-dificuldade {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: auto;
+    filter: brightness(0.7);
+}
+
+.grupo-dificuldade.selecionado {
+    filter: none;
+}
+
+.grupo-dificuldade div {
+    display: flex;
+    flex-direction: row;
+    gap: 50px;
+}
+
+#modos button.botao-pixel {
+    font-family: "Pixelify Sans", sans-serif;
+    box-shadow: var(--moldura-branca);
 }
 
 #game {
@@ -309,8 +418,21 @@ body {
     align-items: center;
     justify-content: flex-start;
     height: 90vh;
-    /* tela - histórico - 20px (margem do jogo) - 20px (margem do histórico) - 24px (folga) */
-    width: calc(100vw - var(--historico-largura) - 64px);   /* era 65vw */
+    width: calc(100vw - var(--historico-largura) - 64px);  
+}
+
+.tabuleiro {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+
+    display: flex;
+    align-items: center;        
+    justify-content: center;    
+}
+
+#tabuleiro {
+    margin-top: calc(var(--casa-largura) * 0.4);   
 }
 
 .barra-superior {
@@ -320,13 +442,12 @@ body {
     align-items: center;
     flex-wrap: wrap;
     gap: 16px;
-    position: relative;               /* era absolute */
-    z-index: 1;                       /* fica sempre acima do tabuleiro */
+    position: relative;               
+    z-index: 1;                       
     top: 0;
     left: 0;
 }
 
-/* botões da barra (voltar, config, promoção, cancelar): quadrados */
 .barra-superior .botao-pixel {
     box-sizing: border-box;
     width: var(--altura-barra);
@@ -415,17 +536,14 @@ body {
 
 .casa {
     position: absolute;
-
-    /* +1px evita frestas */
+    
     width: calc(var(--casa-largura) + 1px);
     
     height: calc(var(--casa-altura) + 1px);  
 
-    /* posição isométrica a partir de --col e --lin obtidas em Casa.tsx */
     left: calc((var(--col) - var(--lin) + 7) * var(--casa-largura) / 2);
     top:  calc((var(--col) + var(--lin))     * var(--casa-largura) / 4);
 
-    /* quem está mais à frente cobre quem está atrás */
     z-index: calc(var(--col) + var(--lin));
 
     background-size: 100% 100%;
@@ -464,14 +582,14 @@ body {
     cursor: pointer;}
 
 .peca {
-    --altura-rel: 0.5;   /* altura da peça, em frações da largura da casa */
+    --altura-rel: 0.5;  
 
     position: absolute;
     left: 50%;
     bottom: 50%;
 
     height: calc(var(--casa-largura) * var(--altura-rel));
-    width: auto;   /* mantém a proporção do desenho */
+    width: auto;   
 
     object-fit: fill;
     image-rendering: pixelated;
@@ -592,12 +710,48 @@ body {
     }
 
     #modos {
+        box-sizing: border-box;
+        padding: 80px 20px 20px;
+    }
+
+    .conteudo-modos {
+        width: min(100%, 420px);
+        gap: 24px;
+    }
+
+    .opcoes-modo {
         flex-direction: column;
+        gap: 24px;
     }
 
     .botao-pixel-modo {
-        padding: 3%;
+        padding: 16px 24px;
         font-size: 22px;
+    }
+
+    .botao-pixel-modo img {
+        width: clamp(80px, 30vw, 140px);
+        height: auto;
+    }
+
+    .grupo-dificuldade {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+
+    .grupo-dificuldade div {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .conteudo-modos > .botao-pixel {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .modal-fim div {
+        grid-template-columns: 1fr;
     }
 
     .painel {
@@ -607,8 +761,12 @@ body {
 
     .barra-superior {
         width: 100%;
-        flex-wrap: wrap;             /* os botões de promoção quebram de linha */
+        flex-wrap: wrap;             
         gap: 8px;
+    }
+
+    .indicador-vez {
+        font-size: 16px;
     }
 
     .promocao {
@@ -618,7 +776,7 @@ body {
     }
 
     #historico-movimentos {
-        position: static;            /* sai do canto da tela e passa a ficar embaixo do tabuleiro */
+        position: static;            
         width: auto;
         max-height: 40vh;
         margin-top: 24px;

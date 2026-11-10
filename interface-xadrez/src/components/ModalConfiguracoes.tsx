@@ -1,16 +1,28 @@
-// ModalConfiguracoes.tsx
 import { useEffect } from "react";
 import PainelConfiguracoes from "./PainelConfiguracoes";
+import { Link } from "react-router-dom";
 
-type Props = { aberto: boolean; aoFechar: () => void };
+import casa from "../assets/icones/casa.png";
+import reiniciar from "../assets/icones/reiniciar.png";
 
-const ModalConfiguracoes = ({ aberto, aoFechar }: Props) => {
+interface ModalConfiguracoesProps { 
+    aberto: boolean;
+    reiniciarJogo: () => void;
+    aoFechar: () => void;
+};
+
+const ModalConfiguracoes = ({ aberto, reiniciarJogo, aoFechar }: ModalConfiguracoesProps) => {
     useEffect(() => {
         if (!aberto) return;
         const aoTeclar = (e: KeyboardEvent) => e.key === "Escape" && aoFechar();
         window.addEventListener("keydown", aoTeclar);
         return () => window.removeEventListener("keydown", aoTeclar);
     }, [aberto, aoFechar]);
+
+    const aoReiniciar = () => {
+        reiniciarJogo();
+        aoFechar();
+    };
 
     if (!aberto) return null;
 
@@ -21,6 +33,10 @@ const ModalConfiguracoes = ({ aberto, aoFechar }: Props) => {
                 <button className="modal-fechar" onClick={aoFechar}>⨉</button>
                 <h1>Configurações</h1>
                 <PainelConfiguracoes />
+                <div>
+                    <button className="botao-pixel" onClick={aoReiniciar}><img className="icone-botao" src={reiniciar}/>Reiniciar</button>
+                    <Link className="botao-pixel" to="/"><img className="icone-botao" src={casa}/>Início</Link>
+                </div>
             </div>
         </div>
     );

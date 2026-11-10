@@ -1,8 +1,10 @@
 import { useConfiguracoes } from "../hooks/useConfiguracoes";
 import movimento from "../assets/sons/movimento.m4a";
 import promocao from "../assets/sons/promocao.mp3";
+import xeque from "../assets/sons/xeque.mp3";
+import fimjogo from "../assets/sons/fimjogo.mp3";
 
-const SONS = { movimento, promocao } as const;
+const SONS = { movimento, promocao, xeque, fimjogo } as const;
 
 type TipoSom = keyof typeof SONS;
 
