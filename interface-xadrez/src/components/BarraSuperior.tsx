@@ -29,15 +29,14 @@ const BarraSuperior = ({ setConfigAberta,
     const { vezDasBrancas, tentarLance } = partida;
 
     const tocarPromocao = useSom("promocao"); 
-
-    const escolherPromocao = (letra: string) => {
-        if (!promocao) return;
-
-        if(tentarLance(posicaoToUci(promocao.origem.row, 
-                                 promocao.origem.col) + 
-                       posicaoToUci(promocao.destino.row, 
-                                    promocao.destino.col) + 
-                       letra)) {
+    
+    const escolherPromocao = (
+        { origem, destino }: { origem: Posicao; destino: Posicao },
+        letra: string
+    ) => {
+        if (tentarLance(posicaoToUci(origem.row, origem.col) +
+                        posicaoToUci(destino.row, destino.col) +
+                        letra)) {
             tocarPromocao();
         }
         limparSelecao();
@@ -57,7 +56,7 @@ const BarraSuperior = ({ setConfigAberta,
                 { promocao && (
                         <>
                             {OPCOES_DE_PROMOCAO.map(([tipo, nome]) => (
-                                <button className="botao-pixel" key={tipo} onClick={() => escolherPromocao(tipo)}>
+                                <button className="botao-pixel" key={tipo} onClick={() => escolherPromocao(promocao, tipo)}>
                                     {nome}
                                 </button>
                             ))}
