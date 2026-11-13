@@ -27,8 +27,41 @@ vi.mock('../hooks/useSom', () => ({ useSom: (nome: string) => sons[nome] }))
 vi.mock('../hooks/useMusica', () => ({ useMusica: useMusicaMock }))
 
 vi.mock('../components/Tabuleiro', () => ({
-  default: ({ contraIA }: { contraIA: boolean }) => (
-    <div data-testid="tabuleiro" data-contra-ia={String(contraIA)} />
+  default: ({
+    contraIA,
+    casaSelecionada,
+    setCasaSelecionada,
+    movimentosPossiveis,
+    setMovimentosPossiveis,
+    setPromocao,
+    limparSelecao,
+  }: any) => (
+    <div
+      data-testid="tabuleiro"
+      data-contra-ia={String(contraIA)}
+      data-casa-selecionada={casaSelecionada ? JSON.stringify(casaSelecionada) : 'nenhuma'}
+      data-movimentos={String(movimentosPossiveis.length)}
+    >
+      <button
+        onClick={() => {
+          setCasaSelecionada({ row: 6, col: 4 })
+          setMovimentosPossiveis([
+            { row: 4, col: 4 },
+            { row: 5, col: 4 },
+          ])
+        }}
+      >
+        selecionar-casa
+      </button>
+      <button
+        onClick={() =>
+          setPromocao({ origem: { row: 1, col: 0 }, destino: { row: 0, col: 0 } })
+        }
+      >
+        iniciar-promocao
+      </button>
+      <button onClick={limparSelecao}>limpar-selecao</button>
+    </div>
   ),
 }))
 
@@ -50,9 +83,6 @@ vi.mock('../components/ModalConfiguracoes', () => ({
     ) : null,
 }))
 
-// ---------- helpers ----------
-
-// Monta um tabuleiro 8x8 (strings) a partir de casas, ex.: { g1: 'N', e8: 'k' }
 function montar(pecas: Record<string, string> = {}): string[] {
   const grade = Array.from({ length: 8 }, () => Array<string>(8).fill('.'))
   for (const [casa, peca] of Object.entries(pecas)) {
@@ -98,7 +128,6 @@ function renderizarGame(partida = criarPartida(), url = '/jogo') {
   estado.partida = partida
   const resultado = render(arvore(url))
 
-  // troca a partida devolvida pelo hook e re-renderiza (mantém o estado do componente)
   const atualizar = (nova: ReturnType<typeof criarPartida>) => {
     estado.partida = nova
     resultado.rerender(arvore(url))
@@ -342,7 +371,6 @@ describe('Game', () => {
   })
 
   describe('histórico de movimentos', () => {
-    // Renderiza com o tabuleiro "antes" e depois aplica o lance, como acontece no jogo real
     function jogarLance(
       antes: Record<string, string>,
       depois: Record<string, string>,
@@ -447,6 +475,82 @@ describe('Game', () => {
     })
   })
 
+  describe('seleção e promoção', () => {
+    it('o tabuleiro começa sem casa selecionada nem movimentos', () => {
+      renderizarGame()
+
+      const tabuleiro = screen.getByTestId('tabuleiro')
+      expect(tabuleiro).toHaveAttribute('data-casa-selecionada', 'nenhuma')
+      expect(tabuleiro).toHaveAttribute('data-movimentos', '0')
+    })
+
+    it('guarda a casa selecionada e os movimentos possíveis vindos do tabuleiro', async () => {
+      const user = userEvent.setup()
+      renderizarGame()
+
+      await user.click(screen.getByText('selecionar-casa'))
+
+      const tabuleiro = screen.getByTestId('tabuleiro')
+      expect(tabuleiro).toHaveAttribute('data-casa-selecionada', JSON.stringify({ row: 6, col: 4 }))
+      expect(tabuleiro).toHaveAttribute('data-movimentos', '2')
+    })
+
+    it('limparSelecao zera a casa selecionada e os movimentos possíveis', async () => {
+      const user = userEvent.setup()
+      renderizarGame()
+
+      await user.click(screen.getByText('selecionar-casa'))
+      await user.click(screen.getByText('limpar-selecao'))
+
+      const tabuleiro = screen.getByTestId('tabuleiro')
+      expect(tabuleiro).toHaveAttribute('data-casa-selecionada', 'nenhuma')
+      expect(tabuleiro).toHaveAttribute('data-movimentos', '0')
+    })
+
+    it('exibe as opções de promoção na barra superior quando o tabuleiro inicia uma promoção', async () => {
+      const user = userEvent.setup()
+      renderizarGame()
+
+      expect(screen.queryByRole('button', { name: '♛' })).not.toBeInTheDocument()
+
+      await user.click(screen.getByText('iniciar-promocao'))
+
+      expect(screen.getByRole('button', { name: '♛' })).toBeInTheDocument()
+      expect(screen.getByRole('button', { name: '⨉' })).toBeInTheDocument()
+    })
+
+    it('cancelar a promoção limpa a seleção e esconde as opções', async () => {
+      const user = userEvent.setup()
+      renderizarGame()
+
+      await user.click(screen.getByText('selecionar-casa'))
+      await user.click(screen.getByText('iniciar-promocao'))
+      await user.click(screen.getByRole('button', { name: '⨉' }))
+
+      expect(screen.queryByRole('button', { name: '♛' })).not.toBeInTheDocument()
+      const tabuleiro = screen.getByTestId('tabuleiro')
+      expect(tabuleiro).toHaveAttribute('data-casa-selecionada', 'nenhuma')
+      expect(tabuleiro).toHaveAttribute('data-movimentos', '0')
+    })
+
+    it('escolher uma peça de promoção tenta o lance, toca o som e limpa a seleção', async () => {
+      const user = userEvent.setup()
+      const partida = criarPartida()
+      renderizarGame(partida)
+
+      await user.click(screen.getByText('selecionar-casa'))
+      await user.click(screen.getByText('iniciar-promocao'))
+      await user.click(screen.getByRole('button', { name: '♛' }))
+
+      expect(partida.tentarLance).toHaveBeenCalledWith('a7a8q')
+      expect(sons.promocao).toHaveBeenCalledTimes(1)
+      expect(screen.queryByRole('button', { name: '♛' })).not.toBeInTheDocument()
+      const tabuleiro = screen.getByTestId('tabuleiro')
+      expect(tabuleiro).toHaveAttribute('data-casa-selecionada', 'nenhuma')
+      expect(tabuleiro).toHaveAttribute('data-movimentos', '0')
+    })
+  })
+
   describe('modal de configurações', () => {
     it('abre ao clicar no botão de configurações da barra superior', async () => {
       const user = userEvent.setup()
@@ -531,11 +635,9 @@ describe('Game', () => {
       const user = userEvent.setup()
       renderizarGame(fimDeJogo())
 
-      // dispensa o modal de fim de jogo
       await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: '⨉' }))
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 
-      // reinicia pelas configurações: a dispensa é resetada
       await user.click(screen.getByRole('button', { name: /configurações/i }))
       await user.click(screen.getByText('reiniciar-config'))
 
