@@ -1,0 +1,11 @@
+Testar filtros
+
+$exe = ".\engine\build\Debug\chess_tests.exe"
+foreach ($f in "CC_TT.*", "Mutacao_*", "Integracao_Inter.*") {
+  "=== $f"
+  & $exe "--gtest_filter=$f" | Select-String "FAILED|Failure|Expected|Which is|Actual"
+}
+
+Para testar a dependência de ordem, rode o filtro completo embaralhado algumas vezes:
+
+& $exe "--gtest_filter=CC_TT.*:Mutacao_*:Integracao_Inter.*" --gtest_shuffle --gtest_repeat=3

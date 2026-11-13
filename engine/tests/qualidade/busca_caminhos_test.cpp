@@ -2,7 +2,7 @@
 // minimax_alfa_beta (V=23) e obter_melhor_lance (V=9)
 #include <algorithm>
 #include "helpers_motor.hpp"
-#include "search.hpp"
+#include "../../../ia/busca-minimax/search.hpp"
 using namespace xadrez;
 
 namespace { constexpr int INFI = SCORE_INFINITO; }

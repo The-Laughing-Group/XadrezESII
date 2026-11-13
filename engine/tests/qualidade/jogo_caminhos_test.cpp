@@ -2,7 +2,7 @@
 // descreverLance (V=14), tentarLance (V=9), situacao (V=8), melhorLanceIA (V=4)
 #include <gtest/gtest.h>
 #include <string>
-#include "xadrez/jogo.hpp"
+#include "../../include/xadrez/jogo.hpp"
 using namespace xadrez;
 
 static Jogo carrega(const char* fen) {

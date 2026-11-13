@@ -41,6 +41,13 @@ $mutantes = @(
 )
 
 $res = @()
+
+# Antes do foreach: linha de base
+foreach ($f in @($TT,$BUS,$LAN,$JOGO)) {
+  & $exe "--gtest_filter=$f" *> $null
+  if ($LASTEXITCODE -ne 0) { Write-Warning "LINHA DE BASE FALHA no filtro '$f'. Corrija antes de mutar."; }
+}
+
 foreach ($m in $mutantes) {
   if (-not (Test-Path $m.Arq)) { $res += [pscustomobject]@{Id=$m.Id; Status="ARQUIVO NAO ENCONTRADO (ajuste o caminho)"; Nota=$m.Arq}; continue }
   $caminho = (Resolve-Path $m.Arq).Path
@@ -54,10 +61,19 @@ foreach ($m in $mutantes) {
     cmake --build $Build --config $Config 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) { $status = "NAO COMPILOU" }
     else {
-      $p = Start-Process -FilePath $exe -ArgumentList "--gtest_filter=$($m.F)" -NoNewWindow -PassThru -RedirectStandardOutput "$env:TEMP\mut_out.txt"
-      if (-not $p.WaitForExit($TimeoutSeg * 1000)) { $p.Kill(); $status = "MORTO (timeout)" }
-      elseif ($p.ExitCode -ne 0) { $status = "MORTO" }
-      else { $status = "SOBREVIVEU" }
+      $out = "$env:TEMP\mut_out.txt"
+      $p = Start-Process -FilePath $exe -ArgumentList "--gtest_filter=$($m.F)" -NoNewWindow -PassThru -RedirectStandardOutput $out
+      $null = $p.Handle                       # garante que ExitCode não venha nulo
+      if (-not $p.WaitForExit($TimeoutSeg * 1000)) {
+        $p.Kill(); $status = "MORTO (timeout)"; $quem = "timeout"
+      }
+      elseif ($p.ExitCode -ne 0) {
+        $status = "MORTO"
+        $f = Select-String -Path $out -Pattern "\[  FAILED  \] \S+\.\S+" | Select-Object -First 1
+        $quem = if ($f) { $f.Matches[0].Value } else { "abortou/crash (sem linha FAILED)" }
+      }
+      else { $status = "SOBREVIVEU"; $quem = "" }
+      $m.Nota = "$($m.Nota) $quem".Trim()
     }
   } finally {
     [System.IO.File]::WriteAllBytes($caminho, $bytes)            # sempre restaura

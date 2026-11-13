@@ -1,2 +1,6 @@
-===== Situacao.EnPassantNaoCapturavelNaoDistingueAPosicao =====
+===== CC_Jogo.DescreverLance_CasaDaVitimaNoEnPassant =====
+
+===== UltimoLance.EnPassantInformaACasaDoPeaoCapturado =====
+
+===== UltimoLance.EnPassantDasPretas =====
 

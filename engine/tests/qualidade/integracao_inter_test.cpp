@@ -3,8 +3,8 @@
 #include <algorithm>
 #include <string>
 #include "helpers_motor.hpp"
-#include "search.hpp"
-#include "xadrez/jogo.hpp"
+#include "../../../ia/busca-minimax/search.hpp"
+#include "../../include/xadrez/jogo.hpp"
 using namespace xadrez;
 
 namespace { constexpr int INFI = SCORE_INFINITO; }

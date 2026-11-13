@@ -4,12 +4,12 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include "xadrez/posicao.hpp"
-#include "tabuleiro/tabuleiro.hpp"
-#include "otimizacao/zobrist.hpp"
-#include "otimizacao/tt.hpp"
-#include "lances.hpp"
-#include "movimentos.hpp"
+#include "../../include/xadrez/posicao.hpp"
+#include "../../../infra-estrutura/tabuleiro/tabuleiro.hpp"
+#include "../../../infra-estrutura/otimizacao/zobrist.hpp"
+#include "../../../infra-estrutura/otimizacao/tt.hpp"
+#include "../../../infra-estrutura/lances.hpp"
+#include "../../../infra-estrutura/movimentos.hpp"
 
 namespace th {
 
