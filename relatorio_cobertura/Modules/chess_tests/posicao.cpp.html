@@ -1,0 +1,278 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+        <meta charset="utf-8"/>
+	    <title>posicao.cpp</title>
+	    <link href="../../third-party/google-code-prettify/prettify-CppCoverage.css" type="text/css" rel="stylesheet" />
+	    <script type="text/javascript" src="../../third-party/google-code-prettify/prettify.js"></script>
+	</head>
+    <body onload="prettyPrint()">
+        <h4></h4>
+        <pre class="prettyprint lang-cpp linenums">
+#include "xadrez/posicao.hpp"
+#include "tabuleiro/tabuleiro.hpp"
+#include &lt;stdexcept&gt;
+#include &lt;sstream&gt;
+#include &lt;string&gt;
+#include &lt;vector&gt;
+#include "otimizacao/zobrist.hpp"
+#include "../../../infra-estrutura/movimentos.hpp"   // casa_atacada
+
+void init_raios();   // infra-estrutura/movimentos.cpp: tabelas de raios das peÃ§as deslizantes
+
+namespace xadrez {
+
+<span style = "background-color:#dfd">std::string casaParaTexto(int linha, int coluna) {
+    std::string texto;
+    texto += static_cast&lt;char&gt;('a' + coluna);
+    texto += static_cast&lt;char&gt;('1' + linha);
+    return texto;
+}</span>
+
+<span style = "background-color:#dfd">bool textoParaCasa(const std::string&amp; texto, int&amp; linha, int&amp; coluna) {
+    if (texto.size() != 2) return false;
+    if (texto[0] &lt; 'a' || texto[0] &gt; 'h') return false;
+    if (texto[1] &lt; '1' || texto[1] &gt; '8') return false;
+    coluna = texto[0] - 'a';
+    linha = texto[1] - '1';
+    return true;
+}</span>
+
+// ============================================================================
+// FEN (mantido na engine; o Tabuleiro da infra-estrutura nÃ£o conhece FEN)
+// ============================================================================
+namespace {
+
+// Letras de peÃ§a por [cor][tipo]: P N B R Q K / p n b r q k
+const char LETRA_PECA[NUM_CORES][NUM_TIPOS] = {
+    {'P', 'N', 'B', 'R', 'Q', 'K'},
+    {'p', 'n', 'b', 'r', 'q', 'k'}
+};
+
+// Chave Zobrist calculada do zero, na mesma convenÃ§Ã£o de fazer_lance:
+// peÃ§as + direitos de roque (sempre) + coluna do en passant (se houver)
+// + ZOB_LADO quando a vez Ã© das pretas.
+<span style = "background-color:#dfd">uint64_t calcularChave(const Tabuleiro&amp; b) {
+    uint64_t chave = 0;
+    for (int sq = 0; sq &lt; NUM_CASAS; ++sq) {
+        const Peca p = b.casas[sq];
+        if (p.tpeca != TipoPeca::PECA_VAZIA)
+            chave ^= ZOBRIST[zob_peca(p.cor, p.tpeca, static_cast&lt;Quadrado&gt;(sq))];
+    }
+    chave ^= ZOBRIST[ZOB_ROQUE + b.estado.direitos_roque];
+    if (b.estado.en_passant != Quadrado::quadrado_vazio)
+        chave ^= ZOBRIST[ZOB_EP + coluna_de(b.estado.en_passant)];
+    if (b.estado.lado_a_jogar == Cor::PRETO)
+        chave ^= ZOBRIST[ZOB_LADO];
+    return chave;
+}</span>
+
+<span style = "background-color:#dfd">bool soDigitos(const std::string&amp; s, int&amp; valor) {
+    if (s.empty() || s.size() &gt; 6) return false;
+    valor = 0;
+    for (char c : s) {
+        if (c &lt; '0' || c &gt; '9') return false;
+        valor = valor * 10 + (c - '0');
+    }
+    return true;
+}</span>
+
+// Preenche `p` a partir da FEN (4 a 6 campos; meios-lances e nÃºmero do lance sÃ£o opcionais).
+// Valida: 8 fileiras de 8 casas, peÃ§as conhecidas, um rei de cada cor, nenhum peÃ£o na
+// 1Âª/8Âª fileira, lado, roque, en passant (fileira coerente com o lado) e nÃºmeros.
+// Direitos de roque sem rei/torre na casa de origem sÃ£o descartados.
+// Em caso de erro devolve false e `p` fica em estado indefinido (deFen descarta).
+<span style = "background-color:#dfd">bool lerFen(Posicao&amp; p, const std::string&amp; fen) {
+    std::vector&lt;std::string&gt; campos;
+    std::istringstream ss(fen);
+    std::string tok;
+    while (ss &gt;&gt; tok) campos.push_back(tok);
+    if (campos.size() &lt; 4 || campos.size() &gt; 6) return false;</span>
+
+<span style = "background-color:#dfd">    Tabuleiro&amp; t = p.b;
+    limpar(t);</span>
+
+    // 1) PosiÃ§Ã£o das peÃ§as (fileira 8 primeiro)
+<span style = "background-color:#dfd">    int linha = 7, col = 0;
+    for (char ch : campos[0]) {
+        if (ch == '/') {
+            if (col != 8 || linha == 0) return false;
+            --linha;
+            col = 0;
+        } else if (ch &gt;= '1' &amp;&amp; ch &lt;= '8') {
+            col += ch - '0';
+            if (col &gt; 8) return false;
+        } else {
+            const bool branca = (ch &gt;= 'A' &amp;&amp; ch &lt;= 'Z');
+            const char minus = branca ? static_cast&lt;char&gt;(ch - 'A' + 'a') : ch;</span>
+            TipoPeca tp;
+<span style = "background-color:#dfd">            switch (minus) {
+                case 'p': tp = TipoPeca::PEAO;   break;
+                case 'n': tp = TipoPeca::CAVALO; break;
+                case 'b': tp = TipoPeca::BISPO;  break;
+                case 'r': tp = TipoPeca::TORRE;  break;
+                case 'q': tp = TipoPeca::DAMA;   break;
+                case 'k': tp = TipoPeca::REI;    break;
+                default: return false;</span>
+            }
+<span style = "background-color:#dfd">            if (col &gt;= 8) return false;
+            if (tp == TipoPeca::PEAO &amp;&amp; (linha == 0 || linha == 7)) return false;
+            colocar_peca(t, branca ? Cor::BRANCO : Cor::PRETO, tp,</span>
+                         criar_quadrado(static_cast&lt;Coluna&gt;(col), static_cast&lt;Linha&gt;(linha)));
+<span style = "background-color:#dfd">            ++col;</span>
+        }
+<span style = "background-color:#dfd">    }
+    if (linha != 0 || col != 8) return false;
+    if (quantidade_de(t, Cor::BRANCO, TipoPeca::REI) != 1) return false;
+    if (quantidade_de(t, Cor::PRETO,  TipoPeca::REI) != 1) return false;</span>
+
+    // 2) Lado a jogar
+<span style = "background-color:#dfd">    if (campos[1] == "w") t.estado.lado_a_jogar = Cor::BRANCO;
+    else if (campos[1] == "b") t.estado.lado_a_jogar = Cor::PRETO;
+    else return false;
+    const bool brancas = (t.estado.lado_a_jogar == Cor::BRANCO);</span>
+
+    // 3) Direitos de roque
+<span style = "background-color:#dfd">    uint8_t d = SEM_ROQUE;
+    if (campos[2] != "-") {
+        for (char ch : campos[2]) {
+            switch (ch) {
+                case 'K': d |= ROQUE_BRANCO_REI;  break;
+                case 'Q': d |= ROQUE_BRANCO_DAMA; break;
+                case 'k': d |= ROQUE_PRETO_REI;   break;
+                case 'q': d |= ROQUE_PRETO_DAMA;  break;
+                default: return false;</span>
+            }
+<span style = "background-color:#dfd">        }</span>
+    }
+<span style = "background-color:#dfd">    auto tem = [&amp;](Cor c, TipoPeca tp, Quadrado q) {
+        const Peca x = peca_em(t, q);
+        return x.cor == c &amp;&amp; x.tpeca == tp;
+    };
+    if (!(tem(Cor::BRANCO, TipoPeca::REI, Quadrado::e1) &amp;&amp; tem(Cor::BRANCO, TipoPeca::TORRE, Quadrado::h1)))
+        d = static_cast&lt;uint8_t&gt;(d &amp; ~ROQUE_BRANCO_REI);
+    if (!(tem(Cor::BRANCO, TipoPeca::REI, Quadrado::e1) &amp;&amp; tem(Cor::BRANCO, TipoPeca::TORRE, Quadrado::a1)))
+        d = static_cast&lt;uint8_t&gt;(d &amp; ~ROQUE_BRANCO_DAMA);
+    if (!(tem(Cor::PRETO, TipoPeca::REI, Quadrado::e8) &amp;&amp; tem(Cor::PRETO, TipoPeca::TORRE, Quadrado::h8)))
+        d = static_cast&lt;uint8_t&gt;(d &amp; ~ROQUE_PRETO_REI);
+    if (!(tem(Cor::PRETO, TipoPeca::REI, Quadrado::e8) &amp;&amp; tem(Cor::PRETO, TipoPeca::TORRE, Quadrado::a8)))
+        d = static_cast&lt;uint8_t&gt;(d &amp; ~ROQUE_PRETO_DAMA);
+    t.estado.direitos_roque = d;</span>
+
+    // 4) En passant: fileira 6 se as brancas jogam, fileira 3 se as pretas jogam
+<span style = "background-color:#dfd">    t.estado.en_passant = Quadrado::quadrado_vazio;
+    if (campos[3] != "-") {
+        const std::string&amp; e = campos[3];
+        if (e.size() != 2 || e[0] &lt; 'a' || e[0] &gt; 'h') return false;
+        if (e[1] != (brancas ? '6' : '3')) return false;
+        t.estado.en_passant = criar_quadrado(static_cast&lt;Coluna&gt;(e[0] - 'a'),</span>
+                                             static_cast&lt;Linha&gt;(e[1] - '1'));
+    }
+    
+    // 4b) PosiÃ§Ã£o impossÃ­vel: o lado que NÃO tem a vez nÃ£o pode estar em xeque.
+    // Isso tambÃ©m rejeita reis adjacentes (um rei ataca o outro).
+    {
+<span style = "background-color:#dfd">        const Cor aJogar = t.estado.lado_a_jogar;
+        if (casa_atacada(t, casa_do_rei(t, oposta(aJogar)), aJogar)) return false;</span>
+    }
+    
+    // 5) Meios-lances e nÃºmero do lance (opcionais)
+<span style = "background-color:#dfd">    int meios = 0, numero = 1;
+    if (campos.size() &gt;= 5 &amp;&amp; !soDigitos(campos[4], meios)) return false;
+    if (campos.size() &gt;= 6 &amp;&amp; (!soDigitos(campos[5], numero) || numero &lt; 1)) return false;
+    t.estado.contador_50 = meios;
+    p.numeroLance = numero;</span>
+
+<span style = "background-color:#dfd">    t.estado.chave_zobrist = calcularChave(t);
+    return true;
+}</span>
+
+} // namespace
+
+// ============================================================================
+// Posicao
+// ============================================================================
+
+<span style = "background-color:#dfd">Posicao::Posicao() {
+    static const bool zobristPronta = (iniciar_zobrist(), true);</span>
+    (void)zobristPronta;
+<span style = "background-color:#dfd">    static const bool raiosProntos = (init_raios(), true);   // roda uma Ãºnica vez</span>
+    (void)raiosProntos;
+<span style = "background-color:#dfd">    limpar(b);
+}</span>
+
+<span style = "background-color:#dfd">Posicao Posicao::inicial() {
+    Posicao p;
+    posicao_inicial(p.b);
+    p.b.estado.chave_zobrist = calcularChave(p.b);   // a infra deixa a chave em 0
+    p.numeroLance = 1;
+    return p;
+}</span>
+
+<span style = "background-color:#dfd">Posicao Posicao::deFen(const std::string&amp; fen) {
+    Posicao p;
+    if (!lerFen(p, fen)) {
+        throw std::invalid_argument("FEN invalida ou incompleta");</span>
+    }
+<span style = "background-color:#dfd">    return p;
+}</span>
+
+<span style = "background-color:#dfd">std::string Posicao::paraFen() const {
+    std::string s;</span>
+
+<span style = "background-color:#dfd">    for (int linha = 7; linha &gt;= 0; --linha) {
+        int vazias = 0;
+        for (int col = 0; col &lt; 8; ++col) {
+            const Peca p = b.casas[linha * 8 + col];
+            if (p.tpeca == TipoPeca::PECA_VAZIA) {
+                ++vazias;
+            } else {
+                if (vazias) { s += static_cast&lt;char&gt;('0' + vazias); vazias = 0; }
+                s += LETRA_PECA[idx(p.cor)][idx(p.tpeca)];</span>
+            }
+<span style = "background-color:#dfd">        }
+        if (vazias) s += static_cast&lt;char&gt;('0' + vazias);
+        if (linha &gt; 0) s += '/';
+    }</span>
+
+<span style = "background-color:#dfd">    s += (b.estado.lado_a_jogar == Cor::BRANCO) ? " w " : " b ";</span>
+
+<span style = "background-color:#dfd">    const uint8_t d = b.estado.direitos_roque;
+    if (d == SEM_ROQUE) {
+        s += '-';
+    } else {
+        if (d &amp; ROQUE_BRANCO_REI)  s += 'K';
+        if (d &amp; ROQUE_BRANCO_DAMA) s += 'Q';
+        if (d &amp; ROQUE_PRETO_REI)   s += 'k';
+        if (d &amp; ROQUE_PRETO_DAMA)  s += 'q';</span>
+    }
+
+<span style = "background-color:#dfd">    s += ' ';
+    if (b.estado.en_passant == Quadrado::quadrado_vazio) {
+        s += '-';
+    } else {
+        s += casaParaTexto(static_cast&lt;int&gt;(linha_de(b.estado.en_passant)),</span>
+                           static_cast&lt;int&gt;(coluna_de(b.estado.en_passant)));
+    }
+
+<span style = "background-color:#dfd">    s += ' ' + std::to_string(b.estado.contador_50);
+    s += ' ' + std::to_string(numeroLance);
+    return s;
+}</span>
+
+} // namespace xadrez</pre>
+        <hr />
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th align="center">
+                        <small>Generated by</small>
+                        <a href="https://github.com/OpenCppCoverage/OpenCppCoverage/releases">
+                            <strong>OpenCppCoverage (Version: 0.9.9.0)</strong>
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+        </table>
+    </body>
+</html>

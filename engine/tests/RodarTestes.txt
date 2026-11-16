@@ -41,3 +41,6 @@ ctest --test-dir engine/build -C Debug --output-on-failure
 Abra debug_falhas.txt (fica na pasta de onde o .exe foi executado).
 
  
+---------------- Rodar a Cobertura de Testes ------------------------------
+
+OpenCppCoverage.exe --sources="$PWD\infra-estrutura" --sources="$PWD\ia" --sources="$PWD\engine\src" --excluded_sources="$PWD\engine\tests" --export_type=cobertura:coverage.cobertura --export_type=html:relatorio_cobertura -- .\engine\build\Debug\chess_tests.exe

@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+        <meta charset="utf-8"/>
+	    <title>aval_seguranca_rei.cpp</title>
+	    <link href="../../third-party/google-code-prettify/prettify-CppCoverage.css" type="text/css" rel="stylesheet" />
+	    <script type="text/javascript" src="../../third-party/google-code-prettify/prettify.js"></script>
+	</head>
+    <body onload="prettyPrint()">
+        <h4></h4>
+        <pre class="prettyprint lang-cpp linenums">
+#include "aval_seguranca_rei.hpp"
+
+#include &lt;bit&gt;
+
+namespace {
+
+constexpr int PENALIDADE_PEAO_AUSENTE_ESCUDO = 10;
+constexpr int PENALIDADE_COLUNA_ABERTA_REI = 18;
+constexpr int PENALIDADE_COLUNA_ABERTA_ADJACENTE = 9;
+
+<span style = "background-color:#dfd">constexpr int coluna_da_casa(int casa) {
+    return casa % NUM_COLUNAS;
+}</span>
+
+<span style = "background-color:#dfd">constexpr int linha_da_casa(int casa) {
+    return casa / NUM_COLUNAS;
+}</span>
+
+<span style = "background-color:#dfd">int avaliar_escudo_peoes(int casa_rei, Bitboard peoes, Cor cor) {
+    const int coluna_rei = coluna_da_casa(casa_rei);
+    const int linha_rei = linha_da_casa(casa_rei);
+    const int direcao = cor == Cor::BRANCO ? 1 : -1;
+    const int linha_escudo = linha_rei + direcao;</span>
+
+<span style = "background-color:#dfd">    if (linha_escudo &lt; 0 || linha_escudo &gt;= NUM_LINHAS) {</span>
+<span style = "background-color:#fdd">        return 0;</span>
+    }
+
+<span style = "background-color:#dfd">    int penalidade = 0;
+    for (int deslocamento = -1; deslocamento &lt;= 1; ++deslocamento) {
+        const int coluna = coluna_rei + deslocamento;
+        if (coluna &lt; 0 || coluna &gt;= NUM_COLUNAS) {
+            continue;</span>
+        }
+
+<span style = "background-color:#dfd">        const int casa = linha_escudo * NUM_COLUNAS + coluna;
+        const Bitboard mascara = Bitboard{1} &lt;&lt; casa;
+        if ((peoes &amp; mascara) == 0) {
+            penalidade += PENALIDADE_PEAO_AUSENTE_ESCUDO;</span>
+        }
+<span style = "background-color:#dfd">    }</span>
+
+<span style = "background-color:#dfd">    return penalidade;
+}</span>
+
+<span style = "background-color:#dfd">bool ha_peca_pesada_na_coluna(Bitboard pecas_pesadas, int coluna) {
+    return (pecas_pesadas &amp; MASCARA_COLUNAS[coluna]) != 0;
+}</span>
+
+<span style = "background-color:#dfd">int avaliar_colunas_abertas(const Tabuleiro&amp; tab, int casa_rei, Cor cor) {
+    const int coluna_rei = coluna_da_casa(casa_rei);
+    const Cor cor_adversaria = oposta(cor);</span>
+
+<span style = "background-color:#dfd">    const Bitboard todos_os_peoes =</span>
+        tab.pecas[idx(Cor::BRANCO)][idx(TipoPeca::PEAO)] |
+        tab.pecas[idx(Cor::PRETO)][idx(TipoPeca::PEAO)];
+<span style = "background-color:#dfd">    const Bitboard pecas_pesadas_adversarias =</span>
+        tab.pecas[idx(cor_adversaria)][idx(TipoPeca::TORRE)] |
+        tab.pecas[idx(cor_adversaria)][idx(TipoPeca::DAMA)];
+
+<span style = "background-color:#dfd">    int penalidade = 0;</span>
+
+    // Considera a coluna do rei e as duas adjacentes, respeitando as bordas.
+<span style = "background-color:#dfd">    for (int deslocamento = -1; deslocamento &lt;= 1; ++deslocamento) {
+        const int coluna = coluna_rei + deslocamento;
+        if (coluna &lt; 0 || coluna &gt;= NUM_COLUNAS) {
+            continue;</span>
+        }
+
+<span style = "background-color:#dfd">        const Bitboard mascara_coluna = MASCARA_COLUNAS[coluna];
+        const bool coluna_aberta = (todos_os_peoes &amp; mascara_coluna) == 0;</span>
+
+        // Uma coluna vazia de peÃµes sÃ³ representa perigo quando o adversÃ¡rio
+        // tem torre ou dama nessa coluna.
+<span style = "background-color:#dfd">        if (coluna_aberta &amp;&amp;</span>
+            ha_peca_pesada_na_coluna(pecas_pesadas_adversarias, coluna)) {
+<span style = "background-color:#dfd">            penalidade += deslocamento == 0</span>
+                ? PENALIDADE_COLUNA_ABERTA_REI
+                : PENALIDADE_COLUNA_ABERTA_ADJACENTE;
+        }
+<span style = "background-color:#dfd">    }</span>
+
+<span style = "background-color:#dfd">    return penalidade;
+}</span>
+
+} // namespace
+
+<span style = "background-color:#dfd">int avaliar_seguranca_rei(const Tabuleiro&amp; tab) {
+    int score = 0;</span>
+
+<span style = "background-color:#dfd">    for (int indice_cor = 0; indice_cor &lt; NUM_CORES; ++indice_cor) {
+        const Cor cor = static_cast&lt;Cor&gt;(indice_cor);
+        const int sinal = cor == Cor::BRANCO ? 1 : -1;
+        const Bitboard reis = tab.pecas[idx(cor)][idx(TipoPeca::REI)];</span>
+
+        // PosiÃ§Ãµes invÃ¡lidas sem rei nÃ£o devem quebrar a avaliaÃ§Ã£o.
+<span style = "background-color:#dfd">        if (reis == 0) {</span>
+<span style = "background-color:#fdd">            continue;</span>
+        }
+
+<span style = "background-color:#dfd">        const int casa_rei = std::countr_zero(reis);
+        const Bitboard peoes = tab.pecas[idx(cor)][idx(TipoPeca::PEAO)];</span>
+
+<span style = "background-color:#dfd">        const int penalidade_escudo =</span>
+            avaliar_escudo_peoes(casa_rei, peoes, cor);
+<span style = "background-color:#dfd">        const int penalidade_colunas =</span>
+            avaliar_colunas_abertas(tab, casa_rei, cor);
+
+<span style = "background-color:#dfd">        score -= sinal * (penalidade_escudo + penalidade_colunas);
+    }</span>
+
+<span style = "background-color:#dfd">    return score;
+}</span></pre>
+        <hr />
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th align="center">
+                        <small>Generated by</small>
+                        <a href="https://github.com/OpenCppCoverage/OpenCppCoverage/releases">
+                            <strong>OpenCppCoverage (Version: 0.9.9.0)</strong>
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+        </table>
+    </body>
+</html>

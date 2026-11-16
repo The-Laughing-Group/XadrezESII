@@ -1,0 +1,278 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+        <meta charset="utf-8"/>
+	    <title>jogo.cpp</title>
+	    <link href="../../third-party/google-code-prettify/prettify-CppCoverage.css" type="text/css" rel="stylesheet" />
+	    <script type="text/javascript" src="../../third-party/google-code-prettify/prettify.js"></script>
+	</head>
+    <body onload="prettyPrint()">
+        <h4></h4>
+        <pre class="prettyprint lang-cpp linenums">
+#include "xadrez/jogo.hpp"
+#include &lt;cctype&gt;
+#include &lt;stdexcept&gt;
+#include &lt;string&gt;
+#include &lt;vector&gt;
+#include "xadrez/posicao.hpp"
+#include "tabuleiro/tabuleiro.hpp"
+#include "xadrez/movimentos.hpp"
+#include "../../../infra-estrutura/movimentos.hpp"   // ListaLances, gerar_lances
+#include "lances.hpp"
+#include "search.hpp"  // declaraÃ§Ã£o de obter_melhor_lance
+#include &lt;limits&gt;
+#include "../../../infra-estrutura/otimizacao/tt.hpp"
+
+namespace xadrez {
+
+// Casa vazia lida direto do mailbox. NÃ£o usamos casa_vazia() da infra-estrutura
+// porque ela estÃ¡ com o sentido invertido (devolve true quando a casa estÃ¡ ocupada).
+<span style = "background-color:#dfd">static bool vazia(const Tabuleiro&amp; b, Quadrado sq) {
+    return peca_em(b, sq).tpeca == TipoPeca::PECA_VAZIA;
+}</span>
+
+<span style = "background-color:#dfd">static std::string nomeDaCasa(Quadrado sq) {
+    return casaParaTexto(static_cast&lt;int&gt;(linha_de(sq)), static_cast&lt;int&gt;(coluna_de(sq)));
+}</span>
+
+// 'P' 'N' 'B' 'R' 'Q' 'K' para as brancas, minÃºsculas para as pretas.
+<span style = "background-color:#dfd">static char caractereDaPeca(Peca p) {</span>
+    static const char CARACTERE[NUM_CORES][NUM_TIPOS] = {
+        {'P', 'N', 'B', 'R', 'Q', 'K'},
+        {'p', 'n', 'b', 'r', 'q', 'k'}
+    };
+<span style = "background-color:#dfd">    return CARACTERE[idx(p.cor)][idx(p.tpeca)];
+}</span>
+
+// Converte um Lance de 16 bits para UCI ("e2e4", "e7e8q").
+<span style = "background-color:#dfd">static std::string lanceParaUci(Lance m) {
+    const Quadrado origem  = origem_do_lance(m);
+    const Quadrado destino = destino_do_lance(m);</span>
+
+<span style = "background-color:#dfd">    std::string uci = nomeDaCasa(origem) + nomeDaCasa(destino);</span>
+
+<span style = "background-color:#dfd">    if (eh_promocao(m)) {
+        switch (tipo_da_promocao(m)) {
+            case TipoPeca::DAMA:   uci += 'q'; break;
+            case TipoPeca::TORRE:  uci += 'r'; break;
+            case TipoPeca::BISPO:  uci += 'b'; break;
+            case TipoPeca::CAVALO: uci += 'n'; break;</span>
+            default: break;
+        }
+    }
+<span style = "background-color:#dfd">    return uci;
+}</span>
+
+// Descreve o lance olhando o tabuleiro de ANTES dele (depois da jogada a peÃ§a capturada jÃ¡ sumiu).
+<span style = "background-color:#dfd">static InfoLance descreverLance(const Tabuleiro&amp; antes, Lance m) {
+    InfoLance info;
+    info.uci = lanceParaUci(m);</span>
+
+<span style = "background-color:#dfd">    const int destino = destino_do_lance(m);</span>
+
+    // 1) tipo do lance, a partir das flags
+<span style = "background-color:#dfd">    if (eh_roque(m)) {
+        const bool curto = (flags_do_lance(m) == LANCE_ROQUE_REI);
+        info.tipo = curto ? "roque_rei" : "roque_dama";</span>
+        // O lance Ã© o do REI (e1g1, e1c1...). A torre vai junto:
+        //   curto: h -&gt; f   (destino+1 -&gt; destino-1)      longo: a -&gt; d   (destino-2 -&gt; destino+1)
+<span style = "background-color:#dfd">        info.torreOrigem  = nomeDaCasa(static_cast&lt;Quadrado&gt;(curto ? destino + 1 : destino - 2));
+        info.torreDestino = nomeDaCasa(static_cast&lt;Quadrado&gt;(curto ? destino - 1 : destino + 1));
+    } else if (eh_en_passant(m))   info.tipo = "en_passant";
+    else if (eh_promocao(m))       info.tipo = eh_captura(m) ? "captura_promocao" : "promocao";
+    else if (eh_avanco_duplo(m))   info.tipo = "avanco_duplo";
+    else if (eh_captura(m))        info.tipo = "captura";
+    else                           info.tipo = "normal";</span>
+
+    // 2) captura: no en passant a vÃ­tima fica ao lado do destino (uma fileira atrÃ¡s do peÃ£o que captura)
+<span style = "background-color:#dfd">    if (eh_captura(m)) {
+        info.captura = true;
+        int casaVitima = destino;
+        if (eh_en_passant(m))
+            casaVitima = (antes.estado.lado_a_jogar == Cor::BRANCO) ? destino - 8 : destino + 8;
+        info.casaCapturada = nomeDaCasa(static_cast&lt;Quadrado&gt;(casaVitima));
+        info.pecaCapturada = std::string(1, caractereDaPeca(peca_em(antes, static_cast&lt;Quadrado&gt;(casaVitima))));</span>
+    }
+
+    // 3) promoÃ§Ã£o: a letra jÃ¡ estÃ¡ no UCI ("e7e8q")
+<span style = "background-color:#dfd">    if (eh_promocao(m)) info.promocao = std::string(1, info.uci.back());</span>
+
+<span style = "background-color:#dfd">    return info;
+}</span>
+
+<span style = "background-color:#dfd">Jogo::Jogo() : pos_(Posicao::inicial()) {</span>
+    static bool tt_pronta = false;
+<span style = "background-color:#dfd">    if (!tt_pronta) {
+        iniciar_tt(64);   // 64 MB
+        tt_pronta = true;</span>
+    }
+<span style = "background-color:#dfd">}</span>
+
+<span style = "background-color:#dfd">bool Jogo::carregarFen(const std::string&amp; fen) {</span>
+    try {
+<span style = "background-color:#dfd">        pos_ = Posicao::deFen(fen);   // sÃ³ troca pos_ se a FEN for vÃ¡lida
+        ultimo_ = InfoLance{};        // posiÃ§Ã£o nova: ainda nÃ£o houve lance
+        return true;
+    } catch (const std::invalid_argument&amp;) {
+        return false;</span>
+<span style = "background-color:#fdd">    }</span>
+<span style = "background-color:#dfd">}</span>
+
+<span style = "background-color:#dfd">std::string Jogo::fen() const {
+    return pos_.paraFen();
+}</span>
+
+<span style = "background-color:#dfd">bool Jogo::vezDasBrancas() const {
+    return pos_.b.estado.lado_a_jogar == Cor::BRANCO;
+}</span>
+
+<span style = "background-color:#dfd">std::vector&lt;std::string&gt; Jogo::tabuleiro() const {</span>
+    // O front-end espera o Ã­ndice 0 = fileira 8 e o Ã­ndice 7 = fileira 1.
+<span style = "background-color:#dfd">    std::vector&lt;std::string&gt; linhas;
+    for (int l = 7; l &gt;= 0; --l) {
+        std::string linha_str;
+        for (int c = 0; c &lt; 8; ++c) {
+            const Quadrado sq = criar_quadrado(static_cast&lt;Coluna&gt;(c), static_cast&lt;Linha&gt;(l));
+            if (vazia(pos_.b, sq)) {
+                linha_str += '.';
+            } else {
+                linha_str += caractereDaPeca(peca_em(pos_.b, sq));</span>
+            }
+<span style = "background-color:#dfd">        }
+        linhas.emplace_back(linha_str);
+    }
+    return linhas;
+}</span>
+
+<span style = "background-color:#dfd">std::vector&lt;std::string&gt; Jogo::lancesDe(const std::string&amp; casa) const {
+    std::vector&lt;std::string&gt; lances;
+    int linha = 0, coluna = 0;
+    if (!textoParaCasa(casa, linha, coluna)) return lances;</span>
+
+<span style = "background-color:#dfd">    const Quadrado origem = criar_quadrado(static_cast&lt;Coluna&gt;(coluna), static_cast&lt;Linha&gt;(linha));
+    if (vazia(pos_.b, origem)) return lances;</span>
+
+    // SÃ³ se pode pedir lances de peÃ§a de quem tem a vez
+<span style = "background-color:#dfd">    if (peca_em(pos_.b, origem).cor != pos_.b.estado.lado_a_jogar) return lances;</span>
+
+<span style = "background-color:#dfd">    ListaLances lista;
+    gerar_lances(pos_.b, lista);</span>
+
+<span style = "background-color:#dfd">    for (int i = 0; i &lt; lista.quantidade; ++i) {
+        const Lance m = lista.lances[i];
+        if (origem_do_lance(m) != origem) continue;</span>
+
+        // Legalidade: o lance Ã© pseudo-legal; fazer_lance rejeita se o rei ficar em xeque
+<span style = "background-color:#dfd">        Posicao copia = pos_;
+        if (fazer_lance(copia.b, m)) lances.push_back(lanceParaUci(m));
+    }
+    return lances;
+}</span>
+
+<span style = "background-color:#dfd">bool Jogo::tentarLance(const std::string&amp; uci_in) {
+    if (uci_in.size() != 4 &amp;&amp; uci_in.size() != 5) return false;</span>
+
+    // Aceita a letra da promoÃ§Ã£o em maiÃºscula ("e7e8Q")
+<span style = "background-color:#dfd">    std::string uci = uci_in;
+    if (uci.size() == 5)
+        uci[4] = static_cast&lt;char&gt;(std::tolower(static_cast&lt;unsigned char&gt;(uci[4])));</span>
+
+<span style = "background-color:#dfd">    ListaLances lista;
+    gerar_lances(pos_.b, lista);</span>
+
+<span style = "background-color:#dfd">    for (int i = 0; i &lt; lista.quantidade; ++i) {
+        const Lance m = lista.lances[i];
+        if (lanceParaUci(m) != uci) continue;</span>
+
+<span style = "background-color:#dfd">        Posicao copia = pos_;
+        const bool eraVezDasPretas = (copia.b.estado.lado_a_jogar == Cor::PRETO);
+        if (fazer_lance(copia.b, m)) {
+            if (eraVezDasPretas) ++copia.numeroLance;
+            ultimo_ = descreverLance(pos_.b, m);   // pos_ ainda Ã© a posiÃ§Ã£o de ANTES do lance
+            pos_ = copia;
+            return true;</span>
+        }
+<span style = "background-color:#dfd">        return false;   // o UCI existe, mas o lance deixaria o rei em xeque</span>
+<span style = "background-color:#fdd">    }</span>
+<span style = "background-color:#dfd">    return false;
+}</span>
+
+// ---------- fim de partida ----------
+// As funÃ§Ãµes da infra-estrutura recebem Tabuleiro&amp; (sem const) porque testam lances de
+// verdade. Como estes mÃ©todos sÃ£o const, trabalhamos numa cÃ³pia de pos_.
+
+<span style = "background-color:#dfd">bool Jogo::emXeque() const {
+    return em_xeque(pos_.b, pos_.b.estado.lado_a_jogar);   // sÃ³ leitura, nÃ£o precisa de cÃ³pia
+}</span>
+
+<span style = "background-color:#dfd">bool Jogo::emXequeMate() const {
+    Posicao copia = pos_;
+    return em_xeque_mate(copia.b);
+}</span>
+
+<span style = "background-color:#dfd">bool Jogo::emAfogamento() const {
+    Posicao copia = pos_;
+    return em_afogamento(copia.b);
+}</span>
+
+// ---------- estado da partida e Ãºltimo lance ----------
+
+<span style = "background-color:#dfd">SituacaoPartida Jogo::situacao() const {
+    SituacaoPartida s;
+    Posicao copia = pos_;                 // tem_lance_legal precisa de Tabuleiro&amp; (faz e desfaz lances)
+    Tabuleiro&amp; b = copia.b;
+    const Cor vez = b.estado.lado_a_jogar;</span>
+
+<span style = "background-color:#dfd">    s.emXeque = em_xeque(b, vez);
+    const bool semLances = !tem_lance_legal(b);</span>
+
+<span style = "background-color:#dfd">    if (semLances &amp;&amp; s.emXeque) {
+        s.estado   = "xeque_mate";
+        s.vencedor = (vez == Cor::BRANCO) ? "pretas" : "brancas";   // venceu quem NÃO tem a vez
+    } else if (semLances) {
+        s.estado = "afogamento";
+    } else if (material_insuficiente(b)) {
+        s.estado = "material_insuficiente";
+    } else if (empate_50(b)) {
+        s.estado = "regra_dos_50";
+    } else if (contar_repeticoes(b) &gt;= 2) {   // jÃ¡ apareceu 2 vezes antes = esta Ã© a 3Âª
+        s.estado = "repeticao";</span>
+    }
+
+<span style = "background-color:#dfd">    s.terminou = (s.estado != "em_andamento");
+    return s;
+}</span>
+
+<span style = "background-color:#dfd">InfoLance Jogo::ultimoLance() const {
+    return ultimo_;
+}</span>
+
+<span style = "background-color:#dfd">std::string Jogo::melhorLanceIA(int profundidade) {</span>
+    // A IA joga pelas pretas.
+<span style = "background-color:#dfd">    if (pos_.b.estado.lado_a_jogar != Cor::PRETO) return "";</span>
+    // Pode evitar essa checagem duplicada e deixar a busca decidir se hÃ¡ lance
+    // if (profundidade &lt;= 0 || situacao().terminou) return "";
+<span style = "background-color:#dfd">    if (profundidade &lt;= 0) return "";</span>
+
+<span style = "background-color:#dfd">    const Lance melhor = obter_melhor_lance(pos_.b, profundidade);
+    if (melhor == SEM_LANCE) return "";</span>
+
+<span style = "background-color:#dfd">    return lanceParaUci(melhor);
+}</span>
+
+} // namespace xadrez</pre>
+        <hr />
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th align="center">
+                        <small>Generated by</small>
+                        <a href="https://github.com/OpenCppCoverage/OpenCppCoverage/releases">
+                            <strong>OpenCppCoverage (Version: 0.9.9.0)</strong>
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+        </table>
+    </body>
+</html>

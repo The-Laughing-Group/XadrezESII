@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+        <meta charset="utf-8"/>
+	    <title>aval_peoes.cpp</title>
+	    <link href="../../third-party/google-code-prettify/prettify-CppCoverage.css" type="text/css" rel="stylesheet" />
+	    <script type="text/javascript" src="../../third-party/google-code-prettify/prettify.js"></script>
+	</head>
+    <body onload="prettyPrint()">
+        <h4></h4>
+        <pre class="prettyprint lang-cpp linenums">
+#include "aval_peoes.hpp"
+
+#include &lt;bit&gt;
+#include &lt;cstdlib&gt;
+
+namespace {
+
+constexpr int PENALIDADE_PEAO_DOBRADO = 15;
+constexpr int PENALIDADE_PEAO_ISOLADO = 12;
+constexpr int BONUS_PEAO_PASSADO_BASE = 10;
+constexpr int BONUS_PEAO_PASSADO_POR_LINHA = 8;
+constexpr int MAX_AVANCO_PEAO = 5;
+
+<span style = "background-color:#dfd">constexpr int coluna_da_casa(int casa) {
+    return casa % NUM_COLUNAS;
+}</span>
+
+<span style = "background-color:#dfd">constexpr int linha_da_casa(int casa) {
+    return casa / NUM_COLUNAS;
+}</span>
+
+<span style = "background-color:#dfd">bool tem_peao_aliado_adjacente(int casa, Bitboard peoes) {
+    const int coluna = coluna_da_casa(casa);
+    Bitboard colunas_adjacentes = 0;</span>
+
+<span style = "background-color:#dfd">    if (coluna &gt; 0) {
+        colunas_adjacentes |= MASCARA_COLUNAS[coluna - 1];</span>
+    }
+<span style = "background-color:#dfd">    if (coluna &lt; NUM_COLUNAS - 1) {
+        colunas_adjacentes |= MASCARA_COLUNAS[coluna + 1];</span>
+    }
+
+<span style = "background-color:#dfd">    return (peoes &amp; colunas_adjacentes) != 0;
+}</span>
+
+<span style = "background-color:#dfd">bool eh_peao_passado(int casa, Bitboard peoes_adversarios, Cor cor) {
+    const int coluna = coluna_da_casa(casa);
+    const int linha = linha_da_casa(casa);
+    const bool brancas = cor == Cor::BRANCO;</span>
+
+<span style = "background-color:#dfd">    while (peoes_adversarios != 0) {
+        const int casa_inimiga = std::countr_zero(peoes_adversarios);
+        const int coluna_inimiga = coluna_da_casa(casa_inimiga);
+        const int linha_inimiga = linha_da_casa(casa_inimiga);</span>
+
+<span style = "background-color:#dfd">        const bool mesma_ou_adjacente =</span>
+            std::abs(coluna - coluna_inimiga) &lt;= 1;
+<span style = "background-color:#dfd">        const bool a_frente = brancas</span>
+            ? linha_inimiga &gt; linha
+            : linha_inimiga &lt; linha;
+
+<span style = "background-color:#dfd">        if (mesma_ou_adjacente &amp;&amp; a_frente) {
+            return false;</span>
+        }
+
+<span style = "background-color:#dfd">        peoes_adversarios &amp;= peoes_adversarios - 1;
+    }</span>
+
+<span style = "background-color:#dfd">    return true;
+}</span>
+
+<span style = "background-color:#dfd">int bonus_peao_passado(int casa, Cor cor) {
+    const int linha = linha_da_casa(casa);
+    const int avanco = cor == Cor::BRANCO</span>
+        ? linha - Linha::LINHA_2
+        : Linha::LINHA_7 - linha;
+
+    // Considera apenas as seis fileiras entre a posiÃ§Ã£o inicial e a promoÃ§Ã£o.
+<span style = "background-color:#dfd">    const int avanco_limitado = avanco &lt; 0</span>
+        ? 0
+        : (avanco &gt; MAX_AVANCO_PEAO ? MAX_AVANCO_PEAO : avanco);
+
+<span style = "background-color:#dfd">    return BONUS_PEAO_PASSADO_BASE +</span>
+        avanco_limitado * BONUS_PEAO_PASSADO_POR_LINHA;
+<span style = "background-color:#dfd">}</span>
+
+} // namespace
+
+<span style = "background-color:#dfd">int avaliar_estrutura_peoes(const Tabuleiro&amp; tab) {
+    int avaliacao = 0;</span>
+
+<span style = "background-color:#dfd">    for (int indice_cor = 0; indice_cor &lt; NUM_CORES; ++indice_cor) {
+        const Cor cor = static_cast&lt;Cor&gt;(indice_cor);
+        const Cor cor_adversaria = oposta(cor);
+        const int sinal = cor == Cor::BRANCO ? 1 : -1;</span>
+
+<span style = "background-color:#dfd">        const Bitboard peoes =</span>
+            tab.pecas[idx(cor)][idx(TipoPeca::PEAO)];
+<span style = "background-color:#dfd">        const Bitboard peoes_adversarios =</span>
+            tab.pecas[idx(cor_adversaria)][idx(TipoPeca::PEAO)];
+
+        // Penaliza cada peÃ£o alÃ©m do primeiro em uma mesma coluna.
+<span style = "background-color:#dfd">        for (int indice_coluna = 0; indice_coluna &lt; NUM_COLUNAS; ++indice_coluna) {
+            const auto coluna = static_cast&lt;Coluna&gt;(indice_coluna);
+            const int quantidade = std::popcount(</span>
+                peoes &amp; get_mascara_coluna(coluna));
+
+<span style = "background-color:#dfd">            if (quantidade &gt; 1) {
+                avaliacao -= sinal * PENALIDADE_PEAO_DOBRADO * (quantidade - 1);</span>
+            }
+<span style = "background-color:#dfd">        }</span>
+
+<span style = "background-color:#dfd">        Bitboard restantes = peoes;
+        while (restantes != 0) {
+            const int casa = std::countr_zero(restantes);</span>
+
+<span style = "background-color:#dfd">            if (!tem_peao_aliado_adjacente(casa, peoes)) {
+                avaliacao -= sinal * PENALIDADE_PEAO_ISOLADO;</span>
+            }
+
+<span style = "background-color:#dfd">            if (eh_peao_passado(casa, peoes_adversarios, cor)) {
+                avaliacao += sinal * bonus_peao_passado(casa, cor);</span>
+            }
+
+<span style = "background-color:#dfd">            restantes &amp;= restantes - 1;
+        }
+    }</span>
+
+<span style = "background-color:#dfd">    return avaliacao;
+}</span></pre>
+        <hr />
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th align="center">
+                        <small>Generated by</small>
+                        <a href="https://github.com/OpenCppCoverage/OpenCppCoverage/releases">
+                            <strong>OpenCppCoverage (Version: 0.9.9.0)</strong>
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+        </table>
+    </body>
+</html>

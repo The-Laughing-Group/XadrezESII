@@ -9,11 +9,22 @@ namespace { constexpr int INFI = SCORE_INFINITO; }
 
 class CC_Busca : public th::LimpaTT {};
 
+// ----- teste pra quando invertem o sinal de comparação alfa >= beta -----
+TEST_F(CC_Busca, Minimax_F1_FlagUpperBoundQuandoValorIgualAlfa) {
+    Posicao p = Posicao::deFen("rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq e6 0 2");
+    const int v = minimax_alfa_beta(p.b, 3, -INFI, INFI, true, 0);
+    limpar_tt();
+    EXPECT_EQ(minimax_alfa_beta(p.b, 3, v, INFI, true, 0), v);   // janela comeca exatamente em v
+    const TTEntry& e = tabela_tt[p.b.estado.chave_zobrist & tt_mascara];
+    EXPECT_EQ(e.chave, p.b.estado.chave_zobrist);
+    EXPECT_EQ(e.flag, TTFlag::UPPERBOUND);   // com o mutante '<' viraria EXACT
+}
+
 // ---- folha / empates por regra ----
 TEST_F(CC_Busca, Minimax_B1_Empate50Retorna0) {
     Posicao p = Posicao::deFen("4k3/8/8/8/8/8/R7/4K3 w - - 100 80");
     EXPECT_EQ(minimax_alfa_beta(p.b, 3, -INFI, INFI, true, 0), 0);
-}
+}       
 
 TEST_F(CC_Busca, Minimax_B2_RepeticaoRetorna0) {
     Posicao p = Posicao::deFen(FEN_INICIAL);

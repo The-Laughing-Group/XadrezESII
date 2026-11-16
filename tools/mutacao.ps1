@@ -40,48 +40,64 @@ $mutantes = @(
  @{Id="M25"; Arq="engine/src/game/jogo.cpp"; De="? destino - 8 : destino + 8"; Para="? destino + 8 : destino - 8"; F=$JOGO}
 )
 
+# Garante que nao sobrou mutante sujo de uma execucao abortada com Ctrl+C
+$arqsMutados = $mutantes.Arq | Select-Object -Unique
+git diff --quiet -- $arqsMutados
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Existem alteracoes nao commitadas nos arquivos alvo de mutacao (possivel mutante de execucao abortada). Rode 'git status' e restaure antes."
+    exit 1
+}
+
 $res = @()
+
+cmake --build $Build --config $Config 2>&1 | Out-Null
 
 # Antes do foreach: linha de base
 foreach ($f in @($TT,$BUS,$LAN,$JOGO)) {
   & $exe "--gtest_filter=$f" *> $null
-  if ($LASTEXITCODE -ne 0) { Write-Warning "LINHA DE BASE FALHA no filtro '$f'. Corrija antes de mutar."; }
+  if ($LASTEXITCODE -ne 0) { Write-Error "LINHA DE BASE FALHA no filtro '$f'. Corrija antes de mutar."; }
 }
 
-foreach ($m in $mutantes) {
-  if (-not (Test-Path $m.Arq)) { $res += [pscustomobject]@{Id=$m.Id; Status="ARQUIVO NAO ENCONTRADO (ajuste o caminho)"; Nota=$m.Arq}; continue }
-  $caminho = (Resolve-Path $m.Arq).Path
-  $bytes   = [System.IO.File]::ReadAllBytes($caminho)          # backup exato (BOM/CRLF)
-  $texto   = [System.Text.Encoding]::UTF8.GetString($bytes)
-  if (-not $texto.Contains($m.De)) { $res += [pscustomobject]@{Id=$m.Id; Status="TRECHO NAO ENCONTRADO"; Nota=$m.De}; continue }
-  $status = ""
-  try {
-    $novo = $texto.Replace($m.De, $m.Para)
-    [System.IO.File]::WriteAllBytes($caminho, (New-Object System.Text.UTF8Encoding($false)).GetBytes($novo))
-    cmake --build $Build --config $Config 2>&1 | Out-Null
-    if ($LASTEXITCODE -ne 0) { $status = "NAO COMPILOU" }
-    else {
-      $out = "$env:TEMP\mut_out.txt"
-      $p = Start-Process -FilePath $exe -ArgumentList "--gtest_filter=$($m.F)" -NoNewWindow -PassThru -RedirectStandardOutput $out
-      $null = $p.Handle                       # garante que ExitCode não venha nulo
-      if (-not $p.WaitForExit($TimeoutSeg * 1000)) {
-        $p.Kill(); $status = "MORTO (timeout)"; $quem = "timeout"
+try {
+  foreach ($m in $mutantes) {
+    if (-not (Test-Path $m.Arq)) { $res += [pscustomobject]@{Id=$m.Id; Status="ARQUIVO NAO ENCONTRADO (ajuste o caminho)"; Nota=$m.Arq}; continue }
+    $caminho = (Resolve-Path $m.Arq).Path
+    $bytes   = [System.IO.File]::ReadAllBytes($caminho)          # backup exato (BOM/CRLF)
+    $texto   = [System.Text.Encoding]::UTF8.GetString($bytes)
+    if (-not $texto.Contains($m.De)) { $res += [pscustomobject]@{Id=$m.Id; Status="TRECHO NAO ENCONTRADO"; Nota=$m.De}; continue }
+    $status = ""
+    try {
+      $novo = $texto.Replace($m.De, $m.Para)
+      [System.IO.File]::WriteAllBytes($caminho, (New-Object System.Text.UTF8Encoding($false)).GetBytes($novo))
+      cmake --build $Build --config $Config 2>&1 | Out-Null
+      if ($LASTEXITCODE -ne 0) { $status = "NAO COMPILOU" }
+      else {
+        $out = "$env:TEMP\mut_out.txt"
+        $p = Start-Process -FilePath $exe -ArgumentList "--gtest_filter=$($m.F)" -NoNewWindow -PassThru -RedirectStandardOutput $out
+        $null = $p.Handle                       # garante que ExitCode não venha nulo
+        if (-not $p.WaitForExit($TimeoutSeg * 1000)) {
+          $p.Kill(); $status = "MORTO (timeout)"; $quem = "timeout"
+        }
+        elseif ($p.ExitCode -ne 0) {
+          $status = "MORTO"
+          $f = Select-String -Path $out -Pattern "\[  FAILED  \] \S+\.\S+" | Select-Object -First 1
+          $quem = if ($f) { $f.Matches[0].Value } else { "abortou/crash (sem linha FAILED)" }
+        }
+        else { $status = "SOBREVIVEU"; $quem = "" }
+        $m.Nota = "$($m.Nota) $quem".Trim()
       }
-      elseif ($p.ExitCode -ne 0) {
-        $status = "MORTO"
-        $f = Select-String -Path $out -Pattern "\[  FAILED  \] \S+\.\S+" | Select-Object -First 1
-        $quem = if ($f) { $f.Matches[0].Value } else { "abortou/crash (sem linha FAILED)" }
-      }
-      else { $status = "SOBREVIVEU"; $quem = "" }
-      $m.Nota = "$($m.Nota) $quem".Trim()
+    } finally {
+      [System.IO.File]::WriteAllBytes($caminho, $bytes)            # sempre restaura
     }
-  } finally {
-    [System.IO.File]::WriteAllBytes($caminho, $bytes)            # sempre restaura
+    $res += [pscustomobject]@{Id=$m.Id; Status=$status; Nota=$m.Nota}
   }
-  $res += [pscustomobject]@{Id=$m.Id; Status=$status; Nota=$m.Nota}
+  cmake --build $Build --config $Config 2>&1 | Out-Null            # recompila o codigo original
+  $res | Format-Table -AutoSize
+  $mortos = ($res | Where-Object { $_.Status -like "MORTO*" }).Count
+  $validos = ($res | Where-Object { $_.Status -in @("MORTO","MORTO (timeout)","SOBREVIVEU") }).Count
+  if ($validos -gt 0) { "Mutation score: {0}/{1} = {2:P0}" -f $mortos, $validos, ($mortos / $validos) }
 }
-cmake --build $Build --config $Config 2>&1 | Out-Null            # recompila o codigo original
-$res | Format-Table -AutoSize
-$mortos = ($res | Where-Object { $_.Status -like "MORTO*" }).Count
-$validos = ($res | Where-Object { $_.Status -in @("MORTO","MORTO (timeout)","SOBREVIVEU") }).Count
-if ($validos -gt 0) { "Mutation score: {0}/{1} = {2:P0}" -f $mortos, $validos, ($mortos / $validos) }
+
+finally {
+  cmake --build $Build --config $Config 2>&1 | Out-Null 
+}
