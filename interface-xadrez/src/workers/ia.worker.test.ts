@@ -18,6 +18,7 @@ class JogoFalso {
 }
 
 interface PedidoIA { id: number; fen: string; profundidade: number }
+interface RespostaIA { id: number; uci: string | null }
 
 const FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 
@@ -119,7 +120,7 @@ describe('worker da IA', () => {
         enviar({ id: 3, fen: FEN, profundidade: 1 }),
       ])
 
-      expect(postMessage.mock.calls.map(([resposta]) => resposta.id).sort()).toEqual([1, 2, 3])
+      expect(postMessage.mock.calls.map(([resposta]: [RespostaIA]) => resposta.id).sort()).toEqual([1, 2, 3])
     })
   })
 
