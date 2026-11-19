@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "xadrez/jogo.hpp"
+#include "qualidade/helpers_motor.hpp"
 
 using namespace xadrez;
 
@@ -27,6 +28,9 @@ TEST(IA_Performance, PartidaCompletaTempoPorLance) {
     Jogo j;
     std::mt19937 rng(42);   // semente fixa: partida reproduzível. Troque para variar.
     int lance = 0;
+    limpar_tt();
+    int maxMs = 0;
+    std::string piorFen;
 
     while (lance < MAX_JOGADAS) {
         if (j.situacao().terminou) break;
@@ -57,7 +61,13 @@ TEST(IA_Performance, PartidaCompletaTempoPorLance) {
             ASSERT_TRUE(j.tentarLance(m))
                 << "Lance da IA invalido: " << m
                 << "\nFEN antes: " << fenAntes;
+
         }
         ++lance;
     }
+
+    RecordProperty("max_ms", maxMs);
+    RecordProperty("pior_fen", piorFen);
+
+    SUCCEED() << "Max: " << maxMs << "\nFen: " << piorFen;
 }

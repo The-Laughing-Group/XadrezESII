@@ -1,6 +1,2 @@
-===== CC_Jogo.DescreverLance_CasaDaVitimaNoEnPassant =====
-
-===== UltimoLance.EnPassantInformaACasaDoPeaoCapturado =====
-
-===== UltimoLance.EnPassantDasPretas =====
+===== IA_Performance.PartidaCompletaTempoPorLance =====
 
