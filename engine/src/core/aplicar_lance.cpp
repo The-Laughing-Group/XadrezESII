@@ -7,6 +7,7 @@ namespace xadrez {
 // Se o lance for ilegal (deixaria o rei em xeque), fazer_lance devolve false e a
 // cópia sai idêntica à original; quem precisa saber disso deve validar antes
 // (Jogo::tentarLance faz isso).
+
 Posicao aplicarLance(const Posicao& pos, Lance m) {
     Posicao nova = pos;
 
