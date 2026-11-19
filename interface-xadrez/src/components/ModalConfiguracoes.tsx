@@ -30,7 +30,7 @@ const ModalConfiguracoes = ({ aberto, reiniciarJogo, aoFechar }: ModalConfigurac
         <div className="modal-fundo" onClick={aoFechar}>
             <div className="modal-caixa" role="dialog" aria-modal="true"
                  onClick={(e) => e.stopPropagation()}>
-                <button className="modal-fechar" onClick={aoFechar}>⨉</button>
+                <button className="modal-fechar" onClick={aoFechar} aria-label="Fechar" title="Fechar">⨉</button>
                 <h1>Configurações</h1>
                 <PainelConfiguracoes />
                 <div>
