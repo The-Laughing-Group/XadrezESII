@@ -19,11 +19,15 @@
   - cmake -S engine -B engine/build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug
   - cmake --build engine/build 
   - ctest --test-dir engine/build --output-on-failure
-- Rodando a interface(frontend):
+- Rodando a interface (frontend):
   - cd interface-xadrez
   - npm i
   - npm run dev
-
+- Rodando os testes relativos ao frontend:
+  - cd interface-xadrez
+  - npm run test
+  - npm run coverage
+    - Gera uma pasta "coverage". Dentro, abrir "index.html" para visualizar a cobertura de testes.
 
 ## Direitos autorais
 - [Peças e tabuleiro](https://deja-view.itch.io/chess-assets)
