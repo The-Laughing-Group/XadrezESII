@@ -1,7 +1,9 @@
 #pragma once
 #include <cstddef>
-#include "utils/constantes.hpp"
-#include "lances.hpp" //Pode estar desatualizado, procurar lances.hpp
+#include <cstdint>
+#include <vector>
+#include "../utils/constantes.hpp"
+#include "../lances.hpp" //Pode estar desatualizado, procurar lances.hpp
 
 // Tipos de limite guardados na TT (resultado do alpha-beta).
 enum class TTFlag : uint8_t {
@@ -12,7 +14,7 @@ enum class TTFlag : uint8_t {
 
 struct TTEntry {
     uint64_t chave        = 0;                // chave Zobrist (confirma que é a mesma posição)
-    Lance    melhor_lance = SEM_LANCE;        // melhor lance encontrado (para ordenação)
+    Lance    melhor_lance = SEM_LANCE;        // melhor lance encontrado (para ordenação) ou guarda um lance vazio/antigo se ocorrer corte 
     int16_t  pontuacao    = 0;                // avaliação, já normalizada para o nó (ver ply)
     uint8_t  profundidade = 0;                // profundidade restante com que foi buscada
     TTFlag   flag         = TTFlag::EXACT;    // tipo de limite
@@ -21,6 +23,10 @@ struct TTEntry {
 };
 
 static_assert(sizeof(TTEntry) == 16, "TTEntry deve ter 16 bytes");
+
+extern std::vector<TTEntry> tabela_tt;
+extern size_t tt_mascara;
+extern uint8_t idade_atual;
 
 // Aloca a tabela com cerca de 'megabytes' MB (o número de entradas vira potência de 2).
 void iniciar_tt(std::size_t megabytes);
@@ -52,14 +58,14 @@ void gravar_tt(uint64_t chave, int profundidade, int ply, int pontuacao,
 // Conversão de pontuações de mate (uso interno: chamadas dentro de gravar_tt/ler_tt).
 // Mates dependem da distância da raiz; a TT guarda "mate em N a partir DESTE nó".
 // ---------------------------------------------------------------------------
-constexpr int score_para_tt(int score, int ply) {
-    if (score >=  SCORE_MATE_MIN) return score + ply;
-    if (score <= -SCORE_MATE_MIN) return score - ply;
-    return score;
+constexpr int pontuacao_para_tt(int pontuacao, int ply) {
+    if (pontuacao >=  SCORE_MATE_MIN) return pontuacao + ply;
+    if (pontuacao <= -SCORE_MATE_MIN) return pontuacao - ply;
+    return pontuacao;
 }
 
-constexpr int score_da_tt(int score, int ply) {
-    if (score >=  SCORE_MATE_MIN) return score - ply;
-    if (score <= -SCORE_MATE_MIN) return score + ply;
-    return score;
+constexpr int pontuacao_da_tt(int pontuacao, int ply) {
+    if (pontuacao >=  SCORE_MATE_MIN) return pontuacao - ply;
+    if (pontuacao <= -SCORE_MATE_MIN) return pontuacao + ply;
+    return pontuacao;
 }

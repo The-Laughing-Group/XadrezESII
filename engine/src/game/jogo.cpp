@@ -10,6 +10,7 @@
 #include "lances.hpp"
 #include "search.hpp"  // declaração de obter_melhor_lance
 #include <limits>
+#include "../../../infra-estrutura/otimizacao/tt.hpp"
 
 namespace xadrez {
 
@@ -88,7 +89,13 @@ static InfoLance descreverLance(const Tabuleiro& antes, Lance m) {
     return info;
 }
 
-Jogo::Jogo() : pos_(Posicao::inicial()) {}
+Jogo::Jogo() : pos_(Posicao::inicial()) {
+    static bool tt_pronta = false;
+    if (!tt_pronta) {
+        iniciar_tt(64);   // 64 MB
+        tt_pronta = true;
+    }
+}
 
 bool Jogo::carregarFen(const std::string& fen) {
     try {
