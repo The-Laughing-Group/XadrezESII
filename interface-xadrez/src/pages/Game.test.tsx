@@ -3,6 +3,55 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import Game from './Game'
+import type { Posicao } from '../utils/notacao'
+
+type Promocao = { origem: Posicao; destino: Posicao } | null
+type Espiao = ReturnType<typeof vi.fn>
+
+interface Situacao {
+  estado: string
+  emXeque: boolean
+  terminou: boolean
+  vencedor: string | null
+}
+
+interface Lance {
+  uci: string
+  tipo: string
+  captura: boolean
+  promocao: string | null
+}
+
+// A partida de mentira: só o que o Game lê do usePartida.
+interface PartidaFalsa {
+  pronta: boolean
+  fen: string
+  tabuleiro: string[]
+  vezDasBrancas: boolean
+  situacao: Situacao
+  ultimoLance: Lance
+  reiniciar: Espiao
+  jogarIA: Espiao
+  lancesDe: Espiao
+  tentarLance: Espiao
+}
+
+// O que cada teste pode trocar: situacao e ultimoLance podem vir parciais.
+type Sobrescritas = Partial<Omit<PartidaFalsa, 'situacao' | 'ultimoLance'>> & {
+  situacao?: Partial<Situacao>
+  ultimoLance?: Partial<Lance>
+}
+
+// Props que o Game passa ao Tabuleiro (as que o mock usa).
+interface PropsTabuleiroFalso {
+  contraIA: boolean
+  casaSelecionada: Posicao | null
+  setCasaSelecionada: (casa: Posicao | null) => void
+  movimentosPossiveis: Posicao[]
+  setMovimentosPossiveis: (movimentos: Posicao[]) => void
+  setPromocao: (promocao: Promocao) => void
+  limparSelecao: () => void
+}
 
 const { estado, usePartidaMock, useMusicaMock, sons } = vi.hoisted(() => {
   const sons = {
@@ -12,7 +61,7 @@ const { estado, usePartidaMock, useMusicaMock, sons } = vi.hoisted(() => {
     promocao: vi.fn(),
   } as Record<string, ReturnType<typeof vi.fn>>
 
-  const estado = { partida: null as any }
+  const estado = { partida: null as PartidaFalsa | null }
 
   return {
     estado,
@@ -35,7 +84,7 @@ vi.mock('../components/Tabuleiro', () => ({
     setMovimentosPossiveis,
     setPromocao,
     limparSelecao,
-  }: any) => (
+  }: PropsTabuleiroFalso) => (
     <div
       data-testid="tabuleiro"
       data-contra-ia={String(contraIA)}
@@ -95,8 +144,8 @@ function montar(pecas: Record<string, string> = {}): string[] {
 
 const SEM_LANCE = { uci: '', tipo: 'normal', captura: false, promocao: null }
 
-function criarPartida(overrides: Record<string, any> = {}) {
-  const { situacao, ...resto } = overrides
+function criarPartida(overrides: Sobrescritas = {}): PartidaFalsa {
+  const { situacao, ultimoLance, ...resto } = overrides
   return {
     pronta: true,
     fen: 'fen-qualquer',
@@ -109,7 +158,7 @@ function criarPartida(overrides: Record<string, any> = {}) {
       vencedor: null,
       ...situacao,
     },
-    ultimoLance: SEM_LANCE,
+    ultimoLance: { ...SEM_LANCE, ...ultimoLance },
     reiniciar: vi.fn(),
     jogarIA: vi.fn(),
     lancesDe: vi.fn(() => []),
@@ -240,7 +289,7 @@ describe('Game', () => {
   })
 
   describe('jogada da IA', () => {
-    const vezDaIA = (extra: Record<string, any> = {}) =>
+    const vezDaIA = (extra: Sobrescritas = {}) =>
       criarPartida({ vezDasBrancas: false, ...extra })
 
     it('joga depois de 600ms na vez das pretas com dificuldade média por padrão', () => {
@@ -374,7 +423,7 @@ describe('Game', () => {
     function jogarLance(
       antes: Record<string, string>,
       depois: Record<string, string>,
-      ultimoLance: Record<string, any>
+      ultimoLance: Partial<Lance>
     ) {
       const jogo = renderizarGame(criarPartida({ tabuleiro: montar(antes) }))
       jogo.atualizar(
@@ -575,16 +624,15 @@ describe('Game', () => {
       const user = userEvent.setup()
       const jogo = renderizarGame(criarPartida({ tabuleiro: montar({ e2: 'P' }) }))
 
-      jogo.atualizar(
-        criarPartida({
-          tabuleiro: montar({ e4: 'P' }),
-          vezDasBrancas: false,
-          ultimoLance: { ...SEM_LANCE, uci: 'e2e4' },
-        })
-      )
+      const aposLance = criarPartida({
+        tabuleiro: montar({ e4: 'P' }),
+        vezDasBrancas: false,
+        ultimoLance: { ...SEM_LANCE, uci: 'e2e4' },
+      })
+      jogo.atualizar(aposLance)
       expect(jogo.colunas()[1]).toEqual(['e4'])
 
-      const reiniciar = estado.partida.reiniciar
+      const reiniciar = aposLance.reiniciar
       await user.click(screen.getByRole('button', { name: /configurações/i }))
       await user.click(screen.getByText('reiniciar-config'))
 
