@@ -1,0 +1,209 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+        <meta charset="utf-8"/>
+	    <title>lances.cpp</title>
+	    <link href="../../third-party/google-code-prettify/prettify-CppCoverage.css" type="text/css" rel="stylesheet" />
+	    <script type="text/javascript" src="../../third-party/google-code-prettify/prettify.js"></script>
+	</head>
+    <body onload="prettyPrint()">
+        <h4></h4>
+        <pre class="prettyprint lang-cpp linenums">
+#include "lances.hpp"
+#include "tabuleiro/tabuleiro.hpp"
+#include "utils/tipos.hpp"
+#include &lt;initializer_list&gt;
+#include "otimizacao/zobrist.hpp"
+#include "movimentos.hpp"
+#include &lt;cassert&gt;
+
+
+<span style = "background-color:#dfd">static uint8_t novos_direitos(uint8_t r, Quadrado origem, Quadrado destino) {
+    for (Quadrado q : {origem, destino}) {
+        switch (q) {</span>
+            case e1:
+<span style = "background-color:#dfd">                r &amp;= ~(ROQUE_BRANCO_REI | ROQUE_BRANCO_DAMA);
+                break;</span>
+            case h1:
+<span style = "background-color:#dfd">                r &amp;= ~ROQUE_BRANCO_REI;
+                break;</span>
+            case a1:
+<span style = "background-color:#dfd">                r &amp;= ~ROQUE_BRANCO_DAMA;
+                break;</span>
+            case e8:
+<span style = "background-color:#dfd">                r &amp;= ~(ROQUE_PRETO_REI | ROQUE_PRETO_DAMA);
+                break;</span>
+            case h8:
+<span style = "background-color:#dfd">                r &amp;= ~ROQUE_PRETO_REI;
+                break;</span>
+            case a8:
+<span style = "background-color:#dfd">                r &amp;= ~ROQUE_PRETO_DAMA;</span>
+                break;
+            default: break;
+        }
+<span style = "background-color:#dfd">    }
+    return r;
+}</span>
+
+
+//Assume que a maquina de regras jÃ¡ validou todas as jogadas, logo podemos mover
+//sem problemas.
+//Por exemplo, do jeito que estÃ¡ estruturado uma rainha poderia fazer avanÃ§o duplo (en passant)
+//Caso a maquina de regras falhe, aqui certamente irÃ¡ falhar
+
+<span style = "background-color:#dfd">bool fazer_lance(Tabuleiro&amp; b, Lance m) {
+    Quadrado origem = origem_do_lance(m), destino = destino_do_lance(m);
+    Cor cor_atual = b.estado.lado_a_jogar, cor_oponente = oposta(cor_atual);
+    TipoPeca tpeca = peca_em(b, origem).tpeca;</span>
+
+<span style = "background-color:#dfd">    uint64_t chave = b.estado.chave_zobrist;</span>
+
+    //historico Ã© uma pilha que apontava para o vazio, preenche o vazio e incrementa o conta_lance
+<span style = "background-color:#dfd">    b.historico[b.conta_lance++] = b.estado;</span>
+    //Estamos num novo meio-lance, limpamos informaÃ§Ãµes antigas
+<span style = "background-color:#dfd">    b.estado.capturada = TipoPeca::PECA_VAZIA;</span>
+
+    //Se for lance de peao ou captura, o contador de empate 50 volta pra zero
+<span style = "background-color:#dfd">    if (tpeca == TipoPeca::PEAO || eh_captura(m)) b.estado.contador_50 = 0;
+    else b.estado.contador_50++;</span>
+
+    // O en passant antigo expira em qualquer lance (sai da chave, se existia)
+<span style = "background-color:#dfd">    if (b.estado.en_passant != Quadrado::quadrado_vazio) chave ^= ZOBRIST[ZOB_EP + coluna_de(b.estado.en_passant)];
+    b.estado.en_passant = Quadrado::quadrado_vazio;</span>
+
+    //Remove a peÃ§a capturada no destino, mas nÃ£o toca na peÃ§a que fez a captura
+    //isso serÃ¡ tratado no prÃ³ximo if
+<span style = "background-color:#dfd">    if (eh_captura(m)) {</span>
+        Quadrado cap;
+        //Se for en passant, a peÃ§a estÃ¡ acima ou abaixo do quadrado
+<span style = "background-color:#dfd">        if (eh_en_passant(m)) {
+            cap = (cor_atual == Cor::BRANCO) ? static_cast&lt;Quadrado&gt;(destino-8):</span>
+                                               static_cast&lt;Quadrado&gt;(destino+8);
+<span style = "background-color:#dfd">        }</span>
+        //A captura Ã© no prÃ³prio destino
+<span style = "background-color:#dfd">        else cap = destino;</span>
+
+<span style = "background-color:#dfd">        Peca p = peca_em(b, cap);</span>
+        //O tipo de peÃ§a que foi capturada, serve para depois desempilhar
+<span style = "background-color:#dfd">        b.estado.capturada = p.tpeca;</span>
+
+<span style = "background-color:#dfd">        remover_peca(b, cor_oponente, b.estado.capturada, cap);
+        chave ^= ZOBRIST[zob_peca(cor_oponente, p.tpeca, cap)];</span>
+    }
+
+<span style = "background-color:#dfd">    if (eh_promocao(m)) {</span>
+        //Remove o peao e adiciona a peÃ§a selecionada
+<span style = "background-color:#dfd">        remover_peca(b, cor_atual, TipoPeca::PEAO, origem);
+        colocar_peca(b, cor_atual, tipo_da_promocao(m), destino);
+        chave ^= ZOBRIST[zob_peca(cor_atual, TipoPeca::PEAO, origem)]</span>
+              ^  ZOBRIST[zob_peca(cor_atual, tipo_da_promocao(m), destino)];
+<span style = "background-color:#dfd">    }</span>
+    else {
+        //Peao estÃ¡ fazendo avanÃ§o duplo, temos casa de en passant
+<span style = "background-color:#dfd">        if (eh_avanco_duplo(m)) {
+            mover_peca(b, cor_atual, TipoPeca::PEAO, origem, destino);
+            b.estado.en_passant = static_cast&lt;Quadrado&gt;((origem + destino) / 2);
+            chave ^= ZOBRIST[ZOB_EP + coluna_de(b.estado.en_passant)];
+        }</span>
+        //Se nÃ£o, movemos a peÃ§a normalmente
+<span style = "background-color:#dfd">        else mover_peca(b, cor_atual, tpeca, origem, destino);</span>
+
+<span style = "background-color:#dfd">        chave ^= ZOBRIST[zob_peca(cor_atual, tpeca, origem)]</span>
+              ^  ZOBRIST[zob_peca(cor_atual, tpeca, destino)];
+    }
+
+    //Se tudo estÃ¡ certo, o rei jÃ¡ foi movido no "else" acima, falta a torre
+<span style = "background-color:#dfd">    if (eh_roque(m)) {
+        const bool branco   = (cor_atual == Cor::BRANCO);
+        const bool lado_rei = (flags_do_lance(m) == LANCE_ROQUE_REI);
+        const Quadrado t_origem  = lado_rei ? (branco ? h1 : h8) : (branco ? a1 : a8);
+        const Quadrado t_destino = lado_rei ? (branco ? f1 : f8) : (branco ? d1 : d8);</span>
+
+<span style = "background-color:#dfd">        mover_peca(b, cor_atual, TipoPeca::TORRE, t_origem, t_destino);
+        chave ^= ZOBRIST[zob_peca(cor_atual, TipoPeca::TORRE, t_origem)]</span>
+              ^  ZOBRIST[zob_peca(cor_atual, TipoPeca::TORRE, t_destino)];
+    }
+
+    //Remove os direitos de roque anteriores
+<span style = "background-color:#dfd">    chave ^= ZOBRIST[ZOB_ROQUE + b.estado.direitos_roque];</span>
+
+    //Adiciona os direitos novos
+<span style = "background-color:#dfd">    b.estado.direitos_roque = novos_direitos(b.estado.direitos_roque, origem, destino);
+    chave ^= ZOBRIST[ZOB_ROQUE + b.estado.direitos_roque];</span>
+
+    //Troca o lado a jogar
+<span style = "background-color:#dfd">    b.estado.lado_a_jogar = cor_oponente;</span>
+    //Se for vez das brancas, desfaz a mudanÃ§a, se for vez das pretas, aplica a hash
+    //Lembrando da propriedade que A XOR B XOR B = A. (aplicado 2 vezes, Ã© eliminado)
+<span style = "background-color:#dfd">    chave ^= ZOBRIST[ZOB_LADO];</span>
+
+<span style = "background-color:#dfd">    b.estado.chave_zobrist = chave;</span>
+
+    //Se o rei ficou em xeque, desfaÃ§a o lance
+<span style = "background-color:#dfd">    if (em_xeque(b, cor_atual)) {
+        desfazer_lance(b, m);
+        return false;</span>
+    }
+    
+<span style = "background-color:#dfd">    assert(chave == calcular_chave(b));</span>
+
+<span style = "background-color:#dfd">    return true;
+}</span>
+
+<span style = "background-color:#dfd">void desfazer_lance(Tabuleiro&amp; b, Lance m) {</span>
+    //Lado a jogar foi atualizado, desatualize ele (troque de cor)
+
+<span style = "background-color:#dfd">    Quadrado origem = origem_do_lance(m), destino = destino_do_lance(m);
+    Cor cor_atual = oposta(b.estado.lado_a_jogar), cor_oponente = b.estado.lado_a_jogar;
+    TipoPeca tpeca = peca_em(b, destino).tpeca;</span>
+
+<span style = "background-color:#dfd">    if (eh_promocao(m)) {</span>
+        //Remove o peao e adiciona a peÃ§a selecionada
+<span style = "background-color:#dfd">        colocar_peca(b, cor_atual, TipoPeca::PEAO, origem);
+        remover_peca(b, cor_atual, tipo_da_promocao(m), destino);
+    }</span>
+    else {
+        //AvanÃ§o duplo ou nÃ£o, foi um movimento, sÃ³ Ã© necessÃ¡rio
+<span style = "background-color:#dfd">        mover_peca(b, cor_atual, tpeca, destino, origem);</span>
+    }
+
+<span style = "background-color:#dfd">    if (eh_captura(m)) {</span>
+        Quadrado cap;
+        //Se for en passant, a peÃ§a estÃ¡ acima ou abaixo do quadrado
+<span style = "background-color:#dfd">        if (eh_en_passant(m)) {
+            cap = (cor_atual == Cor::BRANCO) ? static_cast&lt;Quadrado&gt;(destino-8):</span>
+                                               static_cast&lt;Quadrado&gt;(destino+8);
+<span style = "background-color:#dfd">        }</span>
+        //A captura Ã© no prÃ³prio destino
+<span style = "background-color:#dfd">        else cap = destino;</span>
+
+<span style = "background-color:#dfd">        colocar_peca(b, cor_oponente, b.estado.capturada, cap);</span>
+    }
+
+<span style = "background-color:#dfd">    if (eh_roque(m)) {</span>
+        Quadrado origem_mov, destino_mov;
+<span style = "background-color:#dfd">        bool branco = (cor_atual == Cor::BRANCO);
+        bool lado_rei = flags_do_lance(m) == LANCE_ROQUE_REI;
+        origem_mov = lado_rei ? (branco ? f1 : f8) : (branco ? d1 : d8);
+        destino_mov = lado_rei ? (branco ? h1 : h8) : (branco ? a1 : a8);</span>
+
+<span style = "background-color:#dfd">        mover_peca(b, cor_atual, TipoPeca::TORRE, origem_mov, destino_mov);</span>
+    }
+
+<span style = "background-color:#dfd">    b.estado = b.historico[--b.conta_lance];
+}</span></pre>
+        <hr />
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th align="center">
+                        <small>Generated by</small>
+                        <a href="https://github.com/OpenCppCoverage/OpenCppCoverage/releases">
+                            <strong>OpenCppCoverage (Version: 0.9.9.0)</strong>
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+        </table>
+    </body>
+</html>

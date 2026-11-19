@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+        <meta charset="utf-8"/>
+	    <title>tt.cpp</title>
+	    <link href="../../third-party/google-code-prettify/prettify-CppCoverage.css" type="text/css" rel="stylesheet" />
+	    <script type="text/javascript" src="../../third-party/google-code-prettify/prettify.js"></script>
+	</head>
+    <body onload="prettyPrint()">
+        <h4></h4>
+        <pre class="prettyprint lang-cpp linenums">
+#include "tt.hpp"
+#include &lt;bit&gt;
+#include &lt;vector&gt;
+#include &lt;algorithm&gt;
+
+<span style = "background-color:#dfd">std::vector&lt;TTEntry&gt; tabela_tt;</span>
+size_t tt_mascara = 0;
+uint8_t idade_atual = 0;
+
+<span style = "background-color:#dfd">void iniciar_tt(std::size_t megabytes) {
+    size_t total_bytes = megabytes * 1024 * 1024;
+    size_t num_entradas = total_bytes / sizeof(TTEntry);</span>
+
+    //Arredonda
+<span style = "background-color:#dfd">    size_t entradas_arredondadas = std::bit_floor(num_entradas);</span>
+
+<span style = "background-color:#dfd">    tabela_tt.resize(entradas_arredondadas);</span>
+
+    //Mascara para a chave zobrist nÃ£o acessar um indice nÃ£o existente
+<span style = "background-color:#dfd">    tt_mascara = entradas_arredondadas - 1;
+}</span>
+
+<span style = "background-color:#dfd">void limpar_tt() {</span>
+    // Limpa tudo com zero
+<span style = "background-color:#dfd">    std::fill(tabela_tt.begin(), tabela_tt.end(), TTEntry{});
+}</span>
+
+/*
+O fluxo do calculo de idade:
+    InÃ­cio do turno da engine: A engine vai comeÃ§ar a calcular o lance que ela vai jogar agora. Ã aqui que vocÃª chama 
+    nova_busca_tt() uma Ãºnica vez. A idade global da TT sobe (ex: de 0 para 1).
+    
+    O iterative deepening roda: A engine faz a busca completa para este turno usando o 
+    iterative deepening ($d=1, d=2, d=3, \dots$). Durante todo este processo de busca, a idade permanece fixa em 1. 
+    
+    Todas as profundidades compartilham e atualizam as entradas livremente sem envelhecer umas Ã s outras.
+    A engine joga: O tempo acaba, a engine escolhe o melhor lance e o executa no tabuleiro.
+    
+    Turno do adversÃ¡rio: O adversÃ¡rio responde.
+    
+    Novo turno da engine: A engine vai pensar de novo. Chamar nova_busca_tt() de novo (idade vai para 2), e o ciclo se repete.
+*/
+<span style = "background-color:#dfd">void nova_busca_tt() {
+    idade_atual++;
+}</span>
+
+<span style = "background-color:#dfd">bool ler_tt(uint64_t chave, int profundidade, int ply, int alpha, int beta, int&amp; pontuacao, Lance&amp; melhor_lance) {
+    const TTEntry&amp; entrada_tt = tabela_tt[chave &amp; tt_mascara];</span>
+
+<span style = "background-color:#dfd">    melhor_lance = SEM_LANCE;</span>
+
+<span style = "background-color:#dfd">    if (entrada_tt.chave == chave) {</span>
+
+<span style = "background-color:#dfd">        melhor_lance = entrada_tt.melhor_lance;</span>
+
+<span style = "background-color:#dfd">        if (profundidade &lt;= entrada_tt.profundidade) {</span>
+
+<span style = "background-color:#dfd">            const int pontuacao_tt = pontuacao_da_tt(entrada_tt.pontuacao, ply);</span>
+            // Valor Exato, da pra cortar pois Ã© o melhor lance
+<span style = "background-color:#dfd">            if (entrada_tt.flag == TTFlag::EXACT) {
+                pontuacao = pontuacao_tt;
+                return true;</span>
+            }
+            // Corte
+            // LOWERBOUND -&gt; o valor da posiÃ§Ã£o eh pelo menos pontuacao_tt
+            // Se pontuacao_tt for maior que beta, ocorre corte
+<span style = "background-color:#dfd">            if (entrada_tt.flag == TTFlag::LOWERBOUND &amp;&amp; pontuacao_tt &gt;= beta) {
+                pontuacao = pontuacao_tt;
+                return true;</span>
+            }
+            // Corte
+            // UPPERBOUND -&gt; o valor da posiÃ§Ã£o eh no mÃ¡ximo pontuacao_tt
+            // Se pontuacao_tt for menor que alpha, ocorre corte
+<span style = "background-color:#dfd">            if (entrada_tt.flag == TTFlag::UPPERBOUND &amp;&amp; pontuacao_tt &lt;= alpha) {
+                pontuacao = pontuacao_tt;
+                return true;</span>
+            }
+        }
+    }
+<span style = "background-color:#dfd">    return false;
+}</span>
+
+<span style = "background-color:#dfd">void gravar_tt(uint64_t chave, int profundidade, int ply, int pontuacao, TTFlag flag, Lance melhor_lance) {
+    TTEntry&amp; entrada_tt = tabela_tt[chave &amp; tt_mascara];</span>
+
+    // Decidimos se vamos sobrescrever a entrada atual da TT.
+    // Substituimos se:
+    // 1. A chave for diferente (posiÃ§Ã£o nova ou slot livre).
+    // 2. A entrada antiga for de uma geraÃ§Ã£o/turno passado (idade diferente).
+    // 3. A nova busca tiver profundidade maior ou igual Ã  armazenada.
+<span style = "background-color:#dfd">    bool deve_substituir = (entrada_tt.chave != chave) ||</span>
+                           (entrada_tt.idade != idade_atual) ||
+                           (profundidade &gt;= entrada_tt.profundidade);
+
+<span style = "background-color:#dfd">    if (deve_substituir) {</span>
+        // ProteÃ§Ã£o extra: se for exatamente a mesma posiÃ§Ã£o e a nova busca 
+        // nÃ£o encontrou nenhum lance vÃ¡lido (SEM_LANCE), mas a antiga tinha,
+        // preservamos o melhor lance antigo para nÃ£o perder a ordenaÃ§Ã£o.
+<span style = "background-color:#dfd">        if (entrada_tt.chave == chave &amp;&amp; melhor_lance == SEM_LANCE) {
+            melhor_lance = entrada_tt.melhor_lance;</span>
+        }
+
+<span style = "background-color:#dfd">        entrada_tt.chave = chave;
+        entrada_tt.flag = flag;
+        entrada_tt.melhor_lance = melhor_lance;
+        entrada_tt.pontuacao = pontuacao_para_tt(pontuacao, ply);
+        entrada_tt.profundidade = profundidade;
+        entrada_tt.idade = idade_atual;</span>
+    }
+<span style = "background-color:#dfd">}</span></pre>
+        <hr />
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th align="center">
+                        <small>Generated by</small>
+                        <a href="https://github.com/OpenCppCoverage/OpenCppCoverage/releases">
+                            <strong>OpenCppCoverage (Version: 0.9.9.0)</strong>
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+        </table>
+    </body>
+</html>

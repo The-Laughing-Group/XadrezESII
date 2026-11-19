@@ -1,0 +1,349 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+        <meta charset="utf-8"/>
+	    <title>movimentos.cpp</title>
+	    <link href="../../third-party/google-code-prettify/prettify-CppCoverage.css" type="text/css" rel="stylesheet" />
+	    <script type="text/javascript" src="../../third-party/google-code-prettify/prettify.js"></script>
+	</head>
+    <body onload="prettyPrint()">
+        <h4></h4>
+        <pre class="prettyprint lang-cpp linenums">
+#include &lt;algorithm&gt;
+#include "../../infra-estrutura/movimentos.hpp"
+#include "../../infra-estrutura/bitboard/bitboard.hpp"
+#include "../../infra-estrutura/tabuleiro/tabuleiro.hpp"
+#include "xadrez/movimentos.hpp"
+#include "tabuleiro/tabuleiro.hpp"
+#include "utils/constantes.hpp"
+#include "utils/tipos.hpp"
+#include "bitboard/bitboard.hpp"
+#include "lances.hpp"
+
+// FunÃ§Ãµes implementadas diretamente pelo modulo infra-estrutura
+extern Bitboard ataques_torre(Quadrado sq, Bitboard ocupacao);
+extern Bitboard ataques_bispo(Quadrado sq, Bitboard ocupacao);
+extern Bitboard ataques_dama(Quadrado sq, Bitboard ocupacao);
+
+// ============================================================================
+// PrÃ©-cÃ¡lculos EstÃ¡ticos (Gerados na CompilaÃ§Ã£o) para PeÃ§as de Pulo
+// ============================================================================
+struct PrecalcAtaques {
+    Bitboard cavalo[NUM_CASAS];
+    Bitboard rei[NUM_CASAS];
+
+    constexpr PrecalcAtaques() : cavalo{}, rei{} {
+        for (int sq = 0; sq &lt; NUM_CASAS; ++sq) {
+            Bitboard bb = 1ULL &lt;&lt; sq;
+
+            // Ataques do Cavalo
+            Bitboard c = 0;
+            c |= (bb &lt;&lt; 17) &amp; ~MASCARA_COLUNAS[COLUNA_A];
+            c |= (bb &lt;&lt; 15) &amp; ~MASCARA_COLUNAS[COLUNA_H];
+            c |= (bb &lt;&lt; 10) &amp; ~(MASCARA_COLUNAS[COLUNA_A] | MASCARA_COLUNAS[COLUNA_B]);
+            c |= (bb &lt;&lt; 6)  &amp; ~(MASCARA_COLUNAS[COLUNA_G] | MASCARA_COLUNAS[COLUNA_H]);
+            c |= (bb &gt;&gt; 17) &amp; ~MASCARA_COLUNAS[COLUNA_H];
+            c |= (bb &gt;&gt; 15) &amp; ~MASCARA_COLUNAS[COLUNA_A];
+            c |= (bb &gt;&gt; 10) &amp; ~(MASCARA_COLUNAS[COLUNA_G] | MASCARA_COLUNAS[COLUNA_H]);
+            c |= (bb &gt;&gt; 6)  &amp; ~(MASCARA_COLUNAS[COLUNA_A] | MASCARA_COLUNAS[COLUNA_B]);
+            cavalo[sq] = c;
+
+            // Ataques do Rei
+            Bitboard r = 0;
+            Bitboard direita = (bb &lt;&lt; 1) &amp; ~MASCARA_COLUNAS[COLUNA_A];
+            Bitboard esquerda = (bb &gt;&gt; 1) &amp; ~MASCARA_COLUNAS[COLUNA_H];
+            r |= direita | esquerda;
+            r |= (bb &lt;&lt; 8) | (direita &lt;&lt; 8) | (esquerda &lt;&lt; 8);
+            r |= (bb &gt;&gt; 8) | (direita &gt;&gt; 8) | (esquerda &gt;&gt; 8);
+            rei[sq] = r;
+        }
+    }
+
+};
+
+constexpr PrecalcAtaques ATAQUES = PrecalcAtaques();
+
+// A casa Ã© atacada por alguma peÃ§a da cor `atacante`?
+<span style = "background-color:#dfd">bool casa_atacada(const Tabuleiro&amp; b, Quadrado casa, Cor atacante) {
+    if (casa &gt;= NUM_CASAS) return false;           // quadrado_vazio</span>
+
+<span style = "background-color:#dfd">    const int a = idx(atacante);
+    const Bitboard bb = BitboardUtils::mascara_casa(casa);
+    const Bitboard ocupacao = b.ocupacoes_totais;</span>
+
+    // PeÃµes: de onde um peÃ£o atacante alcanÃ§aria a casa.
+    Bitboard origens_peao;
+<span style = "background-color:#dfd">    if (atacante == Cor::BRANCO)
+        origens_peao = ((bb &gt;&gt; 7) &amp; ~MASCARA_COLUNAS[COLUNA_A]) | ((bb &gt;&gt; 9) &amp; ~MASCARA_COLUNAS[COLUNA_H]);</span>
+    else
+<span style = "background-color:#dfd">        origens_peao = ((bb &lt;&lt; 7) &amp; ~MASCARA_COLUNAS[COLUNA_H]) | ((bb &lt;&lt; 9) &amp; ~MASCARA_COLUNAS[COLUNA_A]);
+    if (origens_peao &amp; b.pecas[a][idx(TipoPeca::PEAO)]) return true;</span>
+
+    // Cavalo e rei (ataques simÃ©tricos).
+<span style = "background-color:#dfd">    if (ATAQUES.cavalo[casa] &amp; b.pecas[a][idx(TipoPeca::CAVALO)]) return true;
+    if (ATAQUES.rei[casa]    &amp; b.pecas[a][idx(TipoPeca::REI)])    return true;</span>
+
+    // PeÃ§as deslizantes.
+<span style = "background-color:#dfd">    const Bitboard diagonais = b.pecas[a][idx(TipoPeca::BISPO)] | b.pecas[a][idx(TipoPeca::DAMA)];
+    const Bitboard retas     = b.pecas[a][idx(TipoPeca::TORRE)] | b.pecas[a][idx(TipoPeca::DAMA)];
+    if (ataques_bispo(casa, ocupacao) &amp; diagonais) return true;
+    if (ataques_torre(casa, ocupacao) &amp; retas)     return true;</span>
+
+<span style = "background-color:#dfd">    return false;
+}</span>
+
+<span style = "background-color:#dfd">bool em_xeque(const Tabuleiro&amp; b, Cor cor) {
+    return casa_atacada(b, casa_do_rei(b, cor), oposta(cor));
+}</span>
+
+// ============================================================================
+// Fim de partida
+// ============================================================================
+// gerar_lances Ã© PSEUDO-legal (inclui lances que deixam o prÃ³prio rei em xeque),
+// entÃ£o "lista vazia" nÃ£o serve para detectar mate. SÃ³ fazer_lance sabe se o lance Ã©
+// legal. Por isso estas funÃ§Ãµes recebem o Tabuleiro SEM const: fazem e desfazem lances
+// de verdade, mas sempre devolvem o tabuleiro exatamente como estava.
+
+// O lado a jogar tem pelo menos um lance legal?
+<span style = "background-color:#dfd">bool tem_lance_legal(Tabuleiro&amp; b) {
+    ListaLances lista;
+    gerar_lances(b, lista);
+    for (int i = 0; i &lt; lista.quantidade; ++i) {</span>
+        // true  = o lance era legal e FOI feito -&gt; desfazemos para restaurar o tabuleiro
+        // false = era ilegal e fazer_lance jÃ¡ desfez sozinho (nÃ£o chamar desfazer_lance)
+<span style = "background-color:#dfd">        if (fazer_lance(b, lista.lances[i])) {
+            desfazer_lance(b, lista.lances[i]);
+            return true;</span>
+        }
+<span style = "background-color:#dfd">    }
+    return false;
+}</span>
+
+// Xeque-mate: o lado a jogar estÃ¡ em xeque E nÃ£o tem nenhum lance legal.
+<span style = "background-color:#dfd">bool em_xeque_mate(Tabuleiro&amp; b) {
+    return em_xeque(b, b.estado.lado_a_jogar) &amp;&amp; !tem_lance_legal(b);
+}</span>
+
+// Afogamento: o lado a jogar NÃO estÃ¡ em xeque, mas tambÃ©m nÃ£o tem nenhum lance legal (empate).
+<span style = "background-color:#dfd">bool em_afogamento(Tabuleiro&amp; b) {
+    return !em_xeque(b, b.estado.lado_a_jogar) &amp;&amp; !tem_lance_legal(b);
+}</span>
+
+// ----------------------------------------------------------------------------
+// Empates "passivos": dependem sÃ³ da posiÃ§Ã£o e do histÃ³rico, nÃ£o de lances legais
+// ----------------------------------------------------------------------------
+
+// Regra dos 50 lances = 100 meios-lances sem captura nem lance de peÃ£o.
+<span style = "background-color:#dfd">bool empate_50(const Tabuleiro&amp; b) {
+    return b.estado.contador_50 &gt;= LIMITE_REGRA_50;
+}</span>
+
+// Quantas vezes ANTES a posiÃ§Ã£o atual jÃ¡ apareceu (0 = Ã© a primeira vez).
+// historico[i] guarda a posiÃ§Ã£o que existia ANTES do i-Ã©simo lance, e a posiÃ§Ã£o atual
+// estÃ¡ em b.estado. SÃ³ posiÃ§Ãµes com o mesmo lado a jogar podem ser iguais, por isso o
+// passo Ã© 2. Lance de peÃ£o ou captura Ã© irreversÃ­vel, entÃ£o nÃ£o adianta olhar antes de
+// (conta_lance - contador_50). A chave Zobrist jÃ¡ inclui peÃ§as, vez, roque e en passant.
+<span style = "background-color:#dfd">int contar_repeticoes(const Tabuleiro&amp; b) {
+    int n = 0;
+    const int limite = std::max(0, b.conta_lance - b.estado.contador_50);
+    for (int i = b.conta_lance - 2; i &gt;= limite; i -= 2)
+        if (b.historico[i].chave_zobrist == b.estado.chave_zobrist) ++n;
+    return n;
+}</span>
+
+<span style = "background-color:#dfd">bool repetida(const Tabuleiro&amp; b) {
+    return contar_repeticoes(b) &gt;= 1;
+}</span>
+
+// Material insuficiente: nenhum lado consegue dar mate, nem com ajuda do adversÃ¡rio.
+//   rei x rei | rei+cavalo x rei | rei+bispo x rei |
+//   sÃ³ bispos e todos na mesma cor de casa (ex.: rei+bispo x rei+bispo "do mesmo lado").
+// NÃO entram: dois cavalos (o mate Ã© possÃ­vel, sÃ³ nÃ£o Ã© forÃ§ado) nem cavalo x cavalo.
+<span style = "background-color:#dfd">bool material_insuficiente(const Tabuleiro&amp; b) {
+    constexpr Bitboard CASAS_ESCURAS = 0xAA55AA55AA55AA55ULL;   // a1 Ã© escura</span>
+
+<span style = "background-color:#dfd">    for (int c = 0; c &lt; NUM_CORES; ++c) {
+        if (b.pecas[c][idx(TipoPeca::PEAO)] || b.pecas[c][idx(TipoPeca::TORRE)] ||</span>
+            b.pecas[c][idx(TipoPeca::DAMA)])
+<span style = "background-color:#dfd">            return false;                       // peÃ£o, torre ou dama: sempre dÃ¡ para mate
+    }</span>
+
+<span style = "background-color:#dfd">    const Bitboard cavalos = b.pecas[idx(Cor::BRANCO)][idx(TipoPeca::CAVALO)] | b.pecas[idx(Cor::PRETO)][idx(TipoPeca::CAVALO)];
+    const Bitboard bispos  = b.pecas[idx(Cor::BRANCO)][idx(TipoPeca::BISPO)]  | b.pecas[idx(Cor::PRETO)][idx(TipoPeca::BISPO)];</span>
+
+<span style = "background-color:#dfd">    const int menores = BitboardUtils::contar_bits(cavalos) + BitboardUtils::contar_bits(bispos);
+    if (menores &lt;= 1) return true;              // sÃ³ reis, ou um Ãºnico cavalo/bispo no tabuleiro
+    if (cavalos) return false;                  // 2+ peÃ§as menores incluindo cavalo: hÃ¡ mate possÃ­vel
+    return (bispos &amp; CASAS_ESCURAS) == 0 || (bispos &amp; ~CASAS_ESCURAS) == 0;   // bispos todos na mesma cor
+}</span>
+
+// ============================================================================
+// Helpers para popular a ListaLances da Equipe
+// ============================================================================
+
+<span style = "background-color:#dfd">static void extrair_movimentos(ListaLances&amp; lista, Quadrado origem, Bitboard destinos, Bitboard inimigas) {
+    while (destinos) {
+        Quadrado dest = BitboardUtils::remover_lsb(destinos);
+        TipoLance flag = (BitboardUtils::mascara_casa(dest) &amp; inimigas) ? LANCE_CAPTURA : LANCE_NORMAL;
+        lista.adicionar(criar_lance(origem, dest, flag));
+    }
+}</span>
+
+<span style = "background-color:#dfd">static void extrair_movimentos_peao(ListaLances&amp; lista, Quadrado origem, Bitboard destinos, Bitboard mascara_promocao, Bitboard inimigas, Quadrado en_passant_sq) {
+    while (destinos) {
+        Quadrado dest = BitboardUtils::remover_lsb(destinos);
+        bool captura = (BitboardUtils::mascara_casa(dest) &amp; inimigas) != 0;
+        bool ep = (dest == en_passant_sq &amp;&amp; en_passant_sq != quadrado_vazio);</span>
+
+<span style = "background-color:#dfd">        if ((BitboardUtils::mascara_casa(dest) &amp; mascara_promocao) != 0) {</span>
+            // PromoÃ§Ã£o
+<span style = "background-color:#dfd">            if (captura) {
+                lista.adicionar(criar_lance(origem, dest, LANCE_CAPTURA_PROMO_DAMA));
+                lista.adicionar(criar_lance(origem, dest, LANCE_CAPTURA_PROMO_TORRE));
+                lista.adicionar(criar_lance(origem, dest, LANCE_CAPTURA_PROMO_BISPO));
+                lista.adicionar(criar_lance(origem, dest, LANCE_CAPTURA_PROMO_CAVALO));
+            } else {
+                lista.adicionar(criar_lance(origem, dest, LANCE_PROMO_DAMA));
+                lista.adicionar(criar_lance(origem, dest, LANCE_PROMO_TORRE));
+                lista.adicionar(criar_lance(origem, dest, LANCE_PROMO_BISPO));
+                lista.adicionar(criar_lance(origem, dest, LANCE_PROMO_CAVALO));</span>
+            }
+<span style = "background-color:#dfd">        } else {</span>
+            // Normal ou Captura comum
+<span style = "background-color:#dfd">            TipoLance flag = LANCE_NORMAL;
+            if (ep) flag = LANCE_EN_PASSANT;
+            else if (captura) flag = LANCE_CAPTURA;</span>
+
+<span style = "background-color:#dfd">            lista.adicionar(criar_lance(origem, dest, flag));</span>
+        }
+<span style = "background-color:#dfd">    }
+}</span>
+
+// ============================================================================
+// FunÃ§Ã£o Principal Exportada
+// ============================================================================
+// No escopo global, o compilador reconhece o Tabuleiro e a ListaLances
+<span style = "background-color:#dfd">void gerar_lances(const Tabuleiro&amp; b, ListaLances&amp; lista) {
+    Cor cor = b.estado.lado_a_jogar;
+    bool branca = (cor == Cor::BRANCO);
+    Bitboard amigaveis = b.ocupacoes[idx(cor)];
+    Bitboard inimigas = b.ocupacoes[idx(oposta(cor))];
+    Bitboard ocupacoes_totais = b.ocupacoes_totais;</span>
+
+<span style = "background-color:#dfd">    Bitboard peÃ§as_ativas = amigaveis;
+    while (peÃ§as_ativas) {
+        Quadrado sq = BitboardUtils::remover_lsb(peÃ§as_ativas);
+        Peca p = peca_em(b, sq);</span>
+
+<span style = "background-color:#dfd">        switch (p.tpeca) {</span>
+            case TipoPeca::PEAO: {
+<span style = "background-color:#dfd">                Bitboard bb = BitboardUtils::mascara_casa(sq);
+                Bitboard destinos_avanco = 0;
+                Bitboard destinos_captura = 0;
+                Bitboard prom_rank = branca ? MASCARA_LINHAS[LINHA_8] : MASCARA_LINHAS[LINHA_1];</span>
+
+<span style = "background-color:#dfd">                if (branca) {
+                    Bitboard frente = (bb &lt;&lt; 8) &amp; ~ocupacoes_totais;
+                    destinos_avanco |= frente;
+                    if (frente &amp;&amp; (bb &amp; MASCARA_LINHAS[LINHA_2])) {
+                        Bitboard avanÃ§o_duplo = (frente &lt;&lt; 8) &amp; ~ocupacoes_totais;
+                        if (avanÃ§o_duplo) {
+                            lista.adicionar(criar_lance(sq, BitboardUtils::indice_lsb(avanÃ§o_duplo), LANCE_AVANCO_DUPLO));</span>
+                        }
+                    }
+<span style = "background-color:#dfd">                    destinos_captura |= (((bb &lt;&lt; 7) &amp; ~MASCARA_COLUNAS[COLUNA_H]) | ((bb &lt;&lt; 9) &amp; ~MASCARA_COLUNAS[COLUNA_A])) &amp; inimigas;
+                    if (b.estado.en_passant != quadrado_vazio) {
+                        destinos_captura |= (((bb &lt;&lt; 7) &amp; ~MASCARA_COLUNAS[COLUNA_H]) | ((bb &lt;&lt; 9) &amp; ~MASCARA_COLUNAS[COLUNA_A])) &amp; BitboardUtils::mascara_casa(b.estado.en_passant);</span>
+                    }
+<span style = "background-color:#dfd">                } else {
+                    Bitboard frente = (bb &gt;&gt; 8) &amp; ~ocupacoes_totais;
+                    destinos_avanco |= frente;
+                    if (frente &amp;&amp; (bb &amp; MASCARA_LINHAS[LINHA_7])) {
+                        Bitboard avanÃ§o_duplo = (frente &gt;&gt; 8) &amp; ~ocupacoes_totais;
+                        if (avanÃ§o_duplo) {
+                            lista.adicionar(criar_lance(sq, BitboardUtils::indice_lsb(avanÃ§o_duplo), LANCE_AVANCO_DUPLO));</span>
+                        }
+                    }
+<span style = "background-color:#dfd">                    destinos_captura |= (((bb &gt;&gt; 9) &amp; ~MASCARA_COLUNAS[COLUNA_H]) | ((bb &gt;&gt; 7) &amp; ~MASCARA_COLUNAS[COLUNA_A])) &amp; inimigas;
+                    if (b.estado.en_passant != quadrado_vazio) {
+                        destinos_captura |= (((bb &gt;&gt; 9) &amp; ~MASCARA_COLUNAS[COLUNA_H]) | ((bb &gt;&gt; 7) &amp; ~MASCARA_COLUNAS[COLUNA_A])) &amp; BitboardUtils::mascara_casa(b.estado.en_passant);</span>
+                    }
+                }
+<span style = "background-color:#dfd">                extrair_movimentos_peao(lista, sq, destinos_avanco | destinos_captura, prom_rank, inimigas, b.estado.en_passant);
+                break;</span>
+            }
+
+            case TipoPeca::CAVALO: {
+<span style = "background-color:#dfd">                extrair_movimentos(lista, sq, ATAQUES.cavalo[sq] &amp; ~amigaveis, inimigas);
+                break;</span>
+            }
+
+            case TipoPeca::REI: {
+<span style = "background-color:#dfd">                extrair_movimentos(lista, sq, ATAQUES.rei[sq] &amp; ~amigaveis, inimigas);</span>
+
+<span style = "background-color:#dfd">                const Cor atacante = oposta(cor);
+                auto atacada = [&amp;](Quadrado q) { return casa_atacada(b, q, atacante); };
+                auto livre   = [&amp;](Quadrado q) { return !BitboardUtils::testar_bit(ocupacoes_totais, q); };
+                auto torre_em = [&amp;](Quadrado q) {
+                    Peca t = peca_em(b, q);
+                    return t.tpeca == TipoPeca::TORRE &amp;&amp; t.cor == cor;
+                };</span>
+
+<span style = "background-color:#dfd">                if (branca &amp;&amp; sq == Quadrado::e1) {</span>
+                    if ((b.estado.direitos_roque &amp; ROQUE_BRANCO_REI) &amp;&amp; torre_em(Quadrado::h1) &amp;&amp;
+                        livre(Quadrado::f1) &amp;&amp; livre(Quadrado::g1) &amp;&amp;
+<span style = "background-color:#dfd">                        !atacada(Quadrado::e1) &amp;&amp; !atacada(Quadrado::f1) &amp;&amp; !atacada(Quadrado::g1))
+                        lista.adicionar(criar_lance(sq, Quadrado::g1, LANCE_ROQUE_REI));</span>
+
+                    if ((b.estado.direitos_roque &amp; ROQUE_BRANCO_DAMA) &amp;&amp; torre_em(Quadrado::a1) &amp;&amp;
+                        livre(Quadrado::d1) &amp;&amp; livre(Quadrado::c1) &amp;&amp; livre(Quadrado::b1) &amp;&amp;
+<span style = "background-color:#dfd">                        !atacada(Quadrado::e1) &amp;&amp; !atacada(Quadrado::d1) &amp;&amp; !atacada(Quadrado::c1))
+                        lista.adicionar(criar_lance(sq, Quadrado::c1, LANCE_ROQUE_DAMA));
+                } else if (!branca &amp;&amp; sq == Quadrado::e8) {</span>
+                    if ((b.estado.direitos_roque &amp; ROQUE_PRETO_REI) &amp;&amp; torre_em(Quadrado::h8) &amp;&amp;
+                        livre(Quadrado::f8) &amp;&amp; livre(Quadrado::g8) &amp;&amp;
+<span style = "background-color:#dfd">                        !atacada(Quadrado::e8) &amp;&amp; !atacada(Quadrado::f8) &amp;&amp; !atacada(Quadrado::g8))
+                        lista.adicionar(criar_lance(sq, Quadrado::g8, LANCE_ROQUE_REI));</span>
+
+                    if ((b.estado.direitos_roque &amp; ROQUE_PRETO_DAMA) &amp;&amp; torre_em(Quadrado::a8) &amp;&amp;
+                        livre(Quadrado::d8) &amp;&amp; livre(Quadrado::c8) &amp;&amp; livre(Quadrado::b8) &amp;&amp;
+<span style = "background-color:#dfd">                        !atacada(Quadrado::e8) &amp;&amp; !atacada(Quadrado::d8) &amp;&amp; !atacada(Quadrado::c8))
+                        lista.adicionar(criar_lance(sq, Quadrado::c8, LANCE_ROQUE_DAMA));</span>
+                }
+<span style = "background-color:#dfd">                break;</span>
+            }
+
+            case TipoPeca::BISPO: {
+<span style = "background-color:#dfd">                extrair_movimentos(lista, sq, ataques_bispo(sq, ocupacoes_totais) &amp; ~amigaveis, inimigas);
+                break;</span>
+            }
+
+            case TipoPeca::TORRE: {
+<span style = "background-color:#dfd">                extrair_movimentos(lista, sq, ataques_torre(sq, ocupacoes_totais) &amp; ~amigaveis, inimigas);
+                break;</span>
+            }
+
+            case TipoPeca::DAMA: {
+<span style = "background-color:#dfd">                extrair_movimentos(lista, sq, ataques_dama(sq, ocupacoes_totais) &amp; ~amigaveis, inimigas);</span>
+                break;
+            }
+
+            default: break;
+        }
+<span style = "background-color:#dfd">    }
+}</span></pre>
+        <hr />
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th align="center">
+                        <small>Generated by</small>
+                        <a href="https://github.com/OpenCppCoverage/OpenCppCoverage/releases">
+                            <strong>OpenCppCoverage (Version: 0.9.9.0)</strong>
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+        </table>
+    </body>
+</html>

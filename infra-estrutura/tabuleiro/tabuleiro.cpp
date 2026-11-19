@@ -1,6 +1,7 @@
 #include "tabuleiro.hpp"
 #include "../../infra-estrutura/bitboard/bitboard.hpp"
 #include <iostream>
+#include "../otimizacao/zobrist.hpp"
 
 bool jogo_acabou(Tabuleiro& b);
 
@@ -24,12 +25,10 @@ void posicao_inicial(Tabuleiro& b) {
         colocar_peca(b, Cor::PRETO, ordem_xadrez[i], criar_quadrado(col, Linha::LINHA_8));
     }
 
-    //b.estado.chave_zobrist = calcular_chave(b); //WIP
+    b.estado.chave_zobrist = calcular_chave(b); 
 }
 
-void atualizar_ocupacao(Tabuleiro& b) {
-    //
-}
+
 
 void colocar_peca(Tabuleiro& b, Cor cor, TipoPeca tpeca, Quadrado sq) {
     Peca p;

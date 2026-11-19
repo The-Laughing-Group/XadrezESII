@@ -3,6 +3,15 @@
 #include <algorithm>
 #include "../../infra-estrutura/otimizacao/tt.hpp"
 
+bool g_debug_busca = false; 
+long long g_nos = 0;
+std::ostringstream g_log_busca;
+
+static std::string lance_para_texto(Lance m) {
+    auto sq = [](int s) { return std::string{char('a' + s % 8), char('1' + s / 8)}; };
+    return sq(origem_do_lance(m)) + sq(destino_do_lance(m));
+}
+
 namespace {
     constexpr int PRIORIDADE_LANCE_TT = 1000000;
 
@@ -16,6 +25,7 @@ namespace {
 int minimax_alfa_beta(Tabuleiro& tabuleiro, int profundidade, int alfa, int beta,
                       bool eh_maximizador, int ply)
 {
+    g_nos ++;
     const Cor lado = tabuleiro.estado.lado_a_jogar;
 
     // Empates por regra
@@ -97,6 +107,7 @@ int minimax_alfa_beta(Tabuleiro& tabuleiro, int profundidade, int alfa, int beta
 
 Lance obter_melhor_lance(Tabuleiro& tabuleiro, int profundidade) {
     nova_busca_tt();   // uma vez por lance da engine
+    g_nos = 0;
 
     const bool brancas = tabuleiro.estado.lado_a_jogar == Cor::BRANCO;
 
@@ -115,6 +126,8 @@ Lance obter_melhor_lance(Tabuleiro& tabuleiro, int profundidade) {
                                             !brancas, 1);   // ply 1 no filho da raiz
         desfazer_lance(tabuleiro, lance);
 
+        if (g_debug_busca) g_log_busca << lance_para_texto(lance) << " -> " << valor << "\n";
+
         if (brancas ? valor > melhor_valor : valor < melhor_valor) {
             melhor_valor = valor;
             melhor = lance;
@@ -122,5 +135,7 @@ Lance obter_melhor_lance(Tabuleiro& tabuleiro, int profundidade) {
             else         beta = std::min(beta, melhor_valor);
         }
     }
+
+    if (g_debug_busca) g_log_busca << "melhor: " << lance_para_texto(melhor) << "  nos: " << g_nos << "\n";
     return melhor;
 }

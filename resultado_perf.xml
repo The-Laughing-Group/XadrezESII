@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="1" failures="1" disabled="0" errors="0" time="21.592" timestamp="2026-11-19T19:21:41.627" name="AllTests">
+  <testsuite name="IA_Performance" tests="1" failures="1" disabled="0" skipped="0" errors="0" time="20.888" timestamp="2026-11-19T19:21:41.631">
+    <testcase name="PartidaCompletaTempoPorLance" file="C:\Users\batat\VSCode\XadrezESII\engine\tests\ia_performace_test.cpp" line="26" status="run" result="completed" time="20.861" timestamp="2026-11-19T19:21:41.639" classname="IA_Performance">
+      <failure message="C:\Users\batat\VSCode\XadrezESII\engine\tests\ia_performace_test.cpp:52&#x0A;Expected: (ms) &lt; (LIMITE_MS), actual: 7743 vs 5000&#x0A;Lance 9 da IA levou 7743 ms (limite 5000)&#x0A;Lance escolhido: d7e6&#x0A;FEN antes: r2qkb1r/pbpppppp/1pn1Nn2/8/8/1PP5/P2PPPPP/RNBQKB1R b KQkq - 2 5&#x0A;" type=""><![CDATA[C:\Users\batat\VSCode\XadrezESII\engine\tests\ia_performace_test.cpp:52
+Expected: (ms) < (LIMITE_MS), actual: 7743 vs 5000
+Lance 9 da IA levou 7743 ms (limite 5000)
+Lance escolhido: d7e6
+FEN antes: r2qkb1r/pbpppppp/1pn1Nn2/8/8/1PP5/P2PPPPP/RNBQKB1R b KQkq - 2 5
+]]></failure>
+    </testcase>
+  </testsuite>
+</testsuites>

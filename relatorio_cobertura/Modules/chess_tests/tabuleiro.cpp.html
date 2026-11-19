@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+        <meta charset="utf-8"/>
+	    <title>tabuleiro.cpp</title>
+	    <link href="../../third-party/google-code-prettify/prettify-CppCoverage.css" type="text/css" rel="stylesheet" />
+	    <script type="text/javascript" src="../../third-party/google-code-prettify/prettify.js"></script>
+	</head>
+    <body onload="prettyPrint()">
+        <h4></h4>
+        <pre class="prettyprint lang-cpp linenums">
+#include "tabuleiro.hpp"
+#include "../../infra-estrutura/bitboard/bitboard.hpp"
+#include &lt;iostream&gt;
+#include "../otimizacao/zobrist.hpp"
+
+bool jogo_acabou(Tabuleiro&amp; b);
+
+<span style = "background-color:#dfd">void limpar(Tabuleiro&amp; b) {
+    b = Tabuleiro{};
+}</span>
+
+<span style = "background-color:#dfd">void posicao_inicial(Tabuleiro&amp; b) {
+    limpar(b);</span>
+
+    TipoPeca ordem_xadrez[8] = {
+<span style = "background-color:#dfd">        TipoPeca::TORRE, TipoPeca::CAVALO, TipoPeca::BISPO, TipoPeca::DAMA,
+        TipoPeca::REI,   TipoPeca::BISPO,  TipoPeca::CAVALO, TipoPeca::TORRE</span>
+    };
+
+<span style = "background-color:#dfd">    for (int i = 0; i &lt; 8; i++) {
+        Coluna col = static_cast&lt;Coluna&gt;(i);
+        colocar_peca(b, Cor::BRANCO, ordem_xadrez[i], criar_quadrado(col, Linha::LINHA_1));
+        colocar_peca(b, Cor::BRANCO, TipoPeca::PEAO, criar_quadrado(col, Linha::LINHA_2));
+        colocar_peca(b, Cor::PRETO, TipoPeca::PEAO, criar_quadrado(col, Linha::LINHA_7));
+        colocar_peca(b, Cor::PRETO, ordem_xadrez[i], criar_quadrado(col, Linha::LINHA_8));
+    }</span>
+
+<span style = "background-color:#dfd">    b.estado.chave_zobrist = calcular_chave(b); 
+}</span>
+
+
+
+<span style = "background-color:#dfd">void colocar_peca(Tabuleiro&amp; b, Cor cor, TipoPeca tpeca, Quadrado sq) {
+    Peca p;
+    p.cor = cor;
+    p.tpeca = tpeca;
+    b.casas[static_cast&lt;int&gt;(sq)] = p;</span>
+
+<span style = "background-color:#dfd">    BitboardUtils::setar_bit(b.pecas[idx(cor)][idx(tpeca)], sq);
+    BitboardUtils::setar_bit(b.ocupacoes[idx(cor)], sq);
+    BitboardUtils::setar_bit(b.ocupacoes_totais, sq);
+}</span>
+
+<span style = "background-color:#dfd">void remover_peca(Tabuleiro&amp; b, Cor cor, TipoPeca tpeca, Quadrado sq) {
+    Peca p;
+    p.cor = Cor::COR_VAZIA;
+    p.tpeca = TipoPeca::PECA_VAZIA;
+    b.casas[static_cast&lt;int&gt;(sq)] = p;</span>
+
+<span style = "background-color:#dfd">    BitboardUtils::limpar_bit(b.pecas[idx(cor)][idx(tpeca)], sq);
+    BitboardUtils::limpar_bit(b.ocupacoes[idx(cor)], sq);
+    BitboardUtils::limpar_bit(b.ocupacoes_totais, sq);
+}</span>
+
+<span style = "background-color:#dfd">void mover_peca(Tabuleiro&amp; b, Cor cor, TipoPeca tpeca, Quadrado origem, Quadrado destino) {
+    Peca p;
+    p.cor = Cor::COR_VAZIA;
+    p.tpeca = TipoPeca::PECA_VAZIA;
+    b.casas[static_cast&lt;int&gt;(origem)] = p;</span>
+
+<span style = "background-color:#dfd">    p.cor = cor;
+    p.tpeca = tpeca;
+    b.casas[static_cast&lt;int&gt;(destino)] = p;</span>
+
+<span style = "background-color:#dfd">    Bitboard orig = 0ULL, dest = 0ULL;
+    orig = BitboardUtils::mascara_casa(origem);
+    dest = BitboardUtils::mascara_casa(destino);
+    b.pecas[idx(cor)][idx(tpeca)] ^= orig | dest;
+    b.ocupacoes[idx(cor)] ^= orig | dest;
+    b.ocupacoes_totais ^= orig | dest;
+}</span>
+
+<span style = "background-color:#dfd">Peca peca_em(const Tabuleiro&amp; b, Quadrado sq) {
+    return b.casas[static_cast&lt;int&gt;(sq)];
+}</span>
+
+<span style = "background-color:#fdd">bool casa_vazia(const Tabuleiro&amp; b, Quadrado sq) {
+    return BitboardUtils::testar_bit(b.ocupacoes_totais, sq);
+}</span>
+
+<span style = "background-color:#dfd">int quantidade_de(const Tabuleiro&amp; b, Cor cor, TipoPeca tpeca) {
+    return BitboardUtils::contar_bits(b.pecas[idx(cor)][idx(tpeca)]);
+}</span>
+
+<span style = "background-color:#dfd">Quadrado casa_do_rei(const Tabuleiro&amp; b, Cor cor) {
+    return BitboardUtils::indice_lsb(b.pecas[idx(cor)][idx(TipoPeca::REI)]);
+}</span>
+
+<span style = "background-color:#dfd">bool verificar_consistencia(const Tabuleiro&amp; b) {
+    Peca p;
+    for (int i = 0; i &lt; 64; i++) {
+        p = b.casas[i];
+        if (p.tpeca == TipoPeca::PECA_VAZIA) {
+            if (BitboardUtils::testar_bit(b.ocupacoes_totais, static_cast&lt;Quadrado&gt;(i))) return false;
+            if (BitboardUtils::testar_bit(b.ocupacoes[idx(p.cor)], static_cast&lt;Quadrado&gt;(i))) return false;
+        }</span>
+        else {
+<span style = "background-color:#dfd">            if (!BitboardUtils::testar_bit(b.ocupacoes_totais, static_cast&lt;Quadrado&gt;(i))) return false;
+            if (!BitboardUtils::testar_bit(b.ocupacoes[idx(p.cor)], static_cast&lt;Quadrado&gt;(i))) return false;
+            if (!BitboardUtils::testar_bit(b.pecas[idx(p.cor)][idx(p.tpeca)], static_cast&lt;Quadrado&gt;(i))) return false;</span>
+        }
+<span style = "background-color:#dfd">    }
+    return true;
+}</span>
+
+<span style = "background-color:#fdd">void imprimir(const Tabuleiro&amp; b) {</span>
+    char CARACTERE[NUM_CORES][NUM_TIPOS] = {
+<span style = "background-color:#fdd">        {'P', 'N', 'B', 'R', 'Q', 'K'},   // brancas  (Ã­ndice 0)
+        {'p', 'n', 'b', 'r', 'q', 'k'}    // pretas   (Ã­ndice 1)</span>
+    };
+<span style = "background-color:#fdd">    Peca p;</span>
+
+<span style = "background-color:#fdd">    std::cout &lt;&lt; "\n* A B C D E F G H\n";
+    for (int i = 56; i &gt;= 0; i = i - 8) {
+        std::cout &lt;&lt; (i / 8) + 1 &lt;&lt; "|";
+        for (int j = 0; j &lt; 8; j++) {
+            p = b.casas[i+j];
+            std::cout &lt;&lt; CARACTERE[idx(p.cor)][idx(p.tpeca)] &lt;&lt; " ";
+        }
+        std::cout &lt;&lt; "\n";
+    }
+    std::cout &lt;&lt; "\n";
+}</span>
+
+// bool carregar_fen(Tabuleiro&amp; b, const std::string&amp; fen) {
+//     //regras
+// }</pre>
+        <hr />
+        <table width="100%">
+            <thead>
+                <tr>
+                    <th align="center">
+                        <small>Generated by</small>
+                        <a href="https://github.com/OpenCppCoverage/OpenCppCoverage/releases">
+                            <strong>OpenCppCoverage (Version: 0.9.9.0)</strong>
+                        </a>
+                    </th>
+                </tr>
+            </thead>
+        </table>
+    </body>
+</html>

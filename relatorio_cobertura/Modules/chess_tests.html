@@ -1,0 +1,565 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="utf-8"/>
+        <title>chess_tests.exe</title>
+        <link rel="stylesheet" type="text/css" href="../third-party/css/style.css"/>
+        <script src="../third-party/RGraph/libraries/RGraph.common.core.js" type="text/javascript"></script>
+        <script src="../third-party/RGraph/libraries/RGraph.common.dynamic.js" type="text/javascript"></script>
+        <script src="../third-party/RGraph/libraries/RGraph.common.tooltips.js" type="text/javascript"></script>
+        <script src="../third-party/RGraph/libraries/RGraph.pie.js" type="text/javascript"></script>
+        <script src="../third-party/JQuery/jquery-3.4.1.min.js"></script>
+    </head>
+    <body>
+    <script type="text/javascript">
+        $(document).ready(function ()
+        {
+            
+            new RGraph.Pie('pi_99ed7b97-8527-4d69-a44b-f351de32124a', [1111, 23])
+                .set('labels', ['Cover 97%','Uncover 3%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 1111 lines (97%)', 'uncover 23 lines (3%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_02f54243-83fc-447d-8fd6-513db33d78e8', [72, 18])
+                .set('labels', ['Cover 80%','Uncover 20%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 72 lines (80%)', 'uncover 18 lines (20%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_f016e075-ab8a-4315-bf2a-0368272607eb', [59, 2])
+                .set('labels', ['Cover 96%','Uncover 4%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 59 lines (96%)', 'uncover 2 lines (4%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_c074c12e-818b-4545-b6c3-fbc095b6ccc8', [40, 1])
+                .set('labels', ['Cover 97%','Uncover 3%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 40 lines (97%)', 'uncover 1 lines (3%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_725009be-1b6e-419e-b6aa-f528658c2bdc', [157, 2])
+                .set('labels', ['Cover 98%','Uncover 2%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 157 lines (98%)', 'uncover 2 lines (2%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_ea35b27b-a143-4535-839b-5c4a6d3abe26', [7, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 7 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_1388a6e8-ee2e-48a8-8bbc-8bc6e138a8e4', [157, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 157 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_c7064aff-0547-4c06-a7ac-0b398f5dee0a', [167, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 167 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_988f8e55-e8ff-419e-9e0d-35b242d49e4c', [82, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 82 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_8c80bbf8-c95f-4a17-9154-b2926f5a584b', [9, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 9 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_3b279390-5a61-40fe-8858-4a9fcef1ffd8', [63, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 63 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_173c280a-eb61-46a2-bce4-b189e5d42397', [36, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 36 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_b161d255-4e3b-4c46-96ed-aba6697335eb', [8, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 8 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_79b6ac29-c728-45f7-bacb-68d99b1c103d', [25, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 25 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_9bd1c609-47e6-43cb-8e19-deec3bfb173d', [91, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 91 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_25eb8688-671d-4c8e-a112-b2b3f38acda4', [31, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 31 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_eb9321df-6869-437d-9564-58d550dae0ec', [5, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 5 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_f01ab05e-8e70-4ab7-af7e-07fd616fd1e2', [45, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 45 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_853ebfac-a40a-44a4-806c-68532c1f6c7a', [10, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 10 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_aa83d863-245a-44e0-89cb-87a912eb8040', [24, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 24 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_3260e97e-bc8d-4b4e-9154-e5ba887c0bb5', [3, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 3 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+            new RGraph.Pie('pi_907b7a7e-0b9f-4767-9f9f-12b7b0ed641b', [20, 0])
+                .set('labels', ['Cover 100%','Uncover 0%'])
+                .set('colors', ['rgb(0,255,0)','rgb(255,0,0)'])
+                .set('linewidth', 1)
+                .set('shadow', true)
+                .set('tooltips', ['cover 20 lines (100%)', 'uncover 0 lines (0%)'])
+                .set('tooltips.event', 'onmousemove')
+                .set('labels.sticks', true)
+                .set('labels.sticks.length', 10)
+                .draw();
+            
+
+      })
+    </script>    
+        <h1>
+        chess_tests.exe
+        </h1>
+        <h4>
+        
+        </h4>
+        <table id="rounded-corner">
+            <thead>
+                <tr>
+                    <th scope="col" class="rounded-left">Coverage</th>
+                    <th scope="col">Total lines</th>
+                    <th scope="col" class="rounded-right">Items</th>
+                </tr>
+            </thead> 
+            <tbody>
+                
+                <tr>
+                    <td>
+            <canvas id="pi_99ed7b97-8527-4d69-a44b-f351de32124a" width="280" height="100">Cover 97%</canvas>
+                    </td>            
+                    <td>1134</td>
+                    <td>            
+                      
+                      C:\Users\batat\VSCode\XadrezESII\engine\build\Debug\chess_tests.exe
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_02f54243-83fc-447d-8fd6-513db33d78e8" width="280" height="100">Cover 80%</canvas>
+                    </td>            
+                    <td>90</td>
+                    <td>            
+                       <a href="chess_tests/tabuleiro.cpp.html">C:\Users\batat\VSCode\XadrezESII\infra-estrutura\tabuleiro\tabuleiro.cpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_f016e075-ab8a-4315-bf2a-0368272607eb" width="280" height="100">Cover 96%</canvas>
+                    </td>            
+                    <td>61</td>
+                    <td>            
+                       <a href="chess_tests/aval_seguranca_rei.cpp.html">C:\Users\batat\VSCode\XadrezESII\ia\funcao-de-custo\aval_seguranca_rei.cpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_c074c12e-818b-4545-b6c3-fbc095b6ccc8" width="280" height="100">Cover 97%</canvas>
+                    </td>            
+                    <td>41</td>
+                    <td>            
+                       <a href="chess_tests/movimentos.cpp.html">C:\Users\batat\VSCode\XadrezESII\infra-estrutura\movimentos.cpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_725009be-1b6e-419e-b6aa-f528658c2bdc" width="280" height="100">Cover 98%</canvas>
+                    </td>            
+                    <td>159</td>
+                    <td>            
+                       <a href="chess_tests/jogo.cpp.html">C:\Users\batat\VSCode\XadrezESII\engine\src\game\jogo.cpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_ea35b27b-a143-4535-839b-5c4a6d3abe26" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>7</td>
+                    <td>            
+                       <a href="chess_tests/aplicar_lance.cpp.html">C:\Users\batat\VSCode\XadrezESII\engine\src\core\aplicar_lance.cpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_1388a6e8-ee2e-48a8-8bbc-8bc6e138a8e4" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>157</td>
+                    <td>            
+                       <a href="chess_tests/movimentos.cpp2.html">C:\Users\batat\VSCode\XadrezESII\engine\src\core\movimentos.cpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_c7064aff-0547-4c06-a7ac-0b398f5dee0a" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>167</td>
+                    <td>            
+                       <a href="chess_tests/posicao.cpp.html">C:\Users\batat\VSCode\XadrezESII\engine\src\core\posicao.cpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_988f8e55-e8ff-419e-9e0d-35b242d49e4c" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>82</td>
+                    <td>            
+                       <a href="chess_tests/search.cpp.html">C:\Users\batat\VSCode\XadrezESII\ia\busca-minimax\search.cpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_8c80bbf8-c95f-4a17-9154-b2926f5a584b" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>9</td>
+                    <td>            
+                       <a href="chess_tests/aval_mat.cpp.html">C:\Users\batat\VSCode\XadrezESII\ia\funcao-de-custo\aval_mat.cpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_3b279390-5a61-40fe-8858-4a9fcef1ffd8" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>63</td>
+                    <td>            
+                       <a href="chess_tests/aval_peoes.cpp.html">C:\Users\batat\VSCode\XadrezESII\ia\funcao-de-custo\aval_peoes.cpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_173c280a-eb61-46a2-bce4-b189e5d42397" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>36</td>
+                    <td>            
+                       <a href="chess_tests/aval_pos.cpp.html">C:\Users\batat\VSCode\XadrezESII\ia\funcao-de-custo\aval_pos.cpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_b161d255-4e3b-4c46-96ed-aba6697335eb" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>8</td>
+                    <td>            
+                       <a href="chess_tests/avaliacao.cpp.html">C:\Users\batat\VSCode\XadrezESII\ia\funcao-de-custo\avaliacao.cpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_79b6ac29-c728-45f7-bacb-68d99b1c103d" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>25</td>
+                    <td>            
+                       <a href="chess_tests/bitboard.hpp.html">C:\Users\batat\VSCode\XadrezESII\infra-estrutura\bitboard\bitboard.hpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_9bd1c609-47e6-43cb-8e19-deec3bfb173d" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>91</td>
+                    <td>            
+                       <a href="chess_tests/lances.cpp.html">C:\Users\batat\VSCode\XadrezESII\infra-estrutura\lances.cpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_25eb8688-671d-4c8e-a112-b2b3f38acda4" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>31</td>
+                    <td>            
+                       <a href="chess_tests/lances.hpp.html">C:\Users\batat\VSCode\XadrezESII\infra-estrutura\lances.hpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_eb9321df-6869-437d-9564-58d550dae0ec" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>5</td>
+                    <td>            
+                       <a href="chess_tests/movimentos.hpp.html">C:\Users\batat\VSCode\XadrezESII\infra-estrutura\movimentos.hpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_f01ab05e-8e70-4ab7-af7e-07fd616fd1e2" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>45</td>
+                    <td>            
+                       <a href="chess_tests/tt.cpp.html">C:\Users\batat\VSCode\XadrezESII\infra-estrutura\otimizacao\tt.cpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_853ebfac-a40a-44a4-806c-68532c1f6c7a" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>10</td>
+                    <td>            
+                       <a href="chess_tests/tt.hpp.html">C:\Users\batat\VSCode\XadrezESII\infra-estrutura\otimizacao\tt.hpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_aa83d863-245a-44e0-89cb-87a912eb8040" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>24</td>
+                    <td>            
+                       <a href="chess_tests/zobrist.cpp.html">C:\Users\batat\VSCode\XadrezESII\infra-estrutura\otimizacao\zobrist.cpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_3260e97e-bc8d-4b4e-9154-e5ba887c0bb5" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>3</td>
+                    <td>            
+                       <a href="chess_tests/zobrist.hpp.html">C:\Users\batat\VSCode\XadrezESII\infra-estrutura\otimizacao\zobrist.hpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+                <tr>
+                    <td>
+            <canvas id="pi_907b7a7e-0b9f-4767-9f9f-12b7b0ed641b" width="280" height="100">Cover 100%</canvas>
+                    </td>            
+                    <td>20</td>
+                    <td>            
+                       <a href="chess_tests/tipos.hpp.html">C:\Users\batat\VSCode\XadrezESII\infra-estrutura\utils\tipos.hpp</a> 
+                      
+                      
+                    </td>
+                </tr>        
+                
+            </tbody>
+            <tfoot>
+                <tr>
+                <td colspan="2" class="rounded-foot-left"></td>
+                <td class="rounded-foot-right"></td>
+                </tr>
+            </tfoot>            
+        </table>
+        <hr/>
+        <table width="100%" >
+         <thead>
+            <tr>
+               <th align="center">
+                  <small>Generated by</small>
+                  <a href="https://github.com/OpenCppCoverage/OpenCppCoverage/releases">
+                     <strong>OpenCppCoverage (Version: 0.9.9.0)</strong>
+                  </a>
+               </th>
+            </tr>
+         </thead>
+        </table>
+    </body>
+</html>
