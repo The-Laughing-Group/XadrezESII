@@ -38,10 +38,11 @@ const PainelConfiguracoes = () => {
 
                     <label className="linha-config">
                         <span>
-                            Volume dos efeitos <span aria-hidden="true">{Math.round(config.volume * 100)}%</span>
+                            Volume {Math.round(config.volume * 100)}%
                         </span>
                         <input type="range" min="0" max="1" step="0.05"
                             value={config.volume}
+                            aria-label="Volume dos efeitos"
                             aria-valuetext={`${Math.round(config.volume * 100)}%`}
                             disabled={!config.somLigado}
                             onChange={(e) => atualizar({ volume: Number(e.target.value) })}
@@ -57,10 +58,11 @@ const PainelConfiguracoes = () => {
 
                     <label className="linha-config">
                         <span>
-                            Volume da música <span aria-hidden="true">{Math.round(config.volumeMusica * 100)}%</span>
+                            Volume {Math.round(config.volumeMusica * 100)}%
                         </span>
                         <input type="range" min="0" max="1" step="0.05"
                             value={config.volumeMusica}
+                            aria-label="Volume da música"
                             aria-valuetext={`${Math.round(config.volumeMusica * 100)}%`}
                             disabled={!config.musicaLigada}
                             onChange={(e) => atualizar({ volumeMusica: Number(e.target.value) })} />
