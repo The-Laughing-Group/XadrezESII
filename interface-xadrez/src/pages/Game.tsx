@@ -112,6 +112,7 @@ const Game = () => {
 
     const reiniciarJogo = () => {
         reiniciar();
+        limparSelecao();
         setHistoricoMovimentos([]);
         setFimJogoDispensado(false);
     };
