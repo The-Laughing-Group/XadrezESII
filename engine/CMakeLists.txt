@@ -28,6 +28,8 @@ file(GLOB_RECURSE IA_SRC CONFIGURE_DEPENDS
 )
 
 add_library(chess_core STATIC ${CORE_SRC} ${INFRA_SRC} ${IA_SRC})
+
+
 # target_include_directories(chess_core PUBLIC include)
 target_include_directories(chess_core PUBLIC
     include
@@ -60,6 +62,10 @@ if(NOT EMSCRIPTEN)
   file(GLOB_RECURSE TEST_SRC CONFIGURE_DEPENDS tests/*.cpp)
   add_executable(chess_tests ${TEST_SRC})
   target_link_libraries(chess_tests PRIVATE chess_core GTest::gtest_main)
+  target_include_directories(chess_tests PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}
+      ${CMAKE_CURRENT_SOURCE_DIR}/tests
+  )
   include(GoogleTest)
   gtest_discover_tests(chess_tests)
 endif()

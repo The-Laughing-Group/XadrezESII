@@ -5,7 +5,7 @@
 #include "xadrez/movimentos.hpp"
 #include "tabuleiro/tabuleiro.hpp"
 #include "lances.hpp"
-#include "../../infra-estrutura/movimentos.hpp"   // ListaLances e gerar_lances
+#include "infra-estrutura/movimentos.hpp"   // ListaLances e gerar_lances
 // (o include relativo acima é frágil: prefira target_include_directories no CMake)
 
 using namespace xadrez;

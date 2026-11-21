@@ -22,6 +22,19 @@ constexpr int zob_peca(Cor c, TipoPeca t, Quadrado q) {
 //                                (aplicar só se en_passant != quadrado_vazio)
 //   trocar a vez de jogar:       chave ^= ZOBRIST[ZOB_LADO];  (a cada lance)
 
+// En passant só faz parte da posição (e da chave) se o lado a jogar tem um peão que
+// possa realmente capturar na casa 'ep' (FIDE 9.2.3).
+// Não olha cravada: um peão cravado ainda conta (a chave só fica mais "separada", nunca junta
+// posições diferentes).
+inline bool ep_capturavel(const Tabuleiro& b, Quadrado ep, Cor quem_captura) {
+    if (ep == Quadrado::quadrado_vazio) return false;
+    const Bitboard bb = 1ULL << ep;
+    // casas de onde um peão de 'quem_captura' alcança 'ep' (mesma conta de casa_atacada)
+    const Bitboard origens = (quem_captura == Cor::BRANCO)
+        ? (((bb >> 7) & ~MASCARA_COLUNAS[COLUNA_A]) | ((bb >> 9) & ~MASCARA_COLUNAS[COLUNA_H]))
+        : (((bb << 7) & ~MASCARA_COLUNAS[COLUNA_H]) | ((bb << 9) & ~MASCARA_COLUNAS[COLUNA_A]));
+    return (origens & b.pecas[idx(quem_captura)][idx(TipoPeca::PEAO)]) != 0;
+}
 
 // Sorteia os números aleatórios (semente fixa, resultados reproduzíveis).
 // Deve rodar ANTES de posicao_inicial() / carregar_fen(); iniciar_motor() cuida disso.

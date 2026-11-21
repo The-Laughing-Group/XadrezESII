@@ -47,6 +47,10 @@ bool fazer_lance(Tabuleiro& b, Lance m) {
 
     uint64_t chave = b.estado.chave_zobrist;
 
+    // Pilha de historico cheia: recusa SEM tocar no tabuleiro (escrever em historico[TAMANHO]
+    // corromperia conta_lance, que fica logo depois do array).
+    if (b.conta_lance >= TAMANHO_HISTORICO) return false;
+
     //historico é uma pilha que apontava para o vazio, preenche o vazio e incrementa o conta_lance
     b.historico[b.conta_lance++] = b.estado;
     //Estamos num novo meio-lance, limpamos informações antigas
@@ -56,8 +60,11 @@ bool fazer_lance(Tabuleiro& b, Lance m) {
     if (tpeca == TipoPeca::PEAO || eh_captura(m)) b.estado.contador_50 = 0;
     else b.estado.contador_50++;
 
+    
+
     // O en passant antigo expira em qualquer lance (sai da chave, se existia)
-    if (b.estado.en_passant != Quadrado::quadrado_vazio) chave ^= ZOBRIST[ZOB_EP + coluna_de(b.estado.en_passant)];
+    // (a) expiração do en passant antigo: só tira da chave se ele estava lá
+    if (ep_capturavel(b, b.estado.en_passant, cor_atual)) chave ^= ZOBRIST[ZOB_EP + coluna_de(b.estado.en_passant)];
     b.estado.en_passant = Quadrado::quadrado_vazio;
 
     //Remove a peça capturada no destino, mas não toca na peça que fez a captura
@@ -92,7 +99,9 @@ bool fazer_lance(Tabuleiro& b, Lance m) {
         if (eh_avanco_duplo(m)) {
             mover_peca(b, cor_atual, TipoPeca::PEAO, origem, destino);
             b.estado.en_passant = static_cast<Quadrado>((origem + destino) / 2);
-            chave ^= ZOBRIST[ZOB_EP + coluna_de(b.estado.en_passant)];
+            if(ep_capturavel(b, b.estado.en_passant, cor_oponente)){
+                chave ^= ZOBRIST[ZOB_EP + coluna_de(b.estado.en_passant)];
+            }
         }
         //Se não, movemos a peça normalmente
         else mover_peca(b, cor_atual, tpeca, origem, destino);

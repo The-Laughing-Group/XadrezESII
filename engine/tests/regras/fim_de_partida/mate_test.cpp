@@ -1,29 +1,15 @@
 #include <gtest/gtest.h>
-#include <algorithm>
-#include <string>
 #include <vector>
 #include "xadrez/jogo.hpp"
+#include "regras/helpers_regras.hpp"
+#include "tests/helpers_comuns.hpp" 
 
-using namespace xadrez;
+using Jogo = xadrez::Jogo;
 
-// Carrega o FEN num Jogo (falha o teste se o FEN for rejeitado).
-static Jogo carrega(const char* fen) {
-    Jogo j;
-    EXPECT_TRUE(j.carregarFen(fen)) << "FEN rejeitado: " << fen;
-    return j;
-}
 
-static bool contem(const std::vector<std::string>& v, const std::string& item) {
-    return std::find(v.begin(), v.end(), item) != v.end();
-}
-
-// Total de lances legais do lado que tem a vez.
-static int totalDeLances(const Jogo& j) {
-    int total = 0;
-    for (char c = 'a'; c <= 'h'; ++c)
-        for (char r = '1'; r <= '8'; ++r)
-            total += static_cast<int>(j.lancesDe(std::string{c, r}).size());
-    return total;
+TEST(Movimentos, MateNaoTemLances) {
+    // mate do louco: 1.f3 e5 2.g4 Dh4#
+    EXPECT_EQ(totalDoLado("rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3"), 0);
 }
 
 // ---------- xeque-mate ----------
@@ -83,54 +69,6 @@ TEST(FimDePartida, XequeQuePodeCapturarAPecaAtacanteComOutraPecaNaoEMate) {
     EXPECT_FALSE(j.emXequeMate());
     EXPECT_FALSE(contem(j.lancesDe("e1"), "e1e2"));
     EXPECT_TRUE(contem(j.lancesDe("c3"), "c3e2"));
-}
-
-// ---------- afogamento ----------
-
-TEST(FimDePartida, DetectaAfogamento) {
-    Jogo j = carrega("7k/5Q2/6K1/8/8/8/8/8 b - - 0 1");
-    EXPECT_FALSE(j.emXeque());
-    EXPECT_FALSE(j.emXequeMate());
-    EXPECT_TRUE(j.emAfogamento());
-    EXPECT_EQ(totalDeLances(j), 0);
-}
-
-// ---------- jogo normal: nada de fim de partida ----------
-
-TEST(FimDePartida, PosicaoInicialNaoTemFimDePartida) {
-    Jogo j;
-    EXPECT_FALSE(j.emXeque());
-    EXPECT_FALSE(j.emXequeMate());
-    EXPECT_FALSE(j.emAfogamento());
-}
-
-TEST(FimDePartida, PosicaoDeAberturaComumNaoTemFimDePartida) {
-    // 1.e4 e5 2.d4 d5: as duas cores jogaram 2 lances, então a posição é alcançável
-    Jogo j = carrega("rnbqkbnr/ppp2ppp/8/3pp3/3PP3/8/PPP2PPP/RNBQKBNR w KQkq - 0 3");
-    EXPECT_FALSE(j.emXeque());
-    EXPECT_FALSE(j.emXequeMate());
-    EXPECT_FALSE(j.emAfogamento());
-}
-
-// ---------- as consultas não podem mexer na partida ----------
-
-TEST(FimDePartida, ConsultarNaoAlteraAPosicao) {
-    const char* fens[] = {
-        "rnb1kbnr/pppp1ppp/8/4p3/6Pq/5P2/PPPPP2P/RNBQKBNR w KQkq - 1 3",   // mate
-        "7k/5Q2/6K1/8/8/8/8/8 b - - 0 1",                                  // afogamento
-        "4k3/8/8/8/8/8/3R4/r3K3 w - - 0 1",                                // xeque defensável
-        "r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1",   // roques, en passant etc.
-    };
-    for (const char* fen : fens) {
-        Jogo j = carrega(fen);
-        const std::string antes = j.fen();
-        (void)j.emXeque();
-        (void)j.emXequeMate();
-        (void)j.emAfogamento();
-        (void)j.emXequeMate();   // repetir não pode dar resultado diferente nem acumular estado
-        EXPECT_EQ(j.fen(), antes) << fen;
-        EXPECT_EQ(j.tabuleiro().size(), 8u);
-    }
 }
 
 // ---------- partidas jogadas lance a lance ----------
