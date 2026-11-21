@@ -14,6 +14,8 @@
 
 namespace xadrez {
 
+static constexpr int LIMITE_LANCES_PARTIDA = TAMANHO_HISTORICO - 1;
+
 // Casa vazia lida direto do mailbox. Não usamos casa_vazia() da infra-estrutura
 // porque ela está com o sentido invertido (devolve true quando a casa está ocupada).
 static bool vazia(const Tabuleiro& b, Quadrado sq) {
@@ -159,6 +161,8 @@ std::vector<std::string> Jogo::lancesDe(const std::string& casa) const {
 }
 
 bool Jogo::tentarLance(const std::string& uci_in) {
+    if (pos_.b.conta_lance >= LIMITE_LANCES_PARTIDA) return false;
+
     if (uci_in.size() != 4 && uci_in.size() != 5) return false;
 
     // Aceita a letra da promoção em maiúscula ("e7e8Q")
@@ -226,6 +230,8 @@ SituacaoPartida Jogo::situacao() const {
         s.estado = "regra_dos_50";
     } else if (contar_repeticoes(b) >= 2) {   // já apareceu 2 vezes antes = esta é a 3ª
         s.estado = "repeticao";
+    } else if (b.conta_lance >= LIMITE_LANCES_PARTIDA) {
+    s.estado = "limite_de_lances";
     }
 
     s.terminou = (s.estado != "em_andamento");

@@ -49,7 +49,7 @@ uint64_t calcularChave(const Tabuleiro& b) {
             chave ^= ZOBRIST[zob_peca(p.cor, p.tpeca, static_cast<Quadrado>(sq))];
     }
     chave ^= ZOBRIST[ZOB_ROQUE + b.estado.direitos_roque];
-    if (b.estado.en_passant != Quadrado::quadrado_vazio)
+    if (ep_capturavel(b, b.estado.en_passant, b.estado.lado_a_jogar))
         chave ^= ZOBRIST[ZOB_EP + coluna_de(b.estado.en_passant)];
     if (b.estado.lado_a_jogar == Cor::PRETO)
         chave ^= ZOBRIST[ZOB_LADO];
