@@ -18,7 +18,8 @@
   - .\build-wasm.ps1 
 - Build com Cmake para testes:
   - cmake -S engine -B engine/build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug
-  - cmake --build engine/build 
+  - cmake --build engine/build
+  - cmake --build engine/build --config Debug
   - ctest --test-dir engine/build --output-on-failure
 - Rodando a interface (frontend):
   - cd interface-xadrez
@@ -29,6 +30,26 @@
   - npm run test
   - npm run coverage
     - Gera uma pasta "coverage". Dentro, abrir "index.html" para visualizar a cobertura de testes.
+- Rodando testes da IA / Engine:
+  ----- Roda o executável direto (mostra o log de cada teste) -----
+
+  - .\engine\build\Debug\chess_tests.exe
+  
+  - .\engine\build\Debug\chess_tests.exe --gtest_list_tests
+  
+  - .\engine\build\Debug\chess_tests.exe --gtest_filter="IA_Mate1.*"
+  
+  - .\engine\build\Debug\chess_tests.exe --gtest_filter="IA_Captura.Cavalo_DamaVsTorre"
+  
+  - .\engine\build\Debug\chess_tests.exe --gtest_filter="IA_*:-IA_Performance.*"
+ 
+  ----- Perft profundo (demora minutos) -----
+
+  - .\engine\build\Debug\chess_tests.exe --gtest_also_run_disabled_tests --gtest_filter="*PerftProfundo*"
+ 
+  ---------------- Rodar a Cobertura de Testes ------------------------------
+
+  - OpenCppCoverage.exe --sources="$PWD\infra-estrutura" --sources="$PWD\ia" --sources="$PWD\engine\src" --excluded_sources="$PWD\engine\tests" --export_type=cobertura:coverage.cobertura --export_type=html:relatorio_cobertura -- .\engine\build\Debug\chess_tests.exe
 
 ## Direitos autorais
 - [Peças e tabuleiro](https://deja-view.itch.io/chess-assets)
